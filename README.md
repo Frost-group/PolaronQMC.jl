@@ -120,9 +120,19 @@ A. Sarsa, K. E. Schmidt and W. R. Magro
 J. Chem. Phys. 113, 1366 (2000); 
 http://dx.doi.org/10.1063/1.481926
 
+## Lectures and other notes (including finite T PIMC)
+
+2012 - quantum Monte Carlo: Theory and Fundies - Uni of illinois
+http://www.mcc.uiuc.edu/summerschool/2012/program.html
+
+BryanClark: Tutorial: Writing a Path Integral Code in Python
+http://web.engr.illinois.edu/~bkclark/PIMCTutorial/tutorial.pdf
+
 
 ## Other codes
 
-See also, @amaciarey's F90 code, for dipolar bosons in 2D: 
+See also, @amaciarey's F90 PIGS code, for dipolar bosons in 2D: 
 https://github.com/amaciarey/PathIntegralGroundState
 
+PIMC++: finite T PIMC code, C++: 
+https://github.com/bkclark/pimcpp
