@@ -128,6 +128,8 @@ http://www.mcc.uiuc.edu/summerschool/2012/program.html
 BryanClark: Tutorial: Writing a Path Integral Code in Python
 http://web.engr.illinois.edu/~bkclark/PIMCTutorial/tutorial.pdf
 
+Adrian Del Maestro - 14 pages of notes and a beautifully clean 222 line PIMC Python code for a 1D SHO 
+https://github.com/agdelma/pimc-notes
 
 ## Other codes
 
