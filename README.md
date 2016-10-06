@@ -44,3 +44,6 @@ https://github.com/amaciarey/PathIntegralGroundState
 
 PIMC++: finite T PIMC code, C++: 
 https://github.com/bkclark/pimcpp
+
+ALSO; same author (?); Simple PIMC
+https://github.com/etano/simpimc
