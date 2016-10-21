@@ -77,14 +77,27 @@ end
 
 #//  <path d="M10 10"/>
 
+function printstartpath(x,y)
+    @printf(svgf,"<path d=\"M %f %f ",x,y)
+end
+
 function printsegment(dx,dy)
     @printf(svgf,"<path d=\"M l %f %f",dx,dy)
 end
 
-printsegment(10,10)
-
-function drawpath()
-    printsegment(10,10)
+function printendpath()
+    @printf(svgf,"\"\\>")
 end
 
+function drawpath()
+    printstartpath(0,0)
+    printsegment(1,1)
+    printsegment(1,0)
+    printsegment(1,1)
+    printendpath()
+end
+
+drawpath()
+
+@printf(svgf,"\n</svg>\n")
 close(svgf)
