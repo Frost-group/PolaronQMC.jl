@@ -14,25 +14,29 @@ end
 
 function printsegment(dx,dy)
     @printf(svgf," l %d %d",dx,dy)
-    @printf("printsegment: %d %d\n",dx,dy)
+#    @printf("printsegment: %d %d\n",dx,dy)
 end
 
 function printendpath()
-    @printf(svgf," z \" stroke=\"black\" fill=\"transparent\" stroke-width=\"0.5\"  \/>")
+    @printf(svgf,"  \" stroke=\"black\" fill=\"transparent\" fill-opacity=\"0.0\" stroke-width=\"0.5\"  \/>")
 end
 
 function drawpath()
-    printstartpath(0,0)
+    printstartpath(0,100)
     
     dx=1
-    for x in 0:1:100
+    # Really need to compose this random vector so paths connect from [x0,t0]->[x1,t1]
+    for x in 0:dx:200
         printsegment(dx,dx*rand([1,-1]) )
     end
     
     printendpath()
 end
 
-drawpath()
+# A few random paths...
+for i in 1:10
+    drawpath()
+end
 
 @printf(svgf,"\n</svg>\n")
 close(svgf)
