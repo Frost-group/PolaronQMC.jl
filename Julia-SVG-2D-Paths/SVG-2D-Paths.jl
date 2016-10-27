@@ -87,7 +87,7 @@ function printsegment(dx,dy)
 end
 
 function printendpath()
-    @printf(svgf,"\" stroke=\"black\" fill=\"transparent\" stroke-width=\"0.5\"  \\>")
+    @printf(svgf," z \" stroke=\"black\" fill=\"transparent\" stroke-width=\"0.5\"  \/>")
 end
 
 function drawpath()
