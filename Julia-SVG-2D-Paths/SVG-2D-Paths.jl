@@ -9,22 +9,26 @@ svgf=open("path.svg","w")
 #//  <path d="M10 10"/>
 
 function printstartpath(x,y)
-    @printf(svgf,"<path d=\"M %f %f ",x,y)
+    @printf(svgf,"<path d=\"M %d %d ",x,y)
 end
 
 function printsegment(dx,dy)
-    @printf(svgf,"<path d=\"M l %f %f",dx,dy)
+    @printf(svgf," l %d %d",dx,dy)
+    @printf("printsegment: %d %d\n",dx,dy)
 end
 
 function printendpath()
-    @printf(svgf,"\"\\>")
+    @printf(svgf,"\" stroke=\"black\" fill=\"transparent\" stroke-width=\"0.5\"  \\>")
 end
 
 function drawpath()
     printstartpath(0,0)
-    printsegment(1,1)
-    printsegment(1,0)
-    printsegment(1,1)
+    
+    dx=1
+    for x in 0:1:100
+        printsegment(dx,dx*rand([1,-1]) )
+    end
+    
     printendpath()
 end
 
