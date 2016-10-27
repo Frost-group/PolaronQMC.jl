@@ -74,6 +74,7 @@ end
 
 @printf(svgf,"\n</svg>\n")
 @printf(svgf,"<svg width=\"200\" height=\"200\" xmlns=\"http://www.w3.org/2000/svg\">\n")
+@printf(svgf,"<svg width=\"100\" height=\"100\" xmlns=\"http://www.w3.org/2000/svg\">\n")
 
 #//  <path d="M10 10"/>
 
@@ -87,23 +88,33 @@ function printsegment(dx,dy)
 end
 
 function printendpath()
-    @printf(svgf,"  \" stroke=\"black\" fill=\"transparent\" fill-opacity=\"0.0\" stroke-width=\"0.5\"  \/>")
+    colours=["#7fc97f","#beaed4","#fdc086","#ffff99","#386cb0","#f0027f"] # Colourbrewer 6 colours qualitative
+    colour=rand(colours)
+
+    @printf(svgf,"  \" stroke=\"%s\" fill=\"none\" stroke-width=\"0.5\"  \/>",colour)
 end
 
 function drawpath()
-    printstartpath(0,100)
+    printstartpath(100/2,0)
     
-    dx=1
+    dt=1
+    sx=0
     # Really need to compose this random vector so paths connect from [x0,t0]->[x1,t1]
-    for x in 0:dx:200
-        printsegment(dx,dx*rand([1,-1]) )
+    for t in 0:dt:100
+        dx=rand([1,-1]) # Forces either a (1,1) or (1,-1) move; zizzag space-time paths
+        
+        if (100-t-1)<abs(sx) # Force a reconnect in the space-time paths
+            dx=-sx/abs(sx) # Head in this direction only.
+        end
+        printsegment(dx,dt )
+        sx+=dx # keep track of where we are, to reconnect space-time paths
     end
     
     printendpath()
 end
 
 # A few random paths...
-for i in 1:10
+for i in 1:50
     drawpath()
 end
 
