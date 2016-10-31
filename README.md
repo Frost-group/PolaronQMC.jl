@@ -94,6 +94,8 @@ Debugging/System information
 
 # HALCYON - PIGS might fly
 
+Writing a Path Integral Ground State monte-carlo code in the Julia programming language. A work in progress!
+
 ## References
 
 Textbook: "Interacting Electrons: Theory and Computational Approaches" 
@@ -102,7 +104,7 @@ Cambridge University Press. (2016)
 Section 25.4 (Ground-state path integrals (GSPI))
 http://dx.doi.org/10.1017/CBO9781139050807 
 
-Original Papers:
+PIGS papers:
 
 [1] "Reptation Quantum Monte Carlo: A Method for Unbiased Ground-State Averages and
 Imaginary-Time Correlations"
@@ -119,6 +121,18 @@ http://dx.doi.org/10.1103/RevModPhys.67.279
 A. Sarsa, K. E. Schmidt and W. R. Magro
 J. Chem. Phys. 113, 1366 (2000); 
 http://dx.doi.org/10.1063/1.481926
+
+Fermion sign problem papers:
+
+[1] Sign problem in the numerical simulation of many-electron systems
+E. Y. Loh, Jr., J. E. Gubernatis, R. T. Scalettar, S. R. White, D. J. Scalapino, and R. L. Sugar
+Phys. Rev. B 41, 9301 – Published 1 May 1990
+https://doi.org/10.1103/PhysRevB.41.9301
+
+[2] Monte Carlo simulations with indefinite and complex-valued measures
+T. D. Kieu and C. J. Griffin
+Phys. Rev. E 49, 3855 – Published 1 May 1994
+https://doi.org/10.1103/PhysRevE.49.3855
 
 ## Lectures and other notes (including finite T PIMC)
 
