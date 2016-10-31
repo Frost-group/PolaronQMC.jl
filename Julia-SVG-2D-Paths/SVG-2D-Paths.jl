@@ -30,12 +30,14 @@ function drawpath()
     
     dt=1
     sx=0
+    x1=5 # This target, but it tends to make the paths look rather artificial!
+
     # Really need to compose this random vector so paths connect from [x0,t0]->[x1,t1]
     for t in 0:dt:tSlices
         dx=rand([1,-1]) # Forces either a (1,1) or (1,-1) move; zizzag space-time paths
         
-        if (tSlices-t-1)<abs(sx) # Force a reconnect in the space-time paths
-            dx=-sx/abs(sx) # Head in this direction only.
+        if (tSlices-t-1)<abs(sx-x1) # Force a reconnect in the space-time paths
+            dx=-(sx-x1)/abs(sx-x1) # Head in this direction only.
         end
         printsegment(dx,dt )
         sx+=dx # keep track of where we are, to reconnect space-time paths
@@ -44,10 +46,25 @@ function drawpath()
     printendpath()
 end
 
+function drawpathPermutations()
+    printstartpath(tSlices/2.0,0)
+
+    dxs=shuffle([fill(1,div(tSlices,2));fill(-1,div(tSlices,2))])
+    # Shuffle set of [1,...,1] and [-1,...-1] arrays together, generating a random set of dxs which sum to zero
+    # i.e. we have a path that connects from x0,t0 to x1,t1, by definition
+
+    dt=1
+    for dx in dxs
+        printsegment(dx,dt)
+    end
+
+    printendpath()
+end
+
 # A few random paths...
 Paths=50
 for i in 1:Paths
-    drawpath()
+    drawpathPermutations()
 end
 
 @printf(svgf,"\n</svg>\n")
