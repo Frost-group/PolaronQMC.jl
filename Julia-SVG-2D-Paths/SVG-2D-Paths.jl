@@ -95,15 +95,15 @@ function printendpath()
 end
 
 function drawpath()
-    printstartpath(100/2,0)
+    printstartpath(tSlices/2.0,0)
     
     dt=1
     sx=0
     # Really need to compose this random vector so paths connect from [x0,t0]->[x1,t1]
-    for t in 0:dt:100
+    for t in 0:dt:tSlices
         dx=rand([1,-1]) # Forces either a (1,1) or (1,-1) move; zizzag space-time paths
         
-        if (100-t-1)<abs(sx) # Force a reconnect in the space-time paths
+        if (tSlices-t-1)<abs(sx) # Force a reconnect in the space-time paths
             dx=-sx/abs(sx) # Head in this direction only.
         end
         printsegment(dx,dt )
@@ -114,7 +114,8 @@ function drawpath()
 end
 
 # A few random paths...
-for i in 1:50
+Paths=50
+for i in 1:Paths
     drawpath()
 end
 
