@@ -49,7 +49,10 @@ end
 function drawpathPermutations()
     printstartpath(tSlices/2.0,0)
 
-    dxs=shuffle([fill(1,div(tSlices,2));fill(-1,div(tSlices,2))])
+    # x1 is an offset for the bottom of the path. I can't remember why I added this!
+    x1=10
+
+    dxs=shuffle([fill(1,x1+div(tSlices,2));fill(-1,-x1+div(tSlices,2))])
     # Shuffle set of [1,...,1] and [-1,...-1] arrays together, generating a random set of dxs which sum to zero
     # i.e. we have a path that connects from x0,t0 to x1,t1, by definition
 
