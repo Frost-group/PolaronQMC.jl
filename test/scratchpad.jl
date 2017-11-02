@@ -1,3 +1,6 @@
+using Revise # Tim Holy's Revise.jl; will auto-reload changed code.
+
+ENV["EDITOR"] = "vim" # Natch.
 push!(LOAD_PATH,"../src/") # load module from local directory
 
 using HALCYON
