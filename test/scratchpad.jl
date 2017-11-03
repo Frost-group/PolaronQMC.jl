@@ -27,3 +27,20 @@ end
 plot!(ρ)
 
 gui() #open dem plots
+
+using GaussianProcesses
+
+# https://github.com/STOR-i/GaussianProcesses.jl/blob/master/notebooks/Regression.ipynb
+# Training data
+
+#Select mean and covariance function
+mZero = MeanZero()                   #Zero mean function
+kern = SE(0.0,0.0)                   #Sqaured exponential kernel (note that hyperparameters are on the log scale)
+logObsNoise = -1.0                        # log standard deviation of observation noise (this is optional)
+
+# OK; pretty coarse idea! Just fit density to bare potential. :^) 
+gp = GP(sampledV,ρ,mZero,kern,logObsNoise)       #Fit the GP
+
+using Plots
+plot(gp)
+# Ah, magic!
