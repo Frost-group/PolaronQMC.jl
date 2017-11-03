@@ -39,7 +39,7 @@ kern = SE(0.0,0.0)                   #Sqaured exponential kernel (note that hype
 logObsNoise = -1.0                        # log standard deviation of observation noise (this is optional)
 
 # OK; pretty coarse idea! Just fit density to bare potential. :^) 
-gp = GP(sampledV,ρ,mZero,kern,logObsNoise)       #Fit the GP
+gp = GP(HALCYON.sampledV(V),ρ,mZero,kern,logObsNoise)       #Fit the GP
 
 using Plots
 plot(gp)
