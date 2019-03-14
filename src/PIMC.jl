@@ -11,7 +11,7 @@ end
 const T=300
 const tau=0.5
 
-timeslices=round(1/(tau*T))
+timeslices=round(Int,1/(tau*T))
 particles=2
 spatialdimensions=1
 
