@@ -161,3 +161,5 @@ Ethan Brown now has his own 'Simple PIMC' code: https://github.com/etano/simpimc
 
 See also, @amaciarey's F90 PIGS code, for dipolar bosons in 2D: 
 https://github.com/amaciarey/PathIntegralGroundState
+
+John Shumway's (now abandoned) C++ code for quantum dots etc. : http://phys-tools.github.io/pi-qmc/  https://github.com/phys-tools/pi-qmc
