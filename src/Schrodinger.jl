@@ -2,6 +2,8 @@
 
 # Mainly liberated from myself: https://github.com/jarvist/Julia-SoftModeTISH-DeformationPotential
 
+using LinearAlgebra: diagm, eigen
+
 function sampledV(V, N=50)
     discreteV=[ V(i/(N-1) - 1/2) for i=0:(N-1) ]
     return discreteV
@@ -14,12 +16,12 @@ function TISE(V,N=50,dx=1E2/(N-1))
     # KE terms on the tridiagonals
     updiagonal = [(-1/dx^2)::Float64 for r in 1:N-1]
     
-    H =diagm(diagonal,0) + diagm(updiagonal,1) + diagm(updiagonal,-1)
+    H = diagm(0 => diagonal, 1 => updiagonal, -1 => updiagonal)
     
     # And so we solve; explicit diagonalisation
-    evals,evecs=eig(H)
+    F=eigen(H)
    
-    return evals,evecs
+    return F.values, F.vectors 
 end
 
 
