@@ -94,9 +94,10 @@ Debugging/System information
 
 # HALCYON - PIGS might fly
 
-Writing a Path Integral Ground State Monte-Carlo code in the Julia programming language. A work in progress!
+Writing a Path Integral Monte-Carlo code in the Julia programming language. A work in progress!
 
-Halcyon is a 1D code to look at combining Path Integrals with Densition Functional Theory, via Gaussian Process inference. The hope is that accurate per-orbital functionals can be sampled by the Path Integral, while energy (and other observable) expectations from the density functional, somehow avoid the sign error.
+Halcyon.jl is a research code to look at combining Path Integrals with Gaussian Process inference. 
+The hope (as always!) is to somehow avoid the sign error, here by seeing whether an extended version of the Feynman variational method can be used, possibly with some kind of quantised form of Gaussian Process.
 
 ## References
 
@@ -137,6 +138,8 @@ Phys. Rev. E 49, 3855 – Published 1 May 1994
 https://doi.org/10.1103/PhysRevE.49.3855
 
 ## Lectures and other notes (including finite T PIMC)
+
+[2021Ceperley] CECAM talk by David Ceperley, very clear and nice high res slides. https://www.youtube.com/watch?v=R0stKun1w0A
 
 2012 - quantum Monte Carlo: Theory and Fundies - Uni of illinois
 http://www.mcc.uiuc.edu/summerschool/2012/program.html
