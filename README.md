@@ -51,12 +51,6 @@ https://doi.org/10.1103/PhysRevE.49.3855
 2012 - quantum Monte Carlo: Theory and Fundies - Uni of illinois
 http://www.mcc.uiuc.edu/summerschool/2012/program.html
 
-BryanClark: Tutorial: Writing a Path Integral Code in Python
-http://web.engr.illinois.edu/~bkclark/PIMCTutorial/tutorial.pdf
-
-Adrian Del Maestro - 14 pages of notes and a beautifully clean 222 line PIMC Python code for a 1D SHO 
-https://github.com/agdelma/pimc-notes
-
 Ethan W. Brown's 2014 Thesis - warm dense matter: https://www.ideals.illinois.edu/bitstream/handle/2142/50560/Ethan_Brown.pdf?sequence=1
 
 2013 Workshop with a half-dozen path integral talks (Ceperley, Boninsegni, Brown, etc. - unfortunately Clark's video has broken sound!)
@@ -64,12 +58,24 @@ http://www.int.washington.edu/talks/WorkShops/int_13_2a/
 
 ## Other codes
 
-PIMC++: finite T PIMC code, C++, originally by Bryan Clark and Ken Esler, with more recent contributions by Ethan Brown: 
+Python - BryanClark: Tutorial: Writing a Path Integral Code in Python
+http://web.engr.illinois.edu/~bkclark/PIMCTutorial/tutorial.pdf
+
+Python - Adrian Del Maestro - 14 pages of notes and a beautifully clean 222 line PIMC Python code for a 1D SHO 
+https://github.com/agdelma/pimc-notes
+
+Julia - Minimal harmonic-oscillator PIMC implementation https://nbviewer.jupyter.org/github/Paul-St-Young/share/blob/master/julia-tutorial-pimc/python_vs_julia/julia-pimc.ipynb
+
+C++ - PIMC++: finite T PIMC code, originally by Bryan Clark and Ken Esler, with more recent contributions by Ethan Brown: 
 https://github.com/bkclark/pimcpp
 
-Ethan Brown now has his own 'Simple PIMC' code: https://github.com/etano/simpimc
+C++ - Ethan Brown now has his own 'Simple PIMC' code: https://github.com/etano/simpimc
 
-See also, @amaciarey's F90 PIGS code, for dipolar bosons in 2D: 
+F90 See also, @amaciarey's F90 PIGS code, for dipolar bosons in 2D: 
 https://github.com/amaciarey/PathIntegralGroundState
 
-John Shumway's (now abandoned) C++ code for quantum dots etc. : http://phys-tools.github.io/pi-qmc/  https://github.com/phys-tools/pi-qmc
+C++ John Shumway's (now abandoned) C++ code for quantum dots etc. : http://phys-tools.github.io/pi-qmc/  https://github.com/phys-tools/pi-qmc
+
+## Packages
+
+Lattice-based Ising MC + AFQMC - https://github.com/crstnbr/MonteCarlo.jl
