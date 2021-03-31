@@ -3,20 +3,20 @@
 
 # Very generic path
 struct Path
-    timeslice
-    particle
-    spatialdimension
+    nbeads ::Int64
+    nparticles ::Int64
+    mass ::Float64
+    spatialdimensions ::Int64
+
+    R::Array{Float64,3}
+
+    function Path(nbeads::Integer, nparticles::Integer; mass=1.0, spatialdimensions=3)
+        R=rand(nbeads, nparticles, spatialdimensions)
+
+        new(nbeads, nparticles, mass, spatialdimensions, R)
+    end
 end
 
-const T=300
-const tau=0.5
-
-timeslices=round(Int,1/(tau*T))
-particles=2
-spatialdimensions=1
-
-path=zeros(timeslices,particles,spatialdimensions)
-show(path)
 
 function KineticAction(sA,sB)
     KE=(sA.r .- sB.r).^2
@@ -30,3 +30,4 @@ function PotentialAction(sA,sB) #sliceA, sliceB
     PE=PE*0.5*tau
     PE
 end
+
