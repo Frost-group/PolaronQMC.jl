@@ -94,10 +94,7 @@ Debugging/System information
 
 # HALCYON - PIGS might fly
 
-Writing a Path Integral Monte-Carlo code in the Julia programming language. A work in progress!
-
-Halcyon.jl is a research code to look at combining Path Integrals with Gaussian Process inference. 
-The hope (as always!) is to somehow avoid the sign error, here by seeing whether an extended version of the Feynman variational method can be used, possibly with some kind of quantised form of Gaussian Process.
+Initially a Path Integral Monte-Carlo code for Polarons in the Julia programming language. A work in progress!
 
 ## References
 
