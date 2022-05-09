@@ -442,4 +442,3 @@ equipartition_energy = 3/2 * T * n_particles
 # ╔═╡ 396be977-6266-4f1e-a9f9-bd1d3c03e6b7
 harmonic_potential_energy = 3.0 / 2.0 * coth(1.0 / 2.0 / T)
 
-
