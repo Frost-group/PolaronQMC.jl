@@ -41,12 +41,22 @@ begin
 	abstract type OneBodyPotential <: Potential end
 	abstract type TwoBodyPotential <: Potential end
 	struct ZeroPotential <: Potential end
+	
 	struct HarmonicPotential <: OneBodyPotential
 		ω :: Float64
 		function HarmonicPotential(ω::Float64)
 			new(ω)
 		end
 	end
+	
+	struct FrohlichPotential <: OneBodyPotential
+		α :: Float64
+		ω :: Float64
+		function FrohlichPotential(α::Float64, ω::Float64)
+			new(α, ω)
+		end
+	end
+	
 	struct CoulombPotential <: TwoBodyPotential
 		κ :: Float64
 		function CoulombPotential(κ::Float64)
@@ -63,6 +73,18 @@ begin
 
 	function one_body_potential(potential::HarmonicPotential, path::Path, bead::Int, particle::Int)
 		return 0.5 * potential.ω^2 * norm(path.beads[bead, particle, :])^2
+	end
+
+	function one_body_potential(potential::FrohlichPotential, path::Path, bead::Int, particle::Int)
+		ω = potential.ω
+		phonon_response(other_bead) = cosh(ω * path.τ * (abs(bead - other_bead) - path.n_beads / 2.0)) / sinh(ω * path.τ * path.n_beads / 2.0)
+		double_integral = 0.0
+		for other_bead in 1:path.n_beads
+			if other_bead != bead
+				double_integral += phonon_response(other_bead) / norm(path.beads[bead, particle, :] .- path.beads[other_bead, particle, :])
+			end
+		end
+		return potential.α * ω^(3/2) / sqrt(8) * double_integral / path.n_beads
 	end
 
 	function two_body_potential(potential::ZeroPotential, path::Path, bead::Int, particle_one::Int, particle_two::Int)
@@ -174,27 +196,16 @@ begin
 	end
 end
 
-# ╔═╡ af516d6c-f426-4162-9146-e162ee690b68
-begin
-	function total_energy(path::Path, potential::Potential)
-		return kinetic_energy(path) + potential_energy(path, potential)
-	end
-
-	function total_energy(path::Path, potentials::Array{Potential})
-		total_energy = kinetic_energy(path)
-		for potential in potentials
-			total_energy += potential_energy(path, potential)
-		end
-		return total_energy
-	end
-end
-
 # ╔═╡ cd2f4580-5888-4dd2-880c-8548891b12a2
-function PIMC(n_steps::Int, movers, path::Path, potentials::Union{Potential, Array{Potential}})
+function PIMC(n_steps::Int, movers, observables, path::Path, potentials::Union{Potential, Array{Potential}})
+	
 	observable_skip = 0.001 * n_steps
 	equilibrium_skip = 0.2 * n_steps
+	# equilibrium_skip = 0
+	
 	n_accepted = Dict(string(Symbol(mover)) => 0 for mover in movers)
-	energy_trace = []
+	observable_traces = Dict(string(Symbol(observable)) => [] for observable in observables)
+	
 	path_trace = []
 	for step in 1:n_steps
 
@@ -205,34 +216,73 @@ function PIMC(n_steps::Int, movers, path::Path, potentials::Union{Potential, Arr
 		end
 
 		if mod(step, observable_skip) == 0 && step > equilibrium_skip
-			append!(energy_trace, total_energy(path, potentials))
+			for observable in observables
+				append!(observable_traces[string(Symbol(observable))], [observable(path, potentials)])
+			end
 			append!(path_trace, [path.beads])
 		end
+		
 	end
 
 	acceptance_ratio = Dict(string(Symbol(mover)) => 1.0 * n_accepted[string(Symbol(mover))] / (n_steps * path.n_particles) for mover in movers)
 
-	return acceptance_ratio, energy_trace, path_trace
+	return acceptance_ratio, path_trace, observable_traces
 end
+
+# ╔═╡ 344dcc8f-dd27-41c5-922f-689a9a952d9e
+# BELOW ARE THE DIFFERENT OBSERVABLES TO SAMPLE
+
+# ╔═╡ af516d6c-f426-4162-9146-e162ee690b68
+begin
+	function Energy(path::Path, potential::Potential)
+		return kinetic_energy(path) + potential_energy(path, potential)
+	end
+
+	function Energy(path::Path, potentials::Array{Potential})
+		total_energy = kinetic_energy(path)
+		for potential in potentials
+			total_energy += potential_energy(path, potential)
+		end
+		return total_energy
+	end
+end
+
+# ╔═╡ acf524a6-e609-46e3-a512-2f0821410954
+begin
+	function Correlation(path::Path, potential::Potential)
+		correlation = Vector{Float64}(undef, path.n_beads)
+		for Δτ in 1:path.n_beads, bead_one in 1:path.n_beads
+			bead_two = mod1(bead_one + Δτ, path.n_beads)
+			correlation[Δτ] += dot(path.beads[bead_one, :, :], path.beads[bead_two, :, :])
+		end		
+		return correlation ./ path.n_beads
+	end
+end
+
+# ╔═╡ ffe57e29-2106-4073-92e8-be539e38510e
+begin
+	function Wavefunction(path::Path, potential::Potential)
+
+	end
+end
+
+# ╔═╡ de79279a-d664-4650-a060-6841404351ec
+# BELOW ARE THE DIFFERENT MOVE METHODS TO SAMPLE THE BEADS
 
 # ╔═╡ 79df06b4-7044-4223-98c6-244b3e65dcab
 function Single(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
 	relabel_beads!(path)
 	
-	width = sqrt(path.λ * path.τ)
+	width = sqrt(2 * path.λ * path.τ)
 	shift = width .* randn(path.n_dimensions)
 	
 	old_action = 0.0
-	for bead in 1:path.n_beads
-		old_action += primitive_action(path, bead, particle, potentials)
-	end
+	old_action += primitive_action(path, 1, particle, potentials)
 	
 	path.beads[1, particle, :] += shift
 	
 	new_action = 0.0
-	for bead in 1:path.n_beads
-		new_action += primitive_action(path, bead, particle, potentials)
-	end
+	new_action += primitive_action(path, 1, particle, potentials)
 
 	if new_action - old_action <= 0.0
 		return true
@@ -247,24 +297,20 @@ end
 # ╔═╡ e1565060-d385-4837-9324-fc637a078c8e
 function Displace(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
 	
-	width = sqrt(path.λ * path.τ)
+	width = sqrt(2 * path.λ * path.τ)
 	shift = width .* randn(path.n_dimensions)
 
 	old_beads = copy(path.beads[:, particle, :])
 
 	old_action = 0.0
-	for bead in 1:path.n_beads
-		old_action += potential_action(path, bead, particle, potentials)
-	end
+	old_action += potential_action(path, 1, particle, potentials)
 
 	for bead in 1:path.n_beads
 		path.beads[bead, particle, :] += shift
 	end
 
 	new_action = 0.0
-	for bead in 1:path.n_beads
-		new_action = potential_action(path, bead, particle, potentials)
-	end
+	new_action = potential_action(path, 1, particle, potentials)
 
 	if new_action - old_action <= 0.0
 		return true
@@ -280,24 +326,30 @@ end
 function Staging(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
 	relabel_beads!(path)
 
+	# segment_length = 0.025 * path.n_beads > 1 ? Int(floor(0.025 * path.n_beads)) : 1
 	segment_length = 16
-
-	old_action = 0.0
-	for bead in 2:segment_length-1
-		old_action += potential_action(path, bead, particle, potentials)
+	
+	if segment_length == 1
+		return Single(path, particle, potentials)
 	end
 
 	old_beads = copy(path.beads[:, particle, :])
-	new_action = 0.0
+	old_action = 0.0
+	for bead in 2:segment_length
+		old_action += potential_action(path, bead, particle, potentials)
+	end
 
+	new_action = 0.0
 	for bead in 1:segment_length-1
 		staging_mass = (segment_length - bead + 1) / (segment_length - bead)
 		staging_position = (path.beads[1 + segment_length, particle, :] + path.beads[bead, particle, :] * (segment_length - bead)) / (segment_length - bead + 1)
-		path.beads[bead + 1, particle, :] += staging_position + randn(path.n_dimensions) * sqrt(path.τ / staging_mass)
+		path.beads[bead + 1, particle, :] = staging_position + randn(path.n_dimensions) * sqrt(path.τ / staging_mass)
 		new_action += potential_action(path, bead + 1, particle, potentials)
 	end
 
-	if rand() <= exp(-(new_action - old_action))
+	if new_action - old_action < 0.0
+		return true
+	elseif rand() < exp(-(new_action - old_action))
 		return true
 	else
 		path.beads[:, particle, :] = old_beads
@@ -305,36 +357,51 @@ function Staging(path::Path, particle::Int, potentials::Union{Potential, Array{P
 	end
 end
 
-# BROKEN!! LOOK AT PYTHON AND C++ CODE FOR IMPLEMENTING THIS, IT LOOKS A BIT DIFFERENT AND MAKE FIX IT!
-
 # ╔═╡ f7b6e17e-997d-4bee-b820-1af281199776
 function Bisection(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
 	relabel_beads!(path)
 
 	max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
+	# max_level = 3
 	clip_length = 2^max_level + 1
 
-	old_action = 0.0
-	for bead in 1:clip_length
-		old_action += primitive_action(path, bead, particle, potentials)
+	old_beads = copy(path.beads[:, particle, :])
+	
+	total_old_action = 0.0
+	for bead in 2:clip_length-1
+		total_old_action += potential_action(path, bead, particle, potentials)
 	end
 
+	old_action = 0.0
+	new_action = 0.0
 	for level in max_level:-1:1
 		step = 2^(level - 1)
-		shift = randn(path.n_dimensions) * sqrt(step * path.τ * path.λ)
-
-		old_action = 
-		
-		for n in 1:2^(max_level - level)
-			bead = 1 + n * step
-			old_action = primitive_action(path, bead, particle, potentials)
-			path.beads[bead, particle, :] = (path.beads[bead - step, particle, :] + path.beads[bead + step, particle, :]) / 2 + shift
+		ratio = 2^max_level / step
+		for interval in 1:2:ratio
+			bead = Int(1 + interval * 2^max_level / ratio)
+			old_action += potential_action(path, bead, particle, potentials)
+			shift_vector = randn(path.n_dimensions) * sqrt(step * path.τ * path.λ)
+			path.beads[bead, particle, :] = 0.5 * (path.beads[bead - step, particle, :] + path.beads[bead + step, particle, :]) + shift_vector
+			new_action += potential_action(path, bead, particle, potentials)
+		end
+		if rand() >= exp(-(new_action - old_action))
+			return false
 		end
 	end
-
-	old_action = primitive_action(path, 1, particle, potentials)
-
 	
+	total_new_action = 0.0
+	for bead in 2:clip_length-1
+		total_new_action += potential_action(path, bead, particle, potentials)
+	end
+
+	if total_new_action - total_old_action < 0.0
+		return true
+	elseif rand() < exp(-(total_new_action - total_old_action))
+		return true
+	else
+		path.beads[:, particle, :] = old_beads
+		return false
+	end
 end
 
 # ╔═╡ 8d8a2113-a6f7-4c40-b04e-8e8ca16a70b3
@@ -355,7 +422,7 @@ function draw_beads_3d(path, xlims, ylims, zlims)
 		push!(y, y[1])
 		push!(z, z[1])
 
-		plot!(p, x, y, z, linestyle = :dash, marker = :circle, label = "P $particle", legend = false, xlims = xlims, ylims = ylims, zlims = zlims)
+		plot!(p, x, y, z, marker = :circle, label = "P $particle", legend = false, xlims = xlims, ylims = ylims, zlims = zlims)
 	end
 	return p
 end
@@ -364,14 +431,14 @@ end
 begin
 	T = 1.0
 	λ = 0.5
-	n_beads = 50
+	n_beads = 100
 	τ = 1.0 / (T * n_beads)
 	n_particles = 1
 	path = Path(n_beads, n_particles, τ = τ, λ = λ)
 
-	n_steps = 50000
+	n_steps = 1000000
 	p_beads = copy(path.beads)
-	pimc = PIMC(n_steps, [Staging], path, HarmonicPotential(1.0))
+	pimc = PIMC(n_steps, [Single, Displace], [Energy, Correlation], path, HarmonicPotential(1.0))
 end
 
 # ╔═╡ 2c80c5f3-f09e-4c95-9667-f10b99260f92
@@ -380,30 +447,56 @@ equipartition_energy = 3/2 * T * n_particles
 # ╔═╡ 396be977-6266-4f1e-a9f9-bd1d3c03e6b7
 harmonic_potential_energy = 3.0 / 2.0 * coth(1.0 / 2.0 / T)
 
+# ╔═╡ 175e8ee7-61e3-465f-9199-aac81c55a751
+begin
+	R = 1 + 1/2 - sqrt(1 + 1/4)
+	harmonic_correlation = 1/2 * (1 + R^n_beads) / (1 - R^n_beads) / sqrt(1 + 1/4)
+end
+
+# ╔═╡ 56729323-ba5f-4a17-aa04-3fda516be1c4
+correlation = [c[i] for i in 1:n_beads, c in (pimc[3]["Correlation"])]
+
 # ╔═╡ 1eb914b1-b750-422e-81d9-d7264d484de7
-expectant_energy = mean(pimc[2])
+begin
+	expectant_energy = mean(pimc[3]["Energy"])
+	expectant_correlation = [mean(correlation[:, i]) for i in 1:n_beads]
+end
 
 # ╔═╡ 3ef58761-9e31-41ef-b9c1-eead8d99a86b
-expectant_energy_error = std(pimc[2]; corrected=true)
+begin
+	expectant_energy_error = std(pimc[3]["Energy"]; corrected=true)
+	expectant_correlation_error = std.(pimc[3]["Correlation"]; corrected=true)
+end
 
 # ╔═╡ 9821de4a-80de-4afe-9656-d62d6497ebf8
 begin
-	plot(pimc[2], label = "μ: $(round(expectant_energy, digits=2))")
-	plot!(repeat([expectant_energy], length(pimc[2])), ribbon = expectant_energy_error, fillalpha=0.3, linewidth = 2, color = :red, label = "σ: $(round(expectant_energy_error, digits=2))")
+	plot(pimc[3]["Energy"], label = "μ: $(round(expectant_energy, digits=2))")
+	plot!(repeat([expectant_energy], length(pimc[3]["Energy"])), ribbon = expectant_energy_error, fillalpha=0.3, linewidth = 2, color = :red, label = "σ: $(round(expectant_energy_error, digits=2))")
 	
+end
+
+# ╔═╡ 80a8d258-cee2-44bd-9073-52364b59dc10
+begin
+	plot(pimc[3]["Correlation"][1], label = "μ: $(round(expectant_correlation[1], digits=2))")
+	plot!(repeat([expectant_correlation[1]], length(pimc[3]["Correlation"][1])), ribbon = [1], fillalpha=0.3, linewidth = 2, color = :red, label = "σ: $(round(expectant_correlation_error[1], digits=2))")
+end
+
+# ╔═╡ 5bfafbea-3ddc-4a86-a76e-05284736cd1b
+begin
+	scatter(expectant_correlation)
 end
 
 # ╔═╡ 3129146b-3fe6-4f6d-915d-13592a5ea3d0
 begin
-	xlims = [minimum([minimum(x[:, :, 1]) for x in pimc[3]]), maximum([maximum(x[:, :, 1]) for x in pimc[3]])]
-	ylims = [minimum([minimum(x[:, :, 2]) for x in pimc[3]]), maximum([maximum(x[:, :, 2]) for x in pimc[3]])]
-	zlims = [minimum([minimum(x[:, :, 3]) for x in pimc[3]]), maximum([maximum(x[:, :, 3]) for x in pimc[3]])]
+	xlims = [minimum([minimum(x[:, :, 1]) for x in pimc[2]]), maximum([maximum(x[:, :, 1]) for x in pimc[2]])]
+	ylims = [minimum([minimum(x[:, :, 2]) for x in pimc[2]]), maximum([maximum(x[:, :, 2]) for x in pimc[2]])]
+	zlims = [minimum([minimum(x[:, :, 3]) for x in pimc[2]]), maximum([maximum(x[:, :, 3]) for x in pimc[2]])]
 end
 
 # ╔═╡ 045abaea-0323-4d5b-b61c-cfbd31f224b9
 # ╠═╡ disabled = true
 #=╠═╡
-anim = @animate for p in pimc[3]
+anim = @animate for p in pimc[2]
 	draw_beads_3d(p, xlims, ylims, zlims)
 end
   ╠═╡ =#
@@ -1312,8 +1405,12 @@ version = "0.9.1+5"
 # ╠═1977ff0e-4dbb-466a-a9e5-d34045e3f165
 # ╠═0128bab2-608a-438b-8374-e1adbe0e4e87
 # ╠═251a5bd3-0259-45e4-9dd1-dd983fab3837
-# ╠═af516d6c-f426-4162-9146-e162ee690b68
 # ╠═cd2f4580-5888-4dd2-880c-8548891b12a2
+# ╠═344dcc8f-dd27-41c5-922f-689a9a952d9e
+# ╠═af516d6c-f426-4162-9146-e162ee690b68
+# ╠═acf524a6-e609-46e3-a512-2f0821410954
+# ╠═ffe57e29-2106-4073-92e8-be539e38510e
+# ╠═de79279a-d664-4650-a060-6841404351ec
 # ╠═79df06b4-7044-4223-98c6-244b3e65dcab
 # ╠═e1565060-d385-4837-9324-fc637a078c8e
 # ╠═c8d6675b-6555-431a-a44f-3e0122b1cd62
@@ -1322,9 +1419,13 @@ version = "0.9.1+5"
 # ╠═79c04f64-64dd-498d-9d95-0f6802d3906d
 # ╠═2c80c5f3-f09e-4c95-9667-f10b99260f92
 # ╠═396be977-6266-4f1e-a9f9-bd1d3c03e6b7
+# ╠═175e8ee7-61e3-465f-9199-aac81c55a751
+# ╠═56729323-ba5f-4a17-aa04-3fda516be1c4
 # ╠═1eb914b1-b750-422e-81d9-d7264d484de7
 # ╠═3ef58761-9e31-41ef-b9c1-eead8d99a86b
 # ╠═9821de4a-80de-4afe-9656-d62d6497ebf8
+# ╠═80a8d258-cee2-44bd-9073-52364b59dc10
+# ╠═5bfafbea-3ddc-4a86-a76e-05284736cd1b
 # ╠═3129146b-3fe6-4f6d-915d-13592a5ea3d0
 # ╠═045abaea-0323-4d5b-b61c-cfbd31f224b9
 # ╠═288cc48b-d23b-457d-b92e-650bbf854dbe
