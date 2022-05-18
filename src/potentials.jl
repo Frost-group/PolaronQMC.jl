@@ -5,46 +5,6 @@ Collection of potentials to use in simulations.
 """
 
 """
-Defined Types for different potentials.
-"""
-
-# Most abstract Potential type.
-abstract type Potential end
-
-# A potential that is independent on bodies.
-abstract type NoBodyPotential <: Potential end
-
-# For potentials that depend on one body.
-abstract type OneBodyPotential <: Potential end
-
-# For potentials that depend on two bodies.
-abstract type TwoBodyPotential <: Potential end
-
-# A constant potential.
-struct ConstantPotential <: NoBodyPotential 
-    V :: Float64
-    function ConstantPotential(V::Float64)
-        new(V)
-    end
-end
-
-# A Harmonic potential for a single body.
-struct HarmonicPotential <: OneBodyPotential
-    ω :: Float64
-    function HarmonicPotential(ω::Float64)
-        new(ω)
-    end
-end
-
-# Coulomb interaction between two bodies.
-struct CoulombPotential <: TwoBodyPotential
-    κ :: Float64
-    function CoulombPotential(κ::Float64)
-        new(κ)
-    end
-end
-
-"""
 Outer constructors for different potential types.
 """
 
