@@ -17,9 +17,9 @@ export Single, Displace, Bisection, Staging
 # Export PIMC algorithm
 export Path, potential_action, kinetic_action, primitive_action, PIMC
 
+include("potentials.jl") # Potentials for QMC algorithms.
 include("PIMC.jl") # Path integrals Monte Carlo algorithm.
 include("moves.jl") # PIMC moves.
-include("potentials.jl") # Potentials for QMC algorithms.
 include("observables.jl") # Observables to sample.
 include("Schrodinger.jl") # discretised TISE solver
 

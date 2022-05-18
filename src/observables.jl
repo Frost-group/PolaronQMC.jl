@@ -12,8 +12,8 @@ function kinetic_energy(path::Path)
 	return prefactor * kinetic_energy / path.n_beads + path.n_dimensions * path.n_particles / (2 * path.τ)
 end
 
-function potential_energy(path::Path, potential::ZeroPotential)
-    return 0.0
+function potential_energy(path::Path, potential::ConstantPotential)
+    return potential.V
 end
 
 function potential_energy(path::Path, potential::OneBodyPotential)
