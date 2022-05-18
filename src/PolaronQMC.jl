@@ -13,7 +13,7 @@ using Plots
 export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, Simple_Regime, Primitive_Regime
 
 # Export types
-export Path, Potential, ZeroPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, CoulombPotential
+export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, CoulombPotential
 
 # Export potentials
 export one_body_potential, two_body_potential
