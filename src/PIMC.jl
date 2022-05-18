@@ -83,3 +83,35 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 
 end
 
+function primitive_action(path::Path, bead::Int, particle::Int, potentials::Array{Potential})
+    primitive_action = kinetic_action(path, bead, particle)
+    for potential in potentials
+        primitive_action += potential_action(path, bead, particle, potential)
+    end
+    return primitive_action
+end
+
+function PIMC(n_steps::Int, movers, path::Path, potentials::Union{Potential, Array{Potential}})
+	observable_skip = 0.001 * n_steps
+	equilibrium_skip = 0.2 * n_steps
+	n_accepted = Dict(string(Symbol(mover)) => 0 for mover in movers)
+	energy_trace = []
+	path_trace = []
+	for step in 1:n_steps
+
+		for mover in movers
+			for particle in rand(1:path.n_particles, path.n_particles)
+				n_accepted[string(Symbol(mover))] += mover(path, particle, potentials)
+			end
+		end
+
+		if mod(step, observable_skip) == 0 && step > equilibrium_skip
+			append!(energy_trace, total_energy(path, potentials))
+			append!(path_trace, [path.beads])
+		end
+	end
+
+	acceptance_ratio = Dict(string(Symbol(mover)) => 1.0 * n_accepted[string(Symbol(mover))] / (n_steps * path.n_particles) for mover in movers)
+
+	return acceptance_ratio, energy_trace, path_trace
+end
