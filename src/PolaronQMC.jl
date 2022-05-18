@@ -6,21 +6,21 @@ using Statistics
 using LinearAlgebra
 
 # Export types
-export Path, Potential, ZeroPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, CoulombPotential
+export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, CoulombPotential
 
 # Export potentials
 export one_body_potential, two_body_potential
 
 # Export observables
-export potential_energy, kinetic_energy
+export potential_energy, kinetic_energy, Energy, Correlation
 
 # Export PIMC move algorithms
 export Single, Displace, Bisection, Staging
 
 # Export PIMC algorithm
-export potential_action, kinetic_action, primitive_action, PIMC
+export potential_action, kinetic_action, primitive_action, PIMC, draw_beads_3d, animate_PIMC
 
-include("types.jl") # Types.
+include("types.jl") # Types. 
 include("potentials.jl") # Potentials for QMC algorithms.
 include("moves.jl") # PIMC moves.
 include("observables.jl") # Observables to sample.
