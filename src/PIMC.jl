@@ -32,8 +32,8 @@ function kinetic_action(path::Path, bead::Int, particle::Int)
 	return kinetic_action
 end
 
-function potential_action(path::Path, bead::Int, particle::Int, potential::ZeroPotential)
-    return 0.0
+function potential_action(path::Path, bead::Int, particle::Int, potential::ConstantPotential)
+    return potential.V
 end
 
 function potential_action(path::Path, bead::Int, particle::Int, potential::OneBodyPotential)
