@@ -1,22 +1,5 @@
 # PIMC.jl
 
-# Very generic path
-mutable struct Path
-	n_beads :: Int64
-	n_particles :: Int64
-	n_dimensions :: Int64
-
-	beads :: Array{Float64, 3}
-
-	τ :: Float64
-	λ :: Float64
-
-	function Path(n_beads::Int64, n_particles::Int64; n_dimensions::Int64 = 3, τ = 0.05, λ = 0.5)
-		beads = rand(n_beads, n_particles, n_dimensions)
-		new(n_beads, n_particles, n_dimensions, beads, τ, λ)
-	end
-end
-
 function relabel_beads!(path::Path)
 	rand_slice = rand(1:path.n_beads)
 	slices = vcat(rand_slice:path.n_beads, 1:rand_slice-1)
