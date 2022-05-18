@@ -2,11 +2,11 @@
 
 module PolaronQMC
 
-import Statistics
-import LinearAlgebra
+using Statistics
+using LinearAlgebra
 
 # Export potentials
-export one_body_potential, two_body_potential, Potential, OneBodyPotential, TwoBodyPotential, ZeroPotential, HarmonicPotential, CoulombPotential
+export one_body_potential, two_body_potential, Potential, ZeroPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, CoulombPotential
 
 # Export observables
 export potential_energy, kinetic_energy
