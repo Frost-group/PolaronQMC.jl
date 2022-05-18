@@ -50,7 +50,12 @@ end
 
 abstract type TwoBodyPotential <: Potential end
 
-struct ZeroPotential <: Potential end
+struct ZeroPotential <: Potential 
+    n :: Float64
+    function ZeroPotential()
+        new(0.0)
+    end
+end
 
 struct HarmonicPotential <: OneBodyPotential
     ω :: Float64
