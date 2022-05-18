@@ -48,16 +48,14 @@ end
 Outer constructors for different potential types.
 """
 
-
+# Just return value of potential for a constant potential independent of single particle.
+function one_body_potential(potential::ConstantPotential, path::Path, bead::Int, particle::Int)
+    return potential.V
+end
 
 # Return the harmonic potential for a single particle.
 function one_body_potential(potential::HarmonicPotential, path::Path, bead::Int, particle::Int)
     return 0.5 * potential.ω^2 * norm(path.beads[bead, particle, :])^2
-end
-
-# Just return value of potential for a constant potential independent of single particle.
-function one_body_potential(potential::ConstantPotential, path::Path, bead::Int, particle::Int)
-    return potential.V
 end
 
 # Just return value of potential for a constant potential independent of two particles.
