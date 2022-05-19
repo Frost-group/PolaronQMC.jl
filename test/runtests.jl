@@ -1,4 +1,4 @@
-using Halcyon
+using PolaronQMC
 
 using Test
 
@@ -12,5 +12,5 @@ nbeads=4
 nparticles=2
 spatialdimensions=1
 
-Halcyon.Path(nbeads, nparticles,  spatialdimensions=spatialdimensions)
+PolaronQMC.Path(nbeads, nparticles,  spatialdimensions=spatialdimensions)
 
