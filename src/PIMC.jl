@@ -97,15 +97,15 @@ function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{P
 	equilibrium_skip = 0.2 * n_steps
 	# equilibrium_skip = 0
 	
-	n_accepted = Dict(string(Symbol(mover)) => 0 for mover in movers)
+	n_accepted = Dict(string(Symbol(mover!)) => 0 for mover! in movers)
 	observable_traces = Dict(string(Symbol(observable)) => [] for observable in observables)
 	
 	path_trace = []
 	for step in 1:n_steps
 
-		for mover in movers
+		for mover! in movers
 			for particle in rand(1:path.n_particles, path.n_particles)
-				n_accepted[string(Symbol(mover))] += mover(path, particle, potentials)
+				n_accepted[string(Symbol(mover!))] += mover!(path, particle, potentials)
 			end
 		end
 
@@ -118,7 +118,7 @@ function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{P
 		
 	end
 
-	acceptance_ratio = Dict(string(Symbol(mover)) => 1.0 * n_accepted[string(Symbol(mover))] / (n_steps * path.n_particles) for mover in movers)
+	acceptance_ratio = Dict(string(Symbol(mover!)) => 1.0 * n_accepted[string(Symbol(mover!))] / (n_steps * path.n_particles) for mover! in movers)
 
 	return acceptance_ratio, path_trace, observable_traces
 end
