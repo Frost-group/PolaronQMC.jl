@@ -6,17 +6,9 @@ function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{P
 	width = sqrt(path.λ * path.τ)
 	shift = width .* randn(path.n_dimensions)
 	
-	old_action = 0.0
-	for bead in 1:path.n_beads
-		old_action += primitive_action(path, bead, particle, potentials)
-	end
-	
+    old_action = sum(primitive_action(path, path.n_beads, particle, potentials))
 	path.beads[1, particle, :] += shift
-	
-	new_action = 0.0
-	for bead in 1:path.n_beads
-		new_action += primitive_action(path, bead, particle, potentials)
-	end
+    new_action = sum(primitive_action(path, path.n_beads, particle, potentials))
 
 	if new_action - old_action <= 0.0
 		return true
@@ -34,20 +26,14 @@ function Displace!(path::Path, particle::Int, potentials::Union{Potential, Array
 	shift = width .* randn(path.n_dimensions)
 
 	old_beads = copy(path.beads[:, particle, :])
-
-	old_action = 0.0
-	for bead in 1:path.n_beads
-		old_action += potential_action(path, bead, particle, potentials)
-	end
-
+    
+    old_action = sum(primitive_action(path, path.n_beads, particle, potentials))
+	
 	for bead in 1:path.n_beads
 		path.beads[bead, particle, :] += shift
 	end
 
-	new_action = 0.0
-	for bead in 1:path.n_beads
-		new_action = potential_action(path, bead, particle, potentials)
-	end
+    new_action = sum(primitive_action(path, path.n_beads, particle, potentials))
 
 	if new_action - old_action <= 0.0
 		return true
