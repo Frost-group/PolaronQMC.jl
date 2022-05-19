@@ -3,6 +3,10 @@
 
 module PolaronQMCVisualisation
 
+import Plots, Pluto
+
+export draw_beads_3d, animate_PIMC
+
 function draw_beads_3d(path, xlims, ylims, zlims)
 
 	p = plot()
@@ -31,7 +35,7 @@ function animate_PIMC(pimc)
 	ylims = [minimum([minimum(x[:, :, 2]) for x in pimc[2]]), maximum([maximum(x[:, :, 2]) for x in pimc[2]])]
 	zlims = [minimum([minimum(x[:, :, 3]) for x in pimc[2]]), maximum([maximum(x[:, :, 3]) for x in pimc[2]])]
 
-	animation = @animate for p in pimc[2]
+	animation = Pluto.@animate for p in pimc[2]
 		draw_beads_3d(p, xlims, ylims, zlims)
 	end
 
