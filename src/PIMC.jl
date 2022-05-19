@@ -84,11 +84,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 end
 
 function primitive_action(path::Path, bead::Int, particle::Int, potentials::Array{Potential})
-    primitive_action = kinetic_action(path, bead, particle)
-    for potential in potentials
-        primitive_action += potential_action(path, bead, particle, potential)
-    end
-    return primitive_action
+    sum(kinetic_action(path, bead, particle), potential_action(path, bead, particle, potentials))
 end
 
 function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{Potential, Array{Potential}})
