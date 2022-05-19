@@ -58,3 +58,4 @@ struct CoulombPotential <: TwoBodyPotential
         new(κ)
     end
 end
+
