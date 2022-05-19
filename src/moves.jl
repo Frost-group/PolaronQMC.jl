@@ -1,6 +1,6 @@
 # moves.jl
 
-function Single(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
+function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
 	relabel_beads!(path)
 	
 	width = sqrt(path.λ * path.τ)
@@ -28,7 +28,7 @@ function Single(path::Path, particle::Int, potentials::Union{Potential, Array{Po
 	end
 end
 
-function Displace(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
+function Displace!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
 	
 	width = sqrt(path.λ * path.τ)
 	shift = width .* randn(path.n_dimensions)
@@ -59,7 +59,7 @@ function Displace(path::Path, particle::Int, potentials::Union{Potential, Array{
 	end
 end
 
-function Staging(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
+function Stage!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
 	relabel_beads!(path)
 
 	segment_length = 16
@@ -87,7 +87,7 @@ function Staging(path::Path, particle::Int, potentials::Union{Potential, Array{P
 	end
 end
 
-function Bisection(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
+function Bisect!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
 	relabel_beads!(path)
 
 	max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
@@ -113,3 +113,4 @@ function Bisection(path::Path, particle::Int, potentials::Union{Potential, Array
 
 	old_action = primitive_action(path, 1, particle, potentials)
 end
+

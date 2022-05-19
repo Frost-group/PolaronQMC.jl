@@ -62,3 +62,4 @@ function Correlation(path::Path, potential::Potential)
     end		
     return correlation ./ path.n_beads
 end
+
