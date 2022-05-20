@@ -21,3 +21,6 @@ using PolaronQMC
 #@testset "BenchmarkMoves.jl" begin include("BenchmarkMoves.jl") end
 
 
+@testset "BenchmarkMoves.jl" begin include("BenchmarkMoves.jl") end
+
+
