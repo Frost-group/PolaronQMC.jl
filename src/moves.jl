@@ -6,9 +6,9 @@ function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{P
 	width = sqrt(path.λ * path.τ)
 	shift = width .* randn(path.n_dimensions)
 	
-    old_action = sum(primitive_action(path, path.n_beads, particle, potentials))
+    old_action = sum([primitive_action(path, n, particle, potentials) for n in axes(path.beads,1)])
 	path.beads[1, particle, :] += shift
-    new_action = sum(primitive_action(path, path.n_beads, particle, potentials))
+    new_action = sum([primitive_action(path, n, particle, potentials) for n in axes(path.beads,1)])
 
 	if new_action - old_action <= 0.0
 		return true
