@@ -89,7 +89,7 @@ end
 
 function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{Potential, Array{Potential}})
 	
-	observable_skip = 0.001 * n_steps
+	observable_skip = n_steps / 100
 	equilibrium_skip = 0.2 * n_steps
 	# equilibrium_skip = 0
 	
