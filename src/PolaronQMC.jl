@@ -6,7 +6,7 @@ using Statistics
 using LinearAlgebra
 
 # Export types
-export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, CoulombPotential
+export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential
 
 # Export potentials
 export one_body_potential, two_body_potential

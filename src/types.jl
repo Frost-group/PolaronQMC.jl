@@ -51,6 +51,13 @@ struct HarmonicPotential <: OneBodyPotential
     end
 end
 
+struct MexicanHatPotential <: OneBodyPotential
+    ω :: Float64
+    function MexicanHatPotential(ω::Float64)
+        new(ω)
+    end
+end
+
 # Coulomb interaction between two bodies.
 struct CoulombPotential <: TwoBodyPotential
     κ :: Float64
