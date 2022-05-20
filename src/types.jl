@@ -1,5 +1,7 @@
 # types.jl
 
+using CircularArrays
+
 """
 Generic path mutable type
 """
@@ -8,13 +10,13 @@ mutable struct Path
 	n_particles :: Int64
 	n_dimensions :: Int64
 
-	beads :: Array{Float64, 3}
+	beads :: CircularArray{Float64, 3}
 
 	τ :: Float64
 	λ :: Float64
 
 	function Path(n_beads::Int64, n_particles::Int64; n_dimensions::Int64 = 3, τ = 0.05, λ = 0.5)
-		beads = rand(n_beads, n_particles, n_dimensions)
+        beads = CircularArray(rand(n_beads, n_particles, n_dimensions))
 		new(n_beads, n_particles, n_dimensions, beads, τ, λ)
 	end
 end
