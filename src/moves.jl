@@ -2,10 +2,11 @@
 
 function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
     m=rand(1:path.n_beads)
-
 	width = sqrt(path.λ * path.τ)
 	shift = width .* randn(path.n_dimensions)
-	
+
+    # We just need to look at the beads +- 1 unit from m
+    # CHECK: Non local potentials? Coulombic?
     old_action = sum([primitive_action(path, n, particle, potentials) for n in m-1:m+1])
 	path.beads[m, particle, :] += shift
     new_action = sum([primitive_action(path, n, particle, potentials) for n in m-1:m+1])
@@ -19,7 +20,6 @@ function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{P
 end
 
 function Displace!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
-	
 	width = sqrt(path.λ * path.τ)
 	shift = width .* randn(path.n_dimensions)
 
