@@ -2,7 +2,6 @@
 
 using CircularArrays
 
-
 """
 Regime for the simuation to run in
 """
