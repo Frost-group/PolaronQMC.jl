@@ -1,21 +1,19 @@
 # moves.jl
 
 function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
-	relabel_beads!(path)
-	
+    m=rand(1:path.n_beads)
+
 	width = sqrt(path.λ * path.τ)
 	shift = width .* randn(path.n_dimensions)
 	
-    old_action = sum([primitive_action(path, n, particle, potentials) for n in axes(path.beads,1)])
-	path.beads[1, particle, :] += shift
-    new_action = sum([primitive_action(path, n, particle, potentials) for n in axes(path.beads,1)])
+    old_action = sum([primitive_action(path, n, particle, potentials) for n in m-1:m+1])
+	path.beads[m, particle, :] += shift
+    new_action = sum([primitive_action(path, n, particle, potentials) for n in m-1:m+1])
 
-	if new_action - old_action <= 0.0
-		return true
-	elseif rand() <= exp(-(new_action - old_action))
+	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
 		return true
 	else
-		path.beads[1, particle, :] -= shift
+		path.beads[m, particle, :] -= shift
 		return false
 	end
 end
