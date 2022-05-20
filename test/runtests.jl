@@ -15,3 +15,6 @@ using PolaronQMC
 #PolaronQMC.Path(nbeads, nparticles,  spatialdimensions=spatialdimensions)
 @testset "SimpleIntegrationTest.jl" begin include("SimpleIntegrationTest.jl") end
 
+@testset "BenchmarkMoves.jl" begin include("BenchmarkMoves.jl") end
+
+
