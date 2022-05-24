@@ -9,14 +9,15 @@ end
 function kinetic_action(path::Path, bead::Int, particle::Int)
 	bead_before = mod1(bead - 1, path.n_beads)
 	bead_after = mod1(bead + 1, path.n_beads)
-	kinetic_action = (norm(path.beads[bead, particle, :] - path.beads[bead_before, particle, :])^2 + norm(path.beads[bead, particle, :] - path.beads[bead_after, particle, :])^2)
+	# kinetic_action = (norm(path.beads[bead, particle, :] - path.beads[bead_before, particle, :])^2 + norm(path.beads[bead, particle, :] - path.beads[bead_after, particle, :])^2)
+	kinetic_action = norm(path.beads[bead, particle, :] - path.beads[bead_after, particle, :])^2
 	kinetic_action /= (4 * path.λ * path.τ)
 	kinetic_action += 3.0 * path.n_particles / 2.0 * log(4π * path.λ * path.τ)
 	return kinetic_action
 end
 
 function potential_action(path::Path, bead::Int, particle::Int, potential::ConstantPotential)
-    return potential.V
+    return path.τ * potential.V
 end
 
 function potential_action(path::Path, bead::Int, particle::Int, potential::OneBodyPotential)
@@ -47,13 +48,17 @@ end
 
 function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{Potential, Array{Potential}})
 	
-	observable_skip = n_steps / 100
+	observable_skip = 10
 	equilibrium_skip = 0.2 * n_steps
 	# equilibrium_skip = 0
 	
 	n_accepted = Dict(string(Symbol(mover!)) => 0 for mover! in movers)
 	observable_traces = Dict(string(Symbol(observable)) => [] for observable in observables)
 	
+	for observable in observables
+		@eval $(Symbol(observable, "_statistics")) = Series(Trace(Mean()), Trace(AutoCov(0)))
+	end
+
 	path_trace = []
 	for step in 1:n_steps
 
@@ -64,9 +69,16 @@ function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{P
 		end
 
 		if mod(step, observable_skip) == 0 && step > equilibrium_skip
+			observable_plots = []
 			for observable in observables
-				append!(observable_traces[string(Symbol(observable))], [observable(path, potentials)])
+				@eval trace_symbol = $(Symbol(observable, "_statistics"))
+				trace_value = observable(path, potentials)
+				append!(observable_traces[string(Symbol(observable))], [trace_value])
+				fit!(trace_symbol, trace_value)
+				append!(observable_plots, [plot(trace_symbol, linestyle = :solid, title = "$observable")])
 			end
+			plot(observable_plots..., size = (1800, 600))
+			gui()
 			append!(path_trace, [path.beads])
 		end
 		
