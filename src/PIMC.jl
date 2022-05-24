@@ -89,9 +89,8 @@ end
 
 function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{Potential, Array{Potential}})
 	
-	observable_skip = 10
-	equilibrium_skip = 0.2 * n_steps
-	# equilibrium_skip = 0
+	observable_skip = 0.01 * n_steps
+	equilibrium_skip = 0.1 * n_steps
 	
 	n_accepted = Dict(string(Symbol(mover!)) => 0 for mover! in movers)
 	observable_traces = Dict(string(Symbol(observable)) => [] for observable in observables)
@@ -99,6 +98,9 @@ function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{P
 	for observable in observables
 		@eval $(Symbol(observable, "_statistics")) = Series(Trace(Mean()), Trace(AutoCov(0)))
 	end
+
+	ymax = maximum(path.beads[:, :, 1])
+	ymin = minimum(path.beads[:, :, 1])
 
 	path_trace = []
 	for step in 1:n_steps
@@ -118,9 +120,13 @@ function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{P
 				fit!(trace_symbol, trace_value)
 				append!(observable_plots, [plot(trace_symbol, linestyle = :solid, title = "$observable")])
 			end
-			plot(observable_plots..., size = (1800, 600))
-			gui()
 			append!(path_trace, [path.beads])
+			ymax = ymax < maximum(path.beads[:, :, 1]) ? maximum(path.beads[:, :, 1]) : ymax
+			ymin = ymin > minimum(path.beads[:, :, 1]) ? minimum(path.beads[:, :, 1]) : ymin
+			path_plot = plot(1:path.n_beads, path.beads[:, :, 1], ylabel = "x position", xlabel = "imaginary time", ylims = [ymin, ymax], title = "Path", marker = :circle, legend = false)
+			plot(observable_plots..., path_plot, size = (500, 500),  layout = @layout [a;b;c])
+			gui()
+			
 		end
 		
 	end
