@@ -4,6 +4,8 @@ module PolaronQMC
 
 using Statistics
 using LinearAlgebra
+using OnlineStats
+using Plots
 
 # Export types
 export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential
