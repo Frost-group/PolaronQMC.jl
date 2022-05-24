@@ -1,13 +1,10 @@
-# observables.jl
+# estimators.jl
 
-function kinetic_energy(path::Path)
+function kinetic_energy(path::Path, potential)
 	kinetic_energy = 0.0
-	prefactor = 1.0 / (4.0 * path.λ * path.τ^2)
-	for bead_one in 1:path.n_beads
-		bead_two = mod1(bead_one - 1, path.n_beads)
-		for particle in 1:path.n_particles
-			kinetic_energy -= norm(path.beads[bead_one, particle, :] - path.beads[bead_two, particle, :])^2
-		end
+	prefactor = 1.0 / (4.0 * path.λ * path.τ)
+	for bead in 1:path.n_beads, particle in 1:path.n_particles
+		kinetic_energy += norm(path.beads[bead, particle, :] - path.beads[bead-1, particle, :])^2
 	end
 	return prefactor * kinetic_energy / path.n_beads + path.n_dimensions * path.n_particles / (2 * path.τ)
 end

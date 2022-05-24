@@ -1,20 +1,29 @@
 # moves.jl
 
 function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
-    m=rand(1:path.n_beads)
+    bead = rand(1:path.n_beads)
 	width = sqrt(path.λ * path.τ)
-	shift = width .* randn(path.n_dimensions)
+	shift = width .* (2 .* rand(path.n_dimensions) .- 1)
 
     # We just need to look at the beads +- 1 unit from m
     # CHECK: Non local potentials? Coulombic?
-    old_action = sum([primitive_action(path, n, particle, potentials) for n in m-1:m+1])
-	path.beads[m, particle, :] += shift
-    new_action = sum([primitive_action(path, n, particle, potentials) for n in m-1:m+1])
+    old_action = 
+		kinetic_action(path, bead-1, bead, particle) +		# Link bead-1 to bead
+		kinetic_action(path, bead, bead+1, particle) +		# Link bead to bead+1
+		potential_action(path, bead, particle, potentials)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+
+	path.beads[bead, particle, :] += shift
+
+    new_action =
+		kinetic_action(path, bead-1, bead, particle) +		# Link bead-1 to bead
+		kinetic_action(path, bead, bead+1, particle) +		# Link bead to bead+1
+		potential_action(path, bead, particle, potentials)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+
 
 	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
 		return true
 	else
-		path.beads[m, particle, :] -= shift
+		path.beads[bead, particle, :] -= shift
 		return false
 	end
 end
@@ -25,13 +34,13 @@ function Displace!(path::Path, particle::Int, potentials::Union{Potential, Array
 
 	old_beads = copy(path.beads[:, particle, :])
     
-    old_action = sum(primitive_action(path, path.n_beads, particle, potentials))
+    old_action = sum(potential_action(path, bead, particle, potentials) for bead in 1:path.n_beads)
 	
 	for bead in 1:path.n_beads
 		path.beads[bead, particle, :] += shift
 	end
 
-    new_action = sum(primitive_action(path, path.n_beads, particle, potentials))
+    new_action = sum(potential_action(path, bead, particle, potentials) for bead in 1:path.n_beads)
 
 	if new_action - old_action <= 0.0
 		return true
