@@ -6,7 +6,7 @@ function kinetic_energy(path::Path, potential)
 	for bead in 1:path.n_beads, particle in 1:path.n_particles
 		kinetic_energy += norm(path.beads[bead, particle, :] - path.beads[bead-1, particle, :])^2
 	end
-	return prefactor * kinetic_energy / path.n_beads + path.n_dimensions * path.n_particles / (2 * path.τ)
+	return prefactor * kinetic_energy / path.n_beads + path.n_dimensions * path.n_particles / (2 * path.τ) / path.n_beads
 end
 
 function potential_energy(path::Path, potential::ConstantPotential)

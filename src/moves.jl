@@ -2,7 +2,7 @@
 
 function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
     bead = rand(1:path.n_beads)
-	width = sqrt(path.λ * path.τ)
+	width = sqrt(4 * path.λ * path.τ)
 	shift = width .* (2 .* rand(path.n_dimensions) .- 1)
 
     # We just need to look at the beads +- 1 unit from m
@@ -29,7 +29,7 @@ function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{P
 end
 
 function Displace!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
-	width = sqrt(path.λ * path.τ)
+	width = sqrt(4 * path.λ * path.τ)
 	shift = width .* randn(path.n_dimensions)
 
 	old_beads = copy(path.beads[:, particle, :])
