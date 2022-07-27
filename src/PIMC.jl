@@ -89,8 +89,8 @@ end
 
 function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{Potential, Array{Potential}}; n_particles = 1, visual = true)
 	
-	observable_skip = 0.01 * n_steps
-	equilibrium_skip = 0.1 * n_steps
+	observable_skip = 0.001 * n_steps
+	equilibrium_skip = 0.0 * n_steps
 	
 	n_accepted = Dict(string(Symbol(mover!)) => 0 for mover! in movers)
 	
@@ -130,7 +130,7 @@ function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{P
 				ymax = ymax < maximum(path.beads[:, :, 1]) ? maximum(path.beads[:, :, 1]) : ymax
 				ymin = ymin > minimum(path.beads[:, :, 1]) ? minimum(path.beads[:, :, 1]) : ymin
 				path_plot = plot(1:path.n_beads, path.beads[:, :, 1], grid = false, ylabel = "x position", xlabel = "imaginary time", ylims = [ymin, ymax], title = "Path", marker = :circle, legend = false)
-				plot(observable_plots..., path_plot, size = (500, 500),  layout = @layout [a;b;c])
+				plot(observable_plots..., path_plot, size = (1000, 500))
 				gui()
 			end
 		end

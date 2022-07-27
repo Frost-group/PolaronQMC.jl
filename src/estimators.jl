@@ -149,12 +149,13 @@ end
 
 function potential_energy(path::Path, potential::TwoBodyPotential, estimator::Thermodynamic_Estimator)
     potential_energy = 0.0
-    for bead in 1:path.n_beads, particle_one in 1:path.n_particles, particle_two in 1:path.n_particles
+    bead = rand(1:path.n_beads)
+    for particle_one in 1:path.n_particles, particle_two in 1:path.n_particles
         if particle_one != particle_two
             potential_energy += two_body_potential(potential, path, bead, particle_one, particle_two)
         end
     end
-    return potential_energy / path.n_beads
+    return potential_energy
 end
 
 
