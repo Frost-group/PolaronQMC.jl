@@ -98,6 +98,10 @@ function potential_action(path::Path, bead::Int, particle::Int, potentials::Arra
     sum(potential_action(path, bead, particle, potential) for potential in potentials)
 end
 
+function primitive_inter_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, potential::Potential)
+    (potential_action(path, bead_one, particle, potential) + potential_action(path, bead_two, particle, potential)) / 2
+end
+
 """
     primitive_action(path::Path, bead_one::Int, bead_two::Int, particles::Int, potential::Potential)
 
@@ -113,11 +117,7 @@ Usually, these are neighbouring beads.
 See also [`Path`](@ref), [`kinetic_action`](@ref), [`potential_action`](@ref). 
 """
 function primitive_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, potential::Potential)
-
-    # Inter-action, the difference between the exact and kinetic actions, for a given particle.
-    inter_action = (potential_action(path, bead_one, particle, potential) + potential_action(path, bead_two, particle, potential)) / 2
-    
-    return kinetic_action(path, bead_one, bead_two, particle) + inter_action
+    kinetic_action(path, bead_one, bead_two, particle) + primitive_inter_action(path, bead_one, bead_two, particle, potential)
 end
 
 """
@@ -136,9 +136,5 @@ This groups together all the potentials that are active in the system.
 See also [`Path`](@ref), [`kinetic_action`](@ref), [`potential_action`](@ref). 
 """
 function primitive_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, potentials::Array{Potential})
-
-    # Inter-action, the difference between the exact and kinetic actions, for a given particle.
-    inter_action = sum(potential_action(path, bead_one, particle, potential) + potential_action(path, bead_two, particle, potential) for potential in potentials) / 2
-    
-    return kinetic_action(path, bead_one, bead_two, particle) + inter_action
+    kinetic_action(path, bead_one, bead_two, particle) + sum(primitive_inter_action(path, bead_one, bead_two, particle, potential) for potential in potentials)
 end
