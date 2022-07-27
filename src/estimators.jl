@@ -1,6 +1,6 @@
 # estimators.jl
 
-function kinetic_energy(path::Path, potential)
+function kinetic_energy(path::Path, potentials)
 	kinetic_energy = 0.0
 	prefactor = 1.0 / (4.0 * path.λ * path.τ)
 	for bead in 1:path.n_beads, particle in 1:path.n_particles
@@ -40,11 +40,11 @@ function potential_energy(path::Path, potentials::Array{Potential})
 end
 
 function Energy(path::Path, potential::Potential)
-    return kinetic_energy(path) + potential_energy(path, potential)
+    return kinetic_energy(path, potentials) + potential_energy(path, potential)
 end
 
 function Energy(path::Path, potentials::Array{Potential})
-    total_energy = kinetic_energy(path)
+    total_energy = kinetic_energy(path, potentials)
     for potential in potentials
         total_energy += potential_energy(path, potential)
     end
