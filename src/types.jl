@@ -53,6 +53,7 @@ struct HarmonicPotential <: OneBodyPotential
     end
 end
 
+# Mexican Hat potential for a single body.
 struct MexicanHatPotential <: OneBodyPotential
     ω :: Float64
     function MexicanHatPotential(ω::Float64)

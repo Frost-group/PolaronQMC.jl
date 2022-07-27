@@ -6,7 +6,7 @@ function relabel_beads!(path::Path)
 	path.beads = path.beads[slices, :, :]
 end
 
-function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{Potential, Array{Potential}}; visual = true)
+function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{Potential, Array{Potential}}; n_particles = 1, visual = true)
 	
 	observable_skip = 0.01 * n_steps
 	equilibrium_skip = 0.1 * n_steps
@@ -26,7 +26,7 @@ function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{P
 	for step in 1:n_steps
 
 		for mover! in movers
-			for particle in rand(1:path.n_particles, path.n_particles)
+			for particle in rand(1:path.n_particles, n_particles)
 				n_accepted[string(Symbol(mover!))] += mover!(path, particle, potentials)
 			end
 		end
@@ -55,7 +55,7 @@ function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{P
 		end
 	end
 
-	acceptance_ratio = Dict(string(Symbol(mover!)) => 1.0 * n_accepted[string(Symbol(mover!))] / (n_steps * path.n_particles) for mover! in movers)
+	acceptance_ratio = Dict(string(Symbol(mover!)) => 1.0 * n_accepted[string(Symbol(mover!))] / (n_steps * n_particles) for mover! in movers)
 	
 	returns = [acceptance_ratio, path_trace]
 

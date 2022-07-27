@@ -1,53 +1,85 @@
 # moves.jl
 
+"""
+	Single!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
+
+Move a single imaginary-time timeslice (bead) on a single particle, or subset of particles, per Monte-Carlo iteration.
+
+# Arguments
+- `path::Path`: collection of all particle imaginary-time paths.
+- `particle::Union{Int, Vector{Int}}`: select a specific particle indexed by this integer, or a subset of particles indexed by integers in this vector.
+- `potentials::Union{Potential, Array{Potential}}`: list of potentials active in the system. Can just be a single potential.
+
+See also [`Path`](@ref).
+"""
 function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
-    bead = rand(1:path.n_beads)
-	width = sqrt(4 * path.λ * path.τ)
-	shift = width .* (2 .* rand(path.n_dimensions) .- 1)
+    bead = rand(1:path.n_beads)								# Pick a random bead.
+	width = sqrt(4 * path.λ * path.τ)						# Displacement width. ~Order(thermal de Broglie wavelength). Adjust for ~50% acceptance rate.
+	shift = width .* (2 .* rand(path.n_dimensions) .- 1)	# Linear random displacement of bead.	
 
-    # We just need to look at the beads +- 1 unit from m
-    # CHECK: Non local potentials? Coulombic?
-    old_action = 
-		kinetic_action(path, bead-1, bead, particle) +		# Link bead-1 to bead
-		kinetic_action(path, bead, bead+1, particle) +		# Link bead to bead+1
-		potential_action(path, bead, particle, potentials)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+	# Save configuration of paths. Return to this configuration if Metropolis rejects the new configuration.
+	old_beads = copy(path.beads[:, particle, :])
 
+    # Evaluate action for links connected to selected bead for specified particle. I.e bead-1 to bead and bead to bead+1.
+    old_action = 														
+		primitive_action(path, bead-1, bead, particle, potentials) +	# Link bead-1 to bead.
+		primitive_action(path, bead, bead+1, particle, potentials)		# Link bead to bead+1.
+
+	# Displace the bead for specified particle.
 	path.beads[bead, particle, :] += shift
 
-    new_action =
-		kinetic_action(path, bead-1, bead, particle) +		# Link bead-1 to bead
-		kinetic_action(path, bead, bead+1, particle) +		# Link bead to bead+1
-		potential_action(path, bead, particle, potentials)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+	# Evaluate new action.
+    new_action =														
+		primitive_action(path, bead-1, bead, particle, potentials) +	# Link bead-1 to bead.
+		primitive_action(path, bead, bead+1, particle, potentials)		# Link bead to bead+1.
 
-
+	# Metropolis algorithm. 
+	# Accept if bead displacement decreases the action, otherwise accept with probability exp(-ΔAction).
 	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
 		return true
 	else
-		path.beads[bead, particle, :] -= shift
+		path.beads[bead, particle, :] = old_beads	# Displacement rejected so return bead to prior position.
 		return false
 	end
 end
 
-function Displace!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
-	width = sqrt(4 * path.λ * path.τ)
-	shift = width .* randn(path.n_dimensions)
+"""
+	Displace!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
 
-	old_beads = copy(path.beads[:, particle, :])
+Move the entire imaginary-time timeslice (all the beads) on a single particle, or subset of particles, by the same vector per Monte-Carlo iteration.
+
+# Arguments
+- `path::Path`: collection of all particle imaginary-time paths.
+- `particle::Union{Int, Vector{Int}}`: select a specific particle indexed by this integer, or a subset of particles indexed by integers in this vector.
+- `potentials::Union{Potential, Array{Potential}}`: list of potentials active in the system. Can just be a single potential.
+
+See also [`Path`](@ref).
+"""
+function Displace!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
+	width = sqrt(4 * path.λ * path.τ)			# Displacement width. ~O(thermal de Broglie wavelength). Adjust for ~50% acceptance rate.
+	shift = width .* randn(path.n_dimensions)	# Normally distributed random displacement of particle.
+
+	# Save configuration of paths. Return to this configuration if Metropolis rejects the new configuration.
+	old_beads = copy(path.beads[:, particles, :])
     
-    old_action = sum(potential_action(path, bead, particle, potentials) for bead in 1:path.n_beads)
+	# Evaluate old action. 
+	# The kinetic action is unchanged because the relative bead positions are preserved, so we only need to evaluate the potential action at each bead.
+    old_action = sum(potential_action(path, bead, particles, potentials) for bead in 1:path.n_beads)
 	
+	# Displace every bead on each specified particle by the same random vector.
 	for bead in 1:path.n_beads
 		path.beads[bead, particle, :] += shift
 	end
 
-    new_action = sum(potential_action(path, bead, particle, potentials) for bead in 1:path.n_beads)
+	# Evaluate new action.
+    new_action = sum(potential_action(path, bead, particles, potentials) for bead in 1:path.n_beads)
 
-	if new_action - old_action <= 0.0
-		return true
-	elseif rand() <= exp(-(new_action - old_action))
+	# Metropolis algorithm.
+	# Accept if bead displacements decreases the potential action, otherwise accept with probability exp(-ΔPotentialAction).
+	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
 		return true
 	else
-		path.beads[:, particle, :] = old_beads
+		path.beads[:, particle, :] = old_beads	# New path configuration rejected, return to old configuration.
 		return false
 	end
 end
