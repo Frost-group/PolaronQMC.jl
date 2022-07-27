@@ -79,5 +79,3 @@ plot(worldline, energyplot, layout = (2,1), legend = false)
 
 
 end
-
-#Testing new estimators
