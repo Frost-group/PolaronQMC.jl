@@ -11,7 +11,14 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 	#observable_skip = 0.01 * n_steps
 	#equilibrium_skip = 0.1 * n_steps
 	
-	n_accepted = Dict(string(Symbol(mover!)) => 0 for mover! in movers)
+	acceptance_array = Dict()
+	attempted_array = Dict()
+	for mover in movers[1]
+		acceptance_array[string(Symbol(mover))] = 0
+		attempted_array[string(Symbol(mover))] = 0
+	end
+
+
 	output_observables = Dict()
 
 	#generating lists for output
@@ -22,11 +29,17 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 
 	path_trace = []
 	for step in 1:n_steps
+		if step == 0.5*n_steps
+			println("50% complete")
+		end
 
 		#updating n_accepted with yes or no, and moving beads
-		for mover! in movers
-			for particle in rand(1:path.n_particles, path.n_particles)
-				n_accepted[string(Symbol(mover!))] += mover!(path, particle, potential, regime)
+		for particle in rand(1:path.n_particles, path.n_particles)
+			for mover_index in 1:length(movers[1])
+				if movers[2][mover_index] > rand()
+					attempted_array[string(Symbol(movers[1][mover_index]))] += 1
+					acceptance_array[string(Symbol(movers[1][mover_index]))] += movers[1][mover_index](path, particle, potential, regime)
+				end
 			end
 		end
 
@@ -43,10 +56,14 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 		end
 	end
 
-	acceptance_ratio = Dict(string(Symbol(mover!)) => 1.0 * n_accepted[string(Symbol(mover!))] / (n_steps * path.n_particles) for mover! in movers)
+	acceptance_ratio = Dict()
+
+	for mover in movers[1]
+		acceptance_ratio[string(Symbol(mover))] = acceptance_array[string(Symbol(mover))] / attempted_array[string(Symbol(mover))] 
+	end
 	
 	
-	return [acceptance_ratio, output_observables]
+	return [attempted_array, acceptance_ratio, output_observables]
 
 end
 
