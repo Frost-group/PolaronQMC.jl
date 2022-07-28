@@ -3,10 +3,13 @@ using Statistics
 using ThreadsX
 
 function kinetic_energy(path::Path, potentials)
-    bead = rand(1:path.n_beads)
 	prefactor = -1.0 / (4.0 * path.λ * path.τ^2)
-	kinetic_energy = sum(norm(path.beads[bead, particle, :] - path.beads[bead-1, particle, :])^2 for particle in 1:path.n_particles)
-	return prefactor * kinetic_energy + path.n_dimensions * path.n_particles / (2 * path.τ)
+	kinetic_energy = sum(
+        norm(path.beads[bead, particle, :] - path.beads[bead-1, particle, :])^2 
+        for bead in 1:path.n_beads, 
+            particle in 1:path.n_particles
+            )
+	return prefactor * kinetic_energy / path.n_beads + path.n_dimensions * path.n_particles / (2 * path.τ) 
 end
 
 
@@ -126,9 +129,12 @@ function potential_energy(path::Path, potential::ConstantPotential, estimator::T
 end
 
 function potential_energy(path::Path, potential::OneBodyPotential)
-    bead = rand(1:path.n_beads)
-    potential_energy = sum(one_body_potential(potential, path, bead, particle) for particle in 1:path.n_particles)
-    return potential_energy
+    potential_energy = sum(
+        one_body_potential(potential, path, bead, particle) 
+        for bead in 1:path.n_beads,
+            particle in 1:path.n_particles
+            )
+    return potential_energy / path.n_beads
 end
 
 function potential_energy(path::Path, potential::TwoBodyPotential)
@@ -153,8 +159,15 @@ function Energy(path::Path, potentials::Array{Potential})
     return total_energy
 end
 
+function Virial_Energy(path::Path, potential::Potential; window_size = 1)
+    window_size = path.n_beads
+    total_energy = path.n_dimensions * path.n_particles / (2 * window_size * path.τ * path.n_beads)
+    general_force = 0.0
+    for bead in 1:path.n_beads, particle in 1:path.n_particles
+        general_force -= primit
+    end
 
-# Correlation ---------------------------------------------------------------------
+end
 
 function Correlation(path::Path, potential::Potential, estimator::Estimator)
     correlation = Vector{Float64}(undef, path.n_beads)
