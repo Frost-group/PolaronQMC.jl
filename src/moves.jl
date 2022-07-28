@@ -12,9 +12,9 @@ Move a single imaginary-time timeslice (bead) on a single particle, or subset of
 
 See also [`Path`](@ref).
 """
-function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
+function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}}; scale = 4.0)
     bead = rand(1:path.n_beads)								# Pick a random bead.
-	width = sqrt(2 * path.λ * path.τ)						# Displacement width. ~Order(thermal de Broglie wavelength). Adjust for ~50% acceptance rate.
+	width = sqrt(scale * path.λ * path.τ)						# Displacement width. ~Order(thermal de Broglie wavelength). Adjust for ~50% acceptance rate.
 	shift = width .* (2 .* rand(path.n_dimensions) .- 1)	# Linear random displacement of bead.	
 
 	# Save configuration of paths. Return to this configuration if Metropolis rejects the new configuration.
@@ -35,7 +35,7 @@ function Single!(path::Path, particle::Int, potentials::Union{Potential, Array{P
 
 	# Metropolis algorithm. 
 	# Accept if bead displacement decreases the action, otherwise accept with probability exp(-ΔAction).
-	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
+	if rand() < minimum([1,exp(-(new_action - old_action))])
 		return true
 	else
 		path.beads[bead, particle, :] = old_beads	# Displacement rejected so return bead to prior position.
@@ -55,8 +55,8 @@ Move the entire imaginary-time timeslice (all the beads) on a single particle, o
 
 See also [`Path`](@ref).
 """
-function Displace!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
-	width = sqrt(150 * path.λ * path.τ)			# Displacement width. ~O(thermal de Broglie wavelength). Adjust for ~50% acceptance rate.
+function Displace!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}}; scale = 4.0)
+	width = sqrt(scale * path.λ * path.τ)			# Displacement width. ~O(thermal de Broglie wavelength). Adjust for ~50% acceptance rate.
 	shift = width .* randn(path.n_dimensions)	# Normally distributed random displacement of particle.
 
 	# Save configuration of paths. Return to this configuration if Metropolis rejects the new configuration.
@@ -76,7 +76,7 @@ function Displace!(path::Path, particle::Int, potentials::Union{Potential, Array
 
 	# Metropolis algorithm.
 	# Accept if bead displacements decreases the potential action, otherwise accept with probability exp(-ΔPotentialAction).
-	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
+	if rand() < minimum([1,exp(-(new_action - old_action))])
 		return true
 	else
 		path.beads[:, particle, :] = old_beads	# New path configuration rejected, return to old configuration.

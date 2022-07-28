@@ -6,11 +6,8 @@ function relabel_beads!(path::Path)
 	path.beads = path.beads[slices, :, :]
 end
 
-function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{Potential, Array{Potential}}; n_particles = 1, visual = true)
-	
-	observable_skip = 0.001 * n_steps
-	equilibrium_skip = 0.0 * n_steps
-	
+function PIMC(n_steps::Int, path::Path, movers, observables, potentials::Union{Potential, Array{Potential}}; n_particles = 1, observable_skip = 10, equilibrium_skip = 1000, visual = true)
+		
 	n_accepted = Dict(string(Symbol(mover!)) => 0 for mover! in movers)
 	
 	for observable in observables
