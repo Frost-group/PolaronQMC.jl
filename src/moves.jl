@@ -7,7 +7,7 @@
 function Single!(path::Path, particle::Int, potential::Potential, regime::Regime)
     bead = rand(1:path.n_beads)
 	width = sqrt(4 * path.λ * path.τ)/2
-	shift = width * rand([-1,1])
+	shift = width * rand([-1,1]) * rand()
 
     # We just need to look at the beads +- 1 unit from m
     # CHECK: Non local potential? Coulombic?
@@ -25,10 +25,10 @@ function Single!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 
 	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
-		return 1.0
+		return true
 	else
 		path.beads[bead, particle] -= shift
-		return 0.0
+		return false
 	end
 end
 
@@ -50,12 +50,12 @@ function Displace!(path::Path, particle::Int, potential::Potential, regime::Regi
     new_action = sum(potential_action(path, bead, particle, potential, regime) for bead in 1:path.n_beads)
 
 	if new_action - old_action <= 0.0
-		return 1.0
+		return true
 	elseif rand() <= exp(-(new_action - old_action))
-		return 1.0
+		return true
 	else
 		path.beads[:, particle] = old_beads
-		return 0.0
+		return false
 	end
 end
 

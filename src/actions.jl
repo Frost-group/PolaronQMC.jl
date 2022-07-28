@@ -35,8 +35,7 @@
 
     function kinetic_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::Primitive_Regime)
         kinetic_action = (path.beads[bead_two, particle] - path.beads[bead_one, particle])^2 / (4 * path.λ * path.τ)
-        kinetic_action += 1.0 * path.n_particles * path.n_beads / 2.0 * log(4π * path.λ * path.τ) #used to have n beads term, why?
-        #kinetic_action += 1.0 * path.n_particles / 2.0 * log(4π * path.λ * path.τ) #used to have n beads term, why?
+        kinetic_action += 1.0 * path.n_particles / 2.0 * log(4π * path.λ * path.τ) #used to have n beads term, why?
         return kinetic_action
     end
 
