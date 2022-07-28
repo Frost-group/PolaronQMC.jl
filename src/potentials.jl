@@ -24,7 +24,7 @@ function one_body_potential(potential::FrohlichPotential, path::Path, bead::Int,
     phonon_response(other_bead) = cosh(ω * path.τ * (abs(bead - other_bead) - path.n_beads / 2.0)) / sinh(ω * path.τ * path.n_beads / 2.0)
     double_integral = 0.0
     for other_bead in 1:path.n_beads
-        if other_beaterd != bead
+        if other_bead != bead
             double_integral += phonon_response(other_bead) / norm(path.beads[bead, particle] .- path.beads[other_bead, particle])
         end
     end

@@ -43,7 +43,7 @@ mutable struct Path
 	λ :: Float64
 
 	function Path(n_beads::Int64, n_particles::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 1.0)
-        beads = CircularArray(rand(n_beads, n_particles)*rand([-1,1])*start_range)
+        beads = CircularArray(rand(n_beads, n_particles).*rand([-1,1],3)*start_range)
 		new(n_beads, n_particles, beads, τ, m, λ)
 	end
 end
