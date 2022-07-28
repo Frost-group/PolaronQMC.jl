@@ -8,6 +8,5 @@ function analytic_energy_harmonic(potential::HarmonicPotential, β::Float64, ħ:
 end
 
 
-function average_position(path,particle)
-    for i in 1:path.n_beads
+
            

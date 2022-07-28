@@ -6,7 +6,7 @@
 #Sampling method of moving single beads individually
 function Single!(path::Path, particle::Int, potential::Potential, regime::Regime)
     bead = rand(1:path.n_beads)
-	width = sqrt(4 * path.λ * path.τ)/2
+	width = sqrt(4 * path.λ * path.τ)
 	shift = width * rand([-1,1]) * rand()
 
     # We just need to look at the beads +- 1 unit from m
@@ -36,7 +36,7 @@ end
 
 
 function Displace!(path::Path, particle::Int, potential::Potential, regime::Regime)
-	width = sqrt(4 * path.λ * path.τ)/2
+	width = sqrt(4 * path.λ * path.τ)*10
 	shift = width * rand([-1,1])
 
 	old_beads = copy(path.beads[:, particle])

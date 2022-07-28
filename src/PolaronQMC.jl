@@ -23,11 +23,14 @@ export Single!, Displace!, Bisect!, Stage!
 # Export actions
 export potential_action, kinetic_action, primitive_action
 
+# Export simulation run code (PIMC)
+export PIMC
+
 # Export values for comparison
 export analytic_energy_harmonic
 
-# Export simulation run code (PIMC)
-export PIMC
+# Export error analysis
+export jackknife
 
 
 
@@ -42,6 +45,7 @@ include("potentials.jl") # Potentials for QMC algorithms.
 include("moves.jl") # PIMC moves.
 include("estimators.jl") # Estimators to sample.
 include("PIMC.jl") # Path integrals Monte Carlo algorithm.
+include("errors.jl") # Methods for analysing errors.
 #include("Schrodinger.jl") # discretised TISE solver
 
 end # module

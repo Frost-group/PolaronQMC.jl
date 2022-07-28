@@ -16,7 +16,7 @@ begin
     T = 1.0
     λ = 0.5
     m = 1.0
-    n_beads = 100
+    n_beads = 500
     τ = 1.0 / (T * n_beads)
     n_particles = 1
     start_range = 1.0
@@ -27,10 +27,10 @@ begin
     β = 1/T
 
     #for pimc
-    n_steps = 100
+    n_steps = 200000
     equilibrium_skip = 0.1*n_steps
     observables_skip = 0.01*n_steps
-    movers = [Displace!]
+    movers = [[Single!,Displace!],[1.0,0.1]]
     observables = [Energy]
     
     #potential type
@@ -39,7 +39,7 @@ begin
     #estimator type
         #estimator = Simple_Estimator()
         #estimator = Thermodynamic_Estimator()
-        estimator = Virial_Estimator(n_beads)
+        estimator = Virial_Estimator(100)
 
     #regime type
         regime = Primitive_Regime()
@@ -55,6 +55,7 @@ output_observables = pimc[2]
 
 energy = output_observables["Energy"]
 analytic_energy = analytic_energy_harmonic(potential,β,ħ)
+errors = sqrt(jackknife(energy))
 
 
 #post analysis
@@ -62,7 +63,7 @@ analytic_energy = analytic_energy_harmonic(potential,β,ħ)
 println("acceptance ratio -", acceptance_ratio)
 println("Mean energy = ", mean(energy))
 println("analytic energy = ", analytic_energy)
-println("average position = ", mean(path.beads[:,1]))
+println("Energy errors = ", errors)
 
 
 #Plots

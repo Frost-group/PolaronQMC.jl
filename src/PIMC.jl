@@ -63,7 +63,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 	end
 	
 	
-	return [attempted_array, acceptance_ratio, output_observables]
+	return [acceptance_ratio, output_observables]
 
 end
 
