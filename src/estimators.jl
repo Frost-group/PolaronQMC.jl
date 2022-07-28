@@ -1,12 +1,9 @@
 # estimators.jl
 
 function kinetic_energy(path::Path, potentials)
-	kinetic_energy = 0.0
     bead = rand(1:path.n_beads)
 	prefactor = -1.0 / (4.0 * path.λ * path.τ^2)
-	for particle in 1:path.n_particles
-		kinetic_energy += norm(path.beads[bead, particle, :] - path.beads[bead-1, particle, :])^2
-	end
+	kinetic_energy = sum(norm(path.beads[bead, particle, :] - path.beads[bead-1, particle, :])^2 for particle in 1:path.n_particles)
 	return prefactor * kinetic_energy + path.n_dimensions * path.n_particles / (2 * path.τ)
 end
 
@@ -15,33 +12,24 @@ function potential_energy(path::Path, potential::ConstantPotential)
 end
 
 function potential_energy(path::Path, potential::OneBodyPotential)
-    potential_energy = 0.0
     bead = rand(1:path.n_beads)
-    for particle in 1:path.n_particles
-        potential_energy += one_body_potential(potential, path, bead, particle)
-    end
-
-    # potential_energy = primitive_inter_action(path, bead, bead-1, 1, potential) / path.τ
+    potential_energy = sum(one_body_potential(potential, path, bead, particle) for particle in 1:path.n_particles)
     return potential_energy
 end
 
 function potential_energy(path::Path, potential::TwoBodyPotential)
-    potential_energy = 0.0
     bead = rand(1:path.n_beads)
-    for particle_one in 1:path.n_particles, particle_two in 1:path.n_particles
-        if particle_one != particle_two
-            potential_energy += two_body_potential(potential, path, bead, particle_one, particle_two)
-        end
-    end
+    potential_energy = sum(
+        two_body_potential(potential, path, bead, particle_one, particle_two) 
+        for particle_one in 1:path.n_particles, 
+            particle_two in 1:(particle_one-1)
+            )
     return potential_energy
 end
 
 function potential_energy(path::Path, potentials::Array{Potential})
-    total_potential_energy = 0.0
-    for potential in potentials
-        total_potential_energy += potential_energy(path, potential)
-    end
-    return total_potential_energy
+    potential_energy = sum(potential_energy(path, potential) for potential in potentials)
+    return potential_energy
 end
 
 function Energy(path::Path, potential::Potential)
@@ -50,9 +38,7 @@ end
 
 function Energy(path::Path, potentials::Array{Potential})
     total_energy = kinetic_energy(path, potentials)
-    for potential in potentials
-        total_energy += potential_energy(path, potential)
-    end
+    total_energy += sum(potential_energy(path, potential) for potential in potentials)
     return total_energy
 end
 
