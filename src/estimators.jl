@@ -78,11 +78,13 @@ function potential_energy(path::Path, potential::HarmonicPotential, estimator::V
     potential_energy = 0.0
     for bead in 1:path.n_beads, particle in 1:path.n_particles
         Δ = 0.0
-        for other_bead in 1:path.n_beads, particle in 1:path.n_particles
-            Δ += path.beads[bead, particle] - path.beads[other_bead, particle]
+
+        for j in -1*estimator.L+1:estimator.L-1
+            Δ += path.beads[bead, particle] - path.beads[bead+j, particle]
         end
-        Δ /= estimator.L
-        generalised_force = -1/path.τ * -path.m*potential.ω^2 * path.beads[bead, particle]
+        Δ /= 2*estimator.L
+
+        generalised_force = -1 / path.τ * -path.m * potential.ω^2 * path.beads[bead, particle]
         potential_energy += -0.5*generalised_force*Δ + one_body_potential(potential, path, bead, particle)
     end
     return potential_energy / path.n_beads
@@ -119,3 +121,9 @@ function Correlation(path::Path, potential::Potential, estimator::Estimator)
     return correlation ./ path.n_beads
 end
 
+
+begin
+    for i in -10:10 
+        println(i) 
+    end
+end
