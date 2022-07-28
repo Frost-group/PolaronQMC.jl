@@ -28,7 +28,7 @@ function potential_energy(path::Path, potential::TwoBodyPotential)
 end
 
 function potential_energy(path::Path, potentials::Array{Potential})
-    potential_energy = sum(potential_energy(path, potential) for potential in potentials)
+    potential_energy = sum(potential_energy.(path, potentials))
     return potential_energy
 end
 
@@ -38,7 +38,7 @@ end
 
 function Energy(path::Path, potentials::Array{Potential})
     total_energy = kinetic_energy(path, potentials)
-    total_energy += sum(potential_energy(path, potential) for potential in potentials)
+    total_energy += sum(potential_energy.(path, potentials))
     return total_energy
 end
 
