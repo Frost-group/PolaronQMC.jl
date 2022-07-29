@@ -38,13 +38,13 @@ m = ω
 
     #estimator = Simple_Estimator()
     #estimator = Thermodynamic_Estimator()
-    estimator = Virial_Estimator(100)
+    estimator = Virial_Estimator()
 
     potential = HarmonicPotential(ω)
 
 
 #changing
-temp_range = 1:10
+temp_range = 0.1:0.1:1
 observables_range = []
 errors_range = []
 comparison_range = []
@@ -75,3 +75,58 @@ scatter!(temp_range,observables_range, yerr = errors_range, label="Simulated Ene
 
 end
 
+
+
+#lattice spacing range (ω and m) ------------------------------------------------
+begin
+#kept constant
+T = 1.0
+τ = 1.0 / (T * n_beads)
+β = 1/T
+
+
+
+
+#Estimators and potentials
+
+    #estimator = Simple_Estimator()
+    estimator = Thermodynamic_Estimator()
+    #estimator = Virial_Estimator(100)
+
+
+#changing
+lattice_range = 0.001:0.005:0.1
+observables_range_L = []
+errors_range_L = []
+comparison_range_L = []
+
+
+for L in lattice_range
+    ω = L
+    m = L
+    potential = HarmonicPotential(ω)
+
+
+    path = Path(n_beads, n_particles, τ, m = m, λ = λ, start_range = start_range)
+    pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimator, potential, regime)
+
+    output_observables = pimc[2]
+    energy = output_observables["Energy"]
+    analytic_energy = analytic_energy_harmonic(potential,β,ħ)
+    error = sqrt(jackknife(energy)[2])
+
+
+
+    append!(observables_range_L,mean(energy))
+    append!(errors_range_L, error)
+    append!(comparison_range_L, analytic_energy)
+    
+end
+
+plot(lattice_range,comparison_range_L, label="Analytic Energy",xlabel="m = ω",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5)
+scatter!(lattice_range,observables_range_L, yerr = errors_range_L, label="Simulated Energy")
+
+end
+
+
+end
