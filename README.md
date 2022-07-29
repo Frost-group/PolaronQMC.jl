@@ -75,3 +75,20 @@ C++ John Shumway's (now abandoned) C++ code for quantum dots etc. : http://phys-
 ## Packages
 
 Lattice-based Ising MC + AFQMC - https://github.com/crstnbr/MonteCarlo.jl
+
+
+
+## Potential outputs
+
+Observables:
+- Energy (Various estimators)
+- Correlation function
+
+Errors (on observables)
+- Jack knife errors
+- Bin based errors
+
+Debugging/System information
+- Attempted number of moves for different movers
+- Acceptance ratios
+

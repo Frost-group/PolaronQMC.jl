@@ -20,26 +20,38 @@ function jackknife(observables_array)
         append!(bins,[sample(observables_array,jk_binwidth,replace=false)])
     end
 
+    #getting bin_variance
+
+    variance_bins = 0.0
+    for k in 1:n_bins
+        variance_bins += (block_estimators[k] - mean(observables_array))^2
+    end
+    variance_bins /= 1/(n_bins*(n_bins-1))
+    
+    
+
+
     #getting jack knife estimators
     jk_estimators = []
-    for i in 1:length(bins)
-        jk_estimator = 0
-        for observable in bins[i]
-            jk_estimator += observable - bin_width * block_estimators[i]
-        end
+
+    observables_sum = sum(observables_array)
+    for i in 1:n_bins
+        jk_estimator = observables_sum - (bin_width * block_estimators[i])
         jk_estimator /= jk_binwidth
+
         append!(jk_estimators,jk_estimator)
     end
 
     #getting jack knife variance
-    jk_variance = 0.0
+    variance_jk = 0.0
         for k in 1:n_bins
-            jk_variance += (jk_estimators[k] - mean(observables_array))^2
+            variance_jk += (jk_estimators[k] - mean(observables_array))^2
         end
-        jk_variance *= (n_bins-1)/n_bins
-        return jk_variance
+        variance_jk *= (n_bins-1)/n_bins
+    return [variance_bins,variance_jk]
 
 end
+
 
 
     
