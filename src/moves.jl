@@ -36,7 +36,7 @@ end
 
 
 function Displace!(path::Path, particle::Int, potential::Potential, regime::Regime)
-	width = sqrt(4 * path.λ * path.τ)*10
+	width = sqrt(4 * path.λ * path.τ)*8
 	shift = width * rand([-1,1])
 
 	old_beads = copy(path.beads[:, particle])
