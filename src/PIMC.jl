@@ -1,31 +1,30 @@
 # PIMC.jl
 
-function relabel_beads!(path::Path)
-	rand_slice = rand(1:path.n_beads)
-	slices = vcat(rand_slice:path.n_beads, 1:rand_slice-1)
-	path.beads = path.beads[slices, :, :]
-end
 
-function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers, observables, estimator::Estimator, potential::Potential, regime::Regime; visual = false)
+
+function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers, observables, estimators::Array{Estimator}, potential::Potential, regime::Regime; visual = false)
 	
-	#observable_skip = 0.01 * n_steps
-	#equilibrium_skip = 0.1 * n_steps
-	
-	acceptance_array = Dict()
-	attempted_array = Dict()
-	for mover in movers[1]
-		acceptance_array[string(Symbol(mover))] = 0
-		attempted_array[string(Symbol(mover))] = 0
-	end
+	#setting up storage of output
 
+	#acceptance and attempt arrays for movers
+		acceptance_array = Dict()
+		attempted_array = Dict()
+		for mover in movers[1]
+			acceptance_array[string(Symbol(mover))] = 0
+			attempted_array[string(Symbol(mover))] = 0
+		end
 
-	output_observables = Dict()
+	#output arrays for different estimators of observables
+		output_observables = Dict()
+		#generating lists for output
+		for observable in observables
+			output_observables[string(observable)] = Dict() 
+			for estimator in estimators
+				output_observables[string(observable)][string(Symbol(estimator))] = []
+			end
+		end
 
-	#generating lists for output
-	for observable in observables
-		output_observables[string(observable)] = [] 
-	end
-	
+		
 
 	path_trace = []
 	for step in 1:n_steps
@@ -47,10 +46,11 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 		if mod(step, observable_skip) == 0 && step > equilibrium_skip
 
 			for observable in observables
+				for estimator in estimators
 				
 				observable_value = observable(path, potential, estimator) #getting value of observable
-				append!(output_observables[string(observable)],observable_value)
-
+				append!(output_observables[string(observable)][string(Symbol(estimator))],observable_value)
+				end
 			end
 
 		end
