@@ -13,10 +13,10 @@ begin
     ω = 0.5
 
     #for path
-    T = 1.0
+    T = 10.0
     λ = 0.5
     m = ω
-    n_beads = 100
+    n_beads = 200
     τ = 1.0 / (T * n_beads)
     n_particles = 1
     start_range = 1.0
@@ -27,7 +27,7 @@ begin
     β = 1/T
 
     #for pimc
-    n_steps = 1000000
+    n_steps = 2000000
     equilibrium_skip = 0.1*n_steps
     observables_skip = 0.01*n_steps
     movers = [[Single!,Displace!],[1.0,0.1]]
@@ -38,8 +38,8 @@ begin
     
     #estimator type
         #estimator = Simple_Estimator()
-        estimator = Thermodynamic_Estimator()
-        #estimator = Virial_Estimator(100)
+        #estimator = Thermodynamic_Estimator()
+        estimator = Virial_Estimator(100)
 
     #regime type
         regime = Primitive_Regime()
