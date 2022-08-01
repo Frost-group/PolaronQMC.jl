@@ -36,7 +36,7 @@ end
 
 
 function Displace!(path::Path, particle::Int, potential::Potential, regime::Regime)
-	width = sqrt(4 * path.λ * path.τ)*8
+	width = sqrt(4 * path.λ * path.τ)*100
 	shift = width * rand([-1,1])
 
 	old_beads = copy(path.beads[:, particle])
@@ -59,17 +59,61 @@ function Displace!(path::Path, particle::Int, potential::Potential, regime::Regi
 	end
 end
 
-#=
-function Single_and_Displace!(path::Path, particle::Int, potential::Potential, regime::Regime)
-	width = sqrt(4 * path.λ * path.τ)
-	shift = width * rand([-1,1])
 
-	for bead in 1:path.n_beads
+function Bisect!(path::Path, particle::Int, potential::Potential)
+
+	max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
+	clip_length = 16 #temporary arbitary choice
+
+	start_bead = rand(1:path.n_beads)
+
+	old_beads = copy(path.beads[:,particle])
+
+
+	total_old_action = 0.0
+	for bead in start_bead:start_bead+clip_length
+
+		total_old_action += primitive_action(path, bead, particle, potential)
+	end
+
+	old_action = 0.0
+	new_action = 0.0
+	for level in max_level:-1:1
+		step = 2^(level - 1)
+		ratio = 2^max_level / step
+		for interval in 1:2:ratio
+			bead = Int(1 + interval * 2^max_level / ratio)
+			old_action += potential_action(path, bead, particle, potentials)
+			shift_vector = randn(path.n_dimensions) * sqrt(step * path.τ * path.λ)
+			path.beads[bead, particle] = 0.5 * (path.beads[bead - step, particle] + path.beads[bead + step, particle]) + shift_vector
+			new_action += potential_action(path, bead, particle, potentials)
+		end
+		if rand() >= exp(-(new_action - old_action))
+			return false
+		end
+	end
+	
+	total_new_action = 0.0
+	for bead in 2:clip_length-1
+		total_new_action += potential_action(path, bead, particle, potentials)
+	end
+
+	if total_new_action - total_old_action < 0.0
+		return true
+	elseif rand() < exp(-(total_new_action - total_old_action))
+		return true
+	else
+		path.beads[:, particle] = old_beads
+		return false
 	end
 end
 
 
 
+
+
+
+#=
 
 function Stage!(path::Path, particle::Int, potential::Union{Potential, Array{Potential}})
 	relabel_beads!(path)
@@ -100,32 +144,7 @@ function Stage!(path::Path, particle::Int, potential::Union{Potential, Array{Pot
 end
 
 
-function Bisect!(path::Path, particle::Int, potential::Union{Potential, Array{Potential}})
-	relabel_beads!(path)
 
-	max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
-	clip_length = 2^max_level + 1
-
-	old_action = 0.0
-	for bead in 1:clip_length
-		old_action += primitive_action(path, bead, particle, potential)
-	end
-
-	for level in max_level:-1:1
-		step = 2^(level - 1)
-		shift = randn(path.n_dimensions) * sqrt(step * path.τ * path.λ)
-
-		old_action = 
-		
-		for n in 1:2^(max_level - level)
-			bead = 1 + n * step
-			old_action = primitive_action(path, bead, particle, potential)
-	 = (path.beads[bead - step, particle, :] + path.beads[bead + step, particle, :]) / 2 + shift
-		end
-	end
-
-	old_action = primitive_action(path, 1, particle, potential)
-end
 
 
 

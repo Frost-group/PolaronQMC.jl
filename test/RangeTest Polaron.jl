@@ -4,6 +4,7 @@ using Revise
 using PolaronQMC
 using Statistics
 using Plots
+using PolaronQMC
 end
 
 
@@ -14,15 +15,17 @@ begin
 n_particles = 1
 start_range = 1.0
 ħ = 1.0
-n_beads = 50
+n_beads = 80
 
 #for pimc
-n_steps = 40000
-equilibrium_skip = 0.1*n_steps
+n_steps = 1000000
+equilibrium_skip = 0.2*n_steps
 observables_skip = 0.01*n_steps
 movers = [[Single!],[1.0]]
 observables = [Energy]
 regime = Primitive_Regime()
+
+
 
 
 end
@@ -102,9 +105,11 @@ end
 
 
 
-#lattice spacing range (ω and m) ------------------------------------------------
+#Testing α range ------------------------------------------------
 begin
     #kept constant
+    T_scale_factor = 1/7.61
+
     T = 1.0
     τ = 1.0 / (T * n_beads)
     β = 1/T
@@ -115,7 +120,8 @@ begin
         estimators = [Thermodynamic_Estimator()]
 
     #changing
-    lattice_range = 1.0:12.0
+    alpha_range = 0.0:10.0
+    comparison_polaron = make_polaron(alpha_range, [T*T_scale_factor], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
 
 
     #output
@@ -130,10 +136,10 @@ begin
         errors_range_L[string(Symbol(estimator))] = []
     end
 
-    comparison_range_L = []
+    comparison_range_L = -1*comparison_polaron.F
 
     #Starting simulation
-    for L in lattice_range
+    for L in alpha_range
         α = L
         potential = FrohlichPotential(α,ω)
 
@@ -141,7 +147,6 @@ begin
         pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime)
 
         output_observables = pimc[2]
-        #analytic_energy = analytic_energy_harmonic(potential,β,ħ)
         energy = output_observables["Energy"]
 
         for estimator in estimators
@@ -155,10 +160,12 @@ begin
             append!(errors_range_L[string(Symbol(estimator))], error)
 
         end
-        #append!(comparison_range_L, analytic_energy)
     end
 
-    #plot(lattice_range,comparison_range_L, label="Analytic Energy",xlabel="m and ω",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5)
+
+
+    #Plotting --------------
+    plot(alpha_range,comparison_range_L, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5)
 
     #Auto plotting all estimators 
     #=
@@ -166,12 +173,12 @@ begin
         scatter!(temp_range,observables_range_T[string(Symbol(estimator))], yerr = errors_range_T[string(Symbol(estimator))], label=string(Symbol(estimator)))
     end
     =#
-    
-    
-    plot(lattice_range,observables_range_L[string(Symbol(estimators[1]))], yerr = errors_range_L[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
-    #scatter!(lattice_range,observables_range_L[string(Symbol(estimators[2]))], yerr = errors_range_L[string(Symbol(estimators[2]))], label=string(Symbol(estimators[2])))
-    
 
 
+    scatter!(alpha_range,observables_range_L[string(Symbol(estimators[1]))], yerr = errors_range_L[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
+    #scatter!(alpha_range,observables_range_L[string(Symbol(estimators[2]))], yerr = errors_range_L[string(Symbol(estimators[2]))], label=string(Symbol(estimators[2])))
+
 end
-end
+
+
+end #final end
