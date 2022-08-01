@@ -90,6 +90,38 @@ function potential_energy(path::Path, potential::HarmonicPotential, estimator::V
     return potential_energy / path.n_beads
 end
 
+function potential_energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator)
+    potential_energy = 0.0
+    for bead in 1:path.n_beads, particle in 1:path.n_particles
+        Δ = 0.0
+
+        for j in -1*estimator.L+1:estimator.L-1
+            Δ += path.beads[bead, particle] - path.beads[bead+j, particle]
+        end
+        Δ /= 2*estimator.L
+
+
+        #finding the derivative of the potential
+        deriv_potential = 0 #derivative of potential wrt bead
+        for other_bead in 1:path.n_beads, particle in 1:path.n_particles
+            if other_bead != bead
+
+                inner_sum = path.τ * (potential.α * potential.ω^(3/2)) / (2*sqrt(2*path.m))
+                inner_sum *= (cosh(potential.ω * path.τ * abs(bead-other_bead) - potential.ħ*potential.ω*potential.β/2))
+                inner_sum *= (path.beads[bead,particle] - path.beads[other_bead,particle]) / (path.beads[bead,particle]-path.beads[other_bead,particle])^3
+                inner_sum *= -1
+                deriv_potential += inner_sum
+            end
+        end
+
+        #piecing all together
+        generalised_force = -1 / path.τ * deriv_potential
+        potential_energy += -0.5*generalised_force*Δ + one_body_potential(potential, path, bead, particle)
+    end
+    return potential_energy / path.n_beads
+end
+
+
 function potential_energy(path::Path, potential::TwoBodyPotential, estimator::Thermodynamic_Estimator)
     potential_energy = 0.0
     for bead in 1:path.n_beads, particle_one in 1:path.n_particles, particle_two in 1:path.n_particles

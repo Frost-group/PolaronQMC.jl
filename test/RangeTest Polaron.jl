@@ -4,7 +4,7 @@ using Revise
 using PolaronQMC
 using Statistics
 using Plots
-using PolaronQMC
+using PolaronMobility
 end
 
 
@@ -18,7 +18,7 @@ start_range = 1.0
 n_beads = 100
 
 #for pimc
-n_steps = 60000
+n_steps = 100000
 equilibrium_skip = 0.2*n_steps
 observables_skip = 0.01*n_steps
 movers = [[Single!],[1.0]]
@@ -112,6 +112,7 @@ begin
 
     T = 1.0
     τ = 1.0 / (T * n_beads)
+    ħ = 1.0
     β = 1/T
     ω = 1.0
     m = ω
@@ -120,7 +121,7 @@ begin
         estimators = [Thermodynamic_Estimator()]
 
     #changing
-    alpha_range = 0.0:10.0
+    alpha_range = 0.0:20.0
     comparison_polaron = make_polaron(alpha_range, [T*T_scale_factor], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
 
 
@@ -141,7 +142,7 @@ begin
     #Starting simulation
     for L in alpha_range
         α = L
-        potential = FrohlichPotential(α,ω)
+        potential = FrohlichPotential(α,ω,ħ,β)
 
         path = Path(n_beads, n_particles, τ, m = m, λ = λ, start_range = start_range)
         pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime)
