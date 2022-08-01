@@ -73,21 +73,23 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 	total_old_action = 0.0
 	for bead in start_bead:start_bead+segment_length-1
-		total_old_action += potential_action(path, bead, particle, potential, regime)
+		total_old_action += total_action(path, bead, bead+1, particle, potential, regime)
 	end
 
 
 	segment_old_action = 0.0 # old action of the cut out segment
 	segment_new_action = 0.0 # new action of the cut out segment
 	for level in max_level-1:-1:1
+
 		
-		ratio = segment_length - 1 / 2^level #16/8
-		for interval in 1:ratio
+		ratio = (segment_length - 1) / 2^level #how many divisions of level makes up full segment
+
+		for interval in 1:ratio-1
 			bead = Int(start_bead + (2^level * interval))
-			segment_old_action += potential_action(path, bead, particle, potential, regime)
-			shift = sqrt(2^level * path.τ * path.λ)
+			segment_old_action += total_action(path, bead, bead+1, particle, potential, regime)
+			shift = sqrt(2^level * path.τ * path.λ)/20
 			path.beads[bead, particle] = 0.5 * (path.beads[bead - 2^level, particle] + path.beads[bead + 2^level, particle]) + shift
-			segment_new_action += potential_action(path, bead, particle, potential, regime)
+			segment_new_action += total_action(path, bead, bead+1, particle, potential, regime)
 		end
 		segment_action_diff = segment_new_action - segment_old_action
 		if rand() >= exp(-segment_action_diff)
@@ -98,7 +100,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 	total_new_action = 0.0
 	for bead in start_bead:start_bead+segment_length-1
-		total_new_action += potential_action(path, bead, particle, potential, regime)
+		total_new_action += total_action(path, bead, bead+1, particle, potential, regime)
 	end
 
 	if total_new_action - total_old_action < 0.0
@@ -118,6 +120,10 @@ end
 
 
 
-
+begin
+	for i in 1:1
+		println(i)
+	end
+end
 
 
