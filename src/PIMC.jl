@@ -2,7 +2,7 @@
 
 
 
-function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers, observables, estimators::Array{Estimator}, potential::Potential, regime::Regime; visual = false)
+function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers, observables, estimators, potential::Potential, regime::Regime; visual = false)
 	
 	#setting up storage of output
 

@@ -9,7 +9,7 @@ using OnlineStats
 using Plots
 
 # Export types
-export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, Regime, Simple_Regime, Primitive_Regime
+export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, Simple_Regime, Primitive_Regime
 
 # Export potentials
 export one_body_potential, two_body_potential
