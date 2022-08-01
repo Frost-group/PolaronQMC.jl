@@ -15,10 +15,10 @@ begin
 n_particles = 1
 start_range = 1.0
 ħ = 1.0
-n_beads = 80
+n_beads = 100
 
 #for pimc
-n_steps = 1000000
+n_steps = 60000
 equilibrium_skip = 0.2*n_steps
 observables_skip = 0.01*n_steps
 movers = [[Single!],[1.0]]

@@ -28,16 +28,17 @@ begin
     β = 1/T
 
     #for pimc
-    n_steps = 200000
+    n_steps = 10
     #equilibrium_skip = 0.1*n_steps
     equilibrium_skip = 100
     #observables_skip = 0.01*n_steps
     observables_skip = 100
-    movers = [[Single!],[1.0]]
+    movers = [[Bisect!],[1.0]]
     observables = [Energy]
     
     #potential type
-        potential = FrohlichPotential(α,ω)
+        #potential = FrohlichPotential(α,ω)
+        potential = HarmonicPotential(ω)
     
     #estimator type
     estimators = [Thermodynamic_Estimator()]
