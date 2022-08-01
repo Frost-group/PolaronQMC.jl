@@ -60,10 +60,11 @@ function Displace!(path::Path, particle::Int, potential::Potential, regime::Regi
 end
 
 
-function Bisect!(path::Path, particle::Int, potential::Potential)
+function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime)
 
-	max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
-	clip_length = 16 #temporary arbitary choice
+	#max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
+	segment_length = 16 + 1 #temporary arbitary choice
+	max_level = Int(floor(log(segment_length)/log(2))) # = 4 in arbitary setting
 
 	start_bead = rand(1:path.n_beads)
 
@@ -71,31 +72,33 @@ function Bisect!(path::Path, particle::Int, potential::Potential)
 
 
 	total_old_action = 0.0
-	for bead in start_bead:start_bead+clip_length
-
-		total_old_action += primitive_action(path, bead, particle, potential)
+	for bead in start_bead:start_bead+segment_length-1
+		total_old_action += potential_action(path, bead, particle, potential, regime)
 	end
 
-	old_action = 0.0
-	new_action = 0.0
-	for level in max_level:-1:1
-		step = 2^(level - 1)
-		ratio = 2^max_level / step
-		for interval in 1:2:ratio
-			bead = Int(1 + interval * 2^max_level / ratio)
-			old_action += potential_action(path, bead, particle, potentials)
-			shift_vector = randn(path.n_dimensions) * sqrt(step * path.τ * path.λ)
-			path.beads[bead, particle] = 0.5 * (path.beads[bead - step, particle] + path.beads[bead + step, particle]) + shift_vector
-			new_action += potential_action(path, bead, particle, potentials)
+
+	segment_old_action = 0.0 # old action of the cut out segment
+	segment_new_action = 0.0 # new action of the cut out segment
+	for level in max_level-1:-1:1
+		
+		ratio = segment_length - 1 / 2^level #16/8
+		for interval in 1:ratio
+			bead = Int(start_bead + (2^level * interval))
+			segment_old_action += potential_action(path, bead, particle, potential, regime)
+			shift = sqrt(2^level * path.τ * path.λ)
+			path.beads[bead, particle] = 0.5 * (path.beads[bead - 2^level, particle] + path.beads[bead + 2^level, particle]) + shift
+			segment_new_action += potential_action(path, bead, particle, potential, regime)
 		end
-		if rand() >= exp(-(new_action - old_action))
+		segment_action_diff = segment_new_action - segment_old_action
+		if rand() >= exp(-segment_action_diff)
 			return false
 		end
+
 	end
-	
+
 	total_new_action = 0.0
-	for bead in 2:clip_length-1
-		total_new_action += potential_action(path, bead, particle, potentials)
+	for bead in start_bead:start_bead+segment_length-1
+		total_new_action += potential_action(path, bead, particle, potential, regime)
 	end
 
 	if total_new_action - total_old_action < 0.0
@@ -106,6 +109,8 @@ function Bisect!(path::Path, particle::Int, potential::Potential)
 		path.beads[:, particle] = old_beads
 		return false
 	end
+
+
 end
 
 
@@ -113,41 +118,6 @@ end
 
 
 
-#=
 
-function Stage!(path::Path, particle::Int, potential::Union{Potential, Array{Potential}})
-	relabel_beads!(path)
-
-	segment_length = 16
-
-	old_action = 0.0
-	for bead in 2:segment_length-1
-		old_action += potential_action(path, bead, particle, potential)
-	end
-
-	old_beads = copy(path.beads[:, particle, :])
-	new_action = 0.0
-
-	for bead in 1:segment_length-1
-		staging_mass = (segment_length - bead + 1) / (segment_length - bead)
-		staging_position = (path.beads[1 + segment_length, particle, :]  * (segment_length - bead)) / (segment_length - bead + 1)
-		path.beads[bead + 1, particle, :] += staging_position + randn(path.n_dimensions) * sqrt(path.τ / staging_mass)
-		new_action += potential_action(path, bead + 1, particle, potential)
-	end
-
-	if rand() <= exp(-(new_action - old_action))
-		return true
-	else
-		path.beads[:, particle, :] = old_beads
-		return false
-	end
-end
-
-
-
-
-
-
-=#
 
 
