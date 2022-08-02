@@ -14,14 +14,15 @@ begin
 n_particles = 1
 start_range = 1.0
 ħ = 1.0
-n_beads = 50
+n_beads = 100
 
 #for pimc
-n_steps = 40000
+n_steps = 100000
 equilibrium_skip = 0.1*n_steps
 observables_skip = 0.01*n_steps
-movers = [[Single!],[1.0]]
+movers = [[Single!, Displace!],[1.0,0.2]]
 observables = [Energy]
+
 regime = Primitive_Regime()
 
 
@@ -37,7 +38,7 @@ begin
 
 
     #Estimators and potentials
-        estimators = [Thermodynamic_Estimator()]
+        estimators = [Thermodynamic_Estimator(), Virial_Estimator(n_beads)]
         potential = HarmonicPotential(ω)
 
 
@@ -65,7 +66,8 @@ begin
         β = 1/T
 
         path = Path(n_beads, n_particles, τ, m = m, λ = λ, start_range = start_range)
-        pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime)
+        adjusters = [Single_Adjuster(path), Displace_Adjuster(path)]
+        pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjusters)
 
         output_observables = pimc[2]
         analytic_energy = analytic_energy_harmonic(potential,β,ħ)
@@ -96,7 +98,7 @@ begin
     
     
     scatter!(temp_range,observables_range_T[string(Symbol(estimators[1]))], yerr = errors_range_T[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
-    #scatter!(temp_range,observables_range_T[string(Symbol(estimators[2]))], yerr = errors_range_T[string(Symbol(estimators[2]))], label=string(Symbol(estimators[2])))
+    scatter!(temp_range,observables_range_T[string(Symbol(estimators[2]))], yerr = errors_range_T[string(Symbol(estimators[2]))], label=string(Symbol(estimators[2])))
     
 end
 
@@ -138,7 +140,8 @@ begin
         potential = FrohlichPotential(α,ω)
 
         path = Path(n_beads, n_particles, τ, m = m, λ = λ, start_range = start_range)
-        pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime)
+        adjusters = [Single_Adjuster(path)]
+        pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjusters)
 
         output_observables = pimc[2]
         #analytic_energy = analytic_energy_harmonic(potential,β,ħ)
