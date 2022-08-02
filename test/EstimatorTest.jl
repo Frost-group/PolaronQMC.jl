@@ -21,6 +21,7 @@ begin
     τ = 1.0 / (T * n_beads)
     n_particles = 1
     start_range = 1.0
+    path = Path(n_beads, n_particles, τ, m = m, λ = λ, start_range = start_range)
 
 
     #for analytic energy
@@ -33,12 +34,15 @@ begin
     #equilibrium_skip = 0
     observables_skip = 0.01*n_steps
     #observables_skip = 100
-    movers = [[Single!],[1.0]]
+    movers = [[Bisect!],[1.0]]
+    adjusters = [Bisect_Adjuster(path)]
+
     observables = [Energy]
     
+    
     #potential type
-        potential = FrohlichPotential(α,ω,ħ,β)
-        #potential = HarmonicPotential(ω)
+        #potential = FrohlichPotential(α,ω,ħ,β)
+        potential = HarmonicPotential(ω)
     
     #estimator type
     estimators = [Thermodynamic_Estimator()]
@@ -53,8 +57,8 @@ begin
 
 #running sim
 
-path = Path(n_beads, n_particles, τ, m = m, λ = λ, start_range = start_range)
-pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime)
+
+pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjusters)
 acceptance_ratio = pimc[1]
 output_observables = pimc[2]
 
@@ -86,3 +90,5 @@ plot(worldline, energyplot, layout = (2,1), legend = false)
 
 
 end
+
+

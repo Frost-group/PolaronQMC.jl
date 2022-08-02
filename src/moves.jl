@@ -4,9 +4,9 @@
 
 
 #Sampling method of moving single beads individually
-function Single!(path::Path, particle::Int, potential::Potential, regime::Regime)
+function Single!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
     bead = rand(1:path.n_beads)
-	width = sqrt(4 * path.λ * path.τ)
+	width = adjuster.shift_width
 	shift = width * rand([-1,1]) * rand()
 
     # We just need to look at the beads +- 1 unit from m
@@ -25,9 +25,11 @@ function Single!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 
 	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
+		adjuster.adjust_counter += 1 #updating counter for adjustment of shift width
 		return true
 	else
 		path.beads[bead, particle] -= shift
+		adjuster.adjust_counter -= 1 #updating counter for adjustment of shift width
 		return false
 	end
 end
@@ -35,9 +37,9 @@ end
 
 
 
-function Displace!(path::Path, particle::Int, potential::Potential, regime::Regime)
-	width = sqrt(4 * path.λ * path.τ)*100
-	shift = width * rand([-1,1])
+function Displace!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
+	width = adjuster.shift_width
+	shift = width * rand([-1,1]) * rand()
 
 	old_beads = copy(path.beads[:, particle])
     
@@ -50,17 +52,20 @@ function Displace!(path::Path, particle::Int, potential::Potential, regime::Regi
     new_action = sum(potential_action(path, bead, particle, potential, regime) for bead in 1:path.n_beads)
 
 	if new_action - old_action <= 0.0
+		adjuster.adjust_counter += 1 #updating counter for adjustment of shift width
 		return true
 	elseif rand() <= exp(-(new_action - old_action))
+		adjuster.adjust_counter += 1 #updating counter for adjustment of shift width
 		return true
 	else
 		path.beads[:, particle] = old_beads
+		adjuster.adjust_counter -= 1 #updating counter for adjustment of shift width
 		return false
 	end
 end
 
 
-function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime)
+function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
 	#max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
 	segment_length = 16 + 1 #temporary arbitary choice
@@ -87,13 +92,16 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 		for interval in 1:ratio-1
 			bead = Int(start_bead + (2^level * interval))
 			segment_old_action += total_action(path, bead, bead+1, particle, potential, regime)
-			shift = sqrt(2^level * path.τ * path.λ)/20
+			shift = sqrt(2^(level-1) * adjuster.shift_width) #auto adjusting level specific width
 			path.beads[bead, particle] = 0.5 * (path.beads[bead - 2^level, particle] + path.beads[bead + 2^level, particle]) + shift
 			segment_new_action += total_action(path, bead, bead+1, particle, potential, regime)
 		end
 		segment_action_diff = segment_new_action - segment_old_action
 		if rand() >= exp(-segment_action_diff)
+			adjuster.adjust_counter -= 1
 			return false
+			
+
 		end
 
 	end
@@ -104,11 +112,14 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 	end
 
 	if total_new_action - total_old_action < 0.0
+		adjuster.adjust_counter += 1
 		return true
 	elseif rand() < exp(-(total_new_action - total_old_action))
+		adjuster.adjust_counter += 1
 		return true
 	else
 		path.beads[:, particle] = old_beads
+		adjuster.adjust_counter -= 1
 		return false
 	end
 
@@ -119,11 +130,5 @@ end
 
 
 
-
-begin
-	for i in 1:1
-		println(i)
-	end
-end
 
 

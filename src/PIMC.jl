@@ -2,8 +2,7 @@
 
 
 
-function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers, observables, estimators, potential::Potential, regime::Regime; visual = false)
-	
+function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers, observables, estimators, potential::Potential, regime::Regime, adjusters; adjust = true, visual = false)
 	#setting up storage of output
 
 	#acceptance and attempt arrays for movers
@@ -26,24 +25,42 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 
 		
 
-	path_trace = []
+	
 	for step in 1:n_steps
 		if step == 0.5*n_steps
 			println("50% complete")
 		end
 
-		#updating n_accepted with yes or no, and moving beads
+		#updating n_accepted, moving beads, and changing shift width if necessary
 		for particle in rand(1:path.n_particles, path.n_particles)
 			for mover_index in 1:length(movers[1])
+				adjuster = adjusters[mover_index]
 				if movers[2][mover_index] > rand()
 					attempted_array[string(Symbol(movers[1][mover_index]))] += 1
-					acceptance_array[string(Symbol(movers[1][mover_index]))] += movers[1][mover_index](path, particle, potential, regime)
+					acceptance_array[string(Symbol(movers[1][mover_index]))] += movers[1][mover_index](path, particle, potential, regime, adjuster)
+					
+					if adjust
+						if adjuster.adjust_counter >= 4
+							#println("adjusted +") 
+							#adjuster.shift_width += adjuster.adjust_unit
+							adjuster.shift_width *= 1.5
+							adjuster.adjust_counter = 0
+						elseif adjuster.adjust_counter <= -4
+							#adjuster.shift_width -= adjuster.adjust_unit
+							adjuster.shift_width /= 1.5
+							adjuster.adjust_counter = 0
+							#println("adjusted -")
+						end
+					end
+					
+
 				end
 			end
 		end
 
 		#generates observable for each cycle of "observable_skip"
 		if mod(step, observable_skip) == 0 && step > equilibrium_skip
+			#println("ad 2 sw ",adjusters[2].shift_width)
 
 			for observable in observables
 				for estimator in estimators
