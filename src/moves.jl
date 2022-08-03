@@ -64,7 +64,7 @@ function Displace!(path::Path, particle::Int, potential::Potential, regime::Regi
 	end
 end
 
-
+#=
 function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
 	#max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
@@ -129,7 +129,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 
 end
-
+=#
 
 
 function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
