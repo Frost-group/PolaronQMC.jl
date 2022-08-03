@@ -107,16 +107,17 @@ function potential_energy(path::Path, potential::FrohlichPotential, estimator::V
             if other_bead != bead
 
                 inner_sum = path.τ * (potential.α * potential.ω^(3/2)) / (2*sqrt(2*path.m))
-                inner_sum *= (cosh(potential.ω * path.τ * abs(bead-other_bead) - potential.ħ*potential.ω*potential.β/2))
-                inner_sum *= (path.beads[bead,particle] - path.beads[other_bead,particle]) / (path.beads[bead,particle]-path.beads[other_bead,particle])^3
-                inner_sum *= -1
+                inner_sum *= (cosh(potential.ω * path.τ * abs(bead-other_bead) - (potential.ħ * potential.ω * potential.β/2))) / sinh(potential.ħ * potential.ω * potential.β * 0.5)
+                inner_sum *= (path.beads[bead,particle] - path.beads[other_bead,particle]) / (path.beads[bead,particle] - path.beads[other_bead,particle])^3
                 deriv_potential += inner_sum
             end
         end
+        deriv_potential *= -1
+
 
         #piecing all together
         generalised_force = -1 / path.τ * deriv_potential
-        potential_energy += -0.5*generalised_force*Δ + one_body_potential(potential, path, bead, particle)
+        potential_energy += -0.5 * generalised_force * Δ + one_body_potential(potential, path, bead, particle)
     end
     return potential_energy / path.n_beads
 end
