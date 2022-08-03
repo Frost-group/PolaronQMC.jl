@@ -20,7 +20,7 @@ n_beads = 100
 n_steps = 20000
 equilibrium_skip = 0.1*n_steps
 observables_skip = 0.01*n_steps
-movers = [[Bisect!,Single!],[0.2,1.0]]
+movers = [[Single!],[1.0]]
 observables = [Energy]
 
 regime = Primitive_Regime()
@@ -32,13 +32,12 @@ begin
 #temperature --------------------------------------------
 
     #kept constant
-    α = 1.0
-    ω = 0.5
+    ω = 1.0
     m = ω
 
 
     #Estimators and potentials
-        estimators = [Virial_Estimator(n_beads)]
+        estimators = [Thermodynamic_Estimator(), Virial_Estimator(n_beads)]
         #estimators = [Thermodynamic_Estimator()]
         potential = HarmonicPotential(ω)
 
@@ -67,8 +66,7 @@ begin
         β = 1/T
 
         path = Path(n_beads, n_particles, τ, m = m, λ = λ, start_range = start_range)
-        adjusters = [Bisect_Adjuster(path),Single_Adjuster(path)]
-        pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjusters)
+        pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust = false)
 
         output_observables = pimc[2]
         analytic_energy = analytic_energy_harmonic(potential,β,ħ)
@@ -99,7 +97,7 @@ begin
     
     
     scatter!(temp_range,observables_range_T[string(Symbol(estimators[1]))], yerr = errors_range_T[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
-    #scatter!(temp_range,observables_range_T[string(Symbol(estimators[2]))], yerr = errors_range_T[string(Symbol(estimators[2]))], label=string(Symbol(estimators[2])))
+    scatter!(temp_range,observables_range_T[string(Symbol(estimators[2]))], yerr = errors_range_T[string(Symbol(estimators[2]))], label=string(Symbol(estimators[2])))
     
 end
 

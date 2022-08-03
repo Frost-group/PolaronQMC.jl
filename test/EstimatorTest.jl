@@ -14,7 +14,7 @@ begin
     α = 10.0
 
     #for path
-    T = 0.01
+    T = 1.0
     λ = 0.5
     m = ω
     n_beads = 100
@@ -28,14 +28,14 @@ begin
     ħ = 1.0
     β = 1/T
 
-    #for pimc00
-    n_steps = 10000
+    #for pimc
+    n_steps = 60000
     equilibrium_skip = 0.1*n_steps
     #equilibrium_skip = 0
     observables_skip = 0.01*n_steps
     #observables_skip = 100
     movers = [[Single!],[1.0]]
-    adjusters = [Single_Adjuster(path)]
+    #adjusters = [Bisect_Adjuster(path),Single_Adjuster(path)]
 
     observables = [Energy]
     
@@ -47,7 +47,7 @@ begin
     #estimator type
     #estimators = [Virial_Estimator(n_beads)]
         #estimator = Simple_Estimator()
-        estimator = [Thermodynamic_Estimator()]
+        estimators = [Thermodynamic_Estimator()]
         #estimator = Virial_Estimator(n_beads)
 
     #regime type
@@ -58,7 +58,7 @@ begin
 #running sim
 
 
-pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjusters, adjust=false)
+pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=false)
 acceptance_ratio = pimc[1]
 output_observables = pimc[2]
 
