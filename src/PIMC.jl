@@ -2,7 +2,7 @@
 
 
 
-function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers, observables, estimators, potential::Potential, regime::Regime, adjusters; adjust = true, visual = false)
+function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers, observables, estimators, potential::Potential, regime::Regime; adjust = true, visual = false)
 	#setting up storage of output
 
 	#acceptance and attempt arrays for movers
@@ -34,18 +34,18 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 		#updating n_accepted, moving beads, and changing shift width if necessary
 		for particle in rand(1:path.n_particles, path.n_particles)
 			for mover_index in 1:length(movers[1])
-				adjuster = adjusters[mover_index]
+				adjuster = path.adjusters[string(Symbol(movers[1][mover_index]))]
 				if movers[2][mover_index] > rand()
 					attempted_array[string(Symbol(movers[1][mover_index]))] += 1
 					acceptance_array[string(Symbol(movers[1][mover_index]))] += movers[1][mover_index](path, particle, potential, regime, adjuster)
 					
-					if adjust #changing shift width automatically
-						for adjuster in adjusters
-							update_shift_width!(adjuster)
-						end
-					end
-					
 
+				end
+			end
+
+			if adjust #changing shift width automatically
+				for adjuster in values(path.adjusters)
+					update_shift_width!(adjuster)
 				end
 			end
 		end
