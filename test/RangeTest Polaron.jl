@@ -18,10 +18,10 @@ start_range = 1.0
 n_beads = 100
 
 #for pimc
-n_steps = 100000
-equilibrium_skip = 0.2*n_steps
-observables_skip = 0.01*n_steps
-movers = [[Single!],[1.0]]
+n_steps = 10000
+equilibrium_skip = 0.1*n_steps
+observables_skip = 0.02*n_steps
+movers = [[Single!, Displace!],[1.0, 0.2]]
 observables = [Energy]
 regime = Primitive_Regime()
 
@@ -121,7 +121,7 @@ begin
         estimators = [Thermodynamic_Estimator()]
 
     #changing
-    alpha_range = 0.0:20.0
+    alpha_range = 25.0:50.0
     comparison_polaron = make_polaron(alpha_range, [T*T_scale_factor], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
 
 
@@ -181,5 +181,33 @@ begin
 
 end
 
+begin
+    plot(alpha_range,comparison_range_L, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5, legend = false)
 
-end #final end
+    scatter!(alpha_range,observables_range_L[string(Symbol(estimators[1]))], yerr = errors_range_L[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
+end
+
+
+begin
+    aggregate_alpha_range = []
+    aggregate_observables_range = []
+    aggregate_comparison_range = []
+end
+
+begin
+    
+    append!(aggregate_alpha_range, alpha_range)
+    append!(aggregate_observables_range, observables_range_L)
+    append!(aggregate_comparison_range, comparison_range_L)
+end
+
+
+begin
+    plot(alpha_range,comparison_range_L, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5, legend = false)
+    scatter!(alpha_range,observables_range_L[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
+end
+
+
+
+
+
