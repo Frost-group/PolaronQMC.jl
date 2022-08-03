@@ -17,7 +17,7 @@ begin
     T = 1.0
     λ = 0.5
     m = ω
-    n_beads = 100
+    n_beads = 1000
     τ = 1.0 / (T * n_beads)
     n_particles = 1
     start_range = 1.0
@@ -29,11 +29,11 @@ begin
     β = 1/T
 
     #for pimc
-    n_steps = 200000
-    equilibrium_skip = 0.1*n_steps
-    #equilibrium_skip = 0
-    observables_skip = 0.01*n_steps
-    #observables_skip = 100
+    n_steps = 100000
+    #equilibrium_skip = 0.1*n_steps
+    equilibrium_skip = 0
+    bservables_skip = 0.01*n_steps
+    #observables_skip = 1000
     movers = [[Bisect!],[1.0]]
     adjusters = [Bisect_Adjuster(path)]
 
@@ -45,10 +45,10 @@ begin
         potential = HarmonicPotential(ω)
     
     #estimator type
-    estimators = [Thermodynamic_Estimator()]
+    estimators = [Virial_Estimator(500)]
         #estimator = Simple_Estimator()
         #estimator = Thermodynamic_Estimator()
-        #estimator = Virial_Estimator(100)
+        #estimator = Virial_Estimator(100)s
 
     #regime type
         regime = Primitive_Regime()
@@ -58,7 +58,7 @@ begin
 #running sim
 
 
-pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjusters)
+pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjusters, adjust=true)
 acceptance_ratio = pimc[1]
 output_observables = pimc[2]
 
@@ -90,5 +90,4 @@ plot(worldline, energyplot, layout = (2,1), legend = false)
 
 
 end
-
 

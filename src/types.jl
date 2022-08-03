@@ -107,60 +107,13 @@ struct CoulombPotential <: TwoBodyPotential
 end
 
 
-
-
 """
 Adjuster type to container information about shift width and allow for its auto adjustment
 
 """
 
-
 abstract type Adjuster end
 
-mutable struct Single_Adjuster <: Adjuster
-    adjust_counter :: Int
-    shift_width :: Float64
-    adjust_unit :: Float64 #how much shift width is adjusted by each time
-    function Single_Adjuster(path::Path)
-        shift_width = sqrt(4 * path.λ * path.τ)
-        adjust_unit = shift_width
-        new(0,shift_width, adjust_unit)
-    end
-end
 
-mutable struct Displace_Adjuster <: Adjuster
-    adjust_counter :: Int
-    shift_width :: Float64 
-    adjust_unit :: Float64 #how much shift width is adjusted by each time
-    function Displace_Adjuster(path::Path)
-        shift_width = sqrt(4 * path.λ * path.τ)*100
-        adjust_unit = 0.5*shift_width
-        new(0,shift_width, adjust_unit)
-    end
-end
-
-mutable struct Bisect_Adjuster <: Adjuster
-    adjust_counter :: Int
-    shift_width :: Float64
-    #shift_width_array :: Dict
-    adjust_unit :: Float64 #how much shift width is adjusted by each time
-
-
-    function Bisect_Adjuster(path::Path)
-        shift_width = path.λ * path.τ
-        adjust_counter = 0
-        #shift_width_array = Dict()
-        #=
-        max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
-
-        for level in 1:max_level-1
-            shift_width[string(level)] = sqrt(2^(level-1) * path.λ * path.τ )
-            adjust_counter[string(level)] = 0
-        end
-        =#
-        adjust_unit = 0.5*shift_width
-        new(adjust_counter,shift_width, adjust_unit)
-    end
-end
 
 
