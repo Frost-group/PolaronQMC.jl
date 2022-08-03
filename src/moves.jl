@@ -84,7 +84,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 	segment_old_action = 0.0 # old action of the cut out segment
 	segment_new_action = 0.0 # new action of the cut out segment
-	for level in max_level-1:-1:1
+	for level in max_level-1:-1:0
 
 		
 		ratio = (segment_length - 1) / 2^level #how many divisions of level makes up full segment
@@ -92,15 +92,16 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 		for interval in 1:ratio-1
 			bead = Int(start_bead + (2^level * interval))
 			segment_old_action += total_action(path, bead, bead+1, particle, potential, regime)
-			shift = sqrt(2^(level-1) * adjuster.shift_width) #auto adjusting level specific width
+			shift = adjuster.shift_width_array[string(level)]*2 #auto adjusting level specific width
 			path.beads[bead, particle] = 0.5 * (path.beads[bead - 2^level, particle] + path.beads[bead + 2^level, particle]) + shift
 			segment_new_action += total_action(path, bead, bead+1, particle, potential, regime)
 		end
 		segment_action_diff = segment_new_action - segment_old_action
 		if rand() >= exp(-segment_action_diff)
-			adjuster.adjust_counter -= 1
+			adjuster.adjust_counter_array[string(level)] -= 1
 			return false
-			
+		else
+			adjuster.adjust_counter_array[string(level)] += 1
 
 		end
 
@@ -112,14 +113,13 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 	end
 
 	if total_new_action - total_old_action < 0.0
-		adjuster.adjust_counter += 1
+
 		return true
 	elseif rand() < exp(-(total_new_action - total_old_action))
-		adjuster.adjust_counter += 1
+
 		return true
 	else
 		path.beads[:, particle] = old_beads
-		adjuster.adjust_counter -= 1
 		return false
 	end
 

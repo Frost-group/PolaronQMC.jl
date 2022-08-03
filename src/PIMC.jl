@@ -39,17 +39,9 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 					attempted_array[string(Symbol(movers[1][mover_index]))] += 1
 					acceptance_array[string(Symbol(movers[1][mover_index]))] += movers[1][mover_index](path, particle, potential, regime, adjuster)
 					
-					if adjust
-						if adjuster.adjust_counter >= 4
-							#println("adjusted +") 
-							#adjuster.shift_width += adjuster.adjust_unit
-							adjuster.shift_width *= 1.5
-							adjuster.adjust_counter = 0
-						elseif adjuster.adjust_counter <= -4
-							#adjuster.shift_width -= adjuster.adjust_unit
-							adjuster.shift_width /= 1.5
-							adjuster.adjust_counter = 0
-							#println("adjusted -")
+					if adjust #changing shift width automatically
+						for adjuster in adjusters
+							update_shift_width!(adjuster)
 						end
 					end
 					
