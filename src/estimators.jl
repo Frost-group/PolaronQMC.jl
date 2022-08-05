@@ -45,6 +45,7 @@ function kinetic_energy(path::Path, estimator::Thermodynamic_Estimator) #thermal
     return term_one - (kinetic_energy * prefactor / path.n_beads)
 end
 
+#=
 function kinetic_energy(path::Path, estimator::Virial_Estimator)
     kinetic_energy = 0.0
     term_one = (path.n_dimensions * path.n_particles) / (2 * estimator.L * path.τ)
@@ -54,6 +55,25 @@ function kinetic_energy(path::Path, estimator::Virial_Estimator)
         kinetic_energy += (term_one - prefactor * link_term)
     end
     return kinetic_energy / path.n_beads
+end
+=#
+
+function kinetic_energy(path::Path, estimator::Virial_Estimator)
+    kinetic_energy = 0.0
+
+
+    #term 1 in virial estimator for KE
+    term_one = (path.n_dimensions * path.n_particles) / (2 * estimator.L * path.τ) 
+    prefactor = 1.0 / (4.0 * estimator.L * path.τ^2 * path.λ)
+    for bead in 1:path.n_beads, particle in 1:path.n_particles
+
+        #term 2 in virial estimator for KE
+            link_term = dot(path.beads[bead+estimator.L, particle, :] - path.beads[bead, particle, :], path.beads[bead+1, particle, :] - path.beads[bead, particle, :])
+            term_two = prefactor*link_term
+        kinetic_energy += term_two
+    end
+    return term_one - (kinetic_energy / path.n_beads)
+
 end
 
 
@@ -82,13 +102,14 @@ function potential_energy(path::Path, potential::HarmonicPotential, estimator::V
         for j in -1*estimator.L+1:estimator.L-1
             Δ += (path.beads[bead, particle, :] - path.beads[bead+j, particle, :])
         end
-        Δ /= 2*estimator.L
+        Δ ./= 2*estimator.L
 
-        generalised_force = -1 / path.τ * -path.m * potential.ω^2 * path.beads[bead, particle, :]
+        generalised_force = -1 / path.τ * path.m * potential.ω^2 * path.beads[bead, particle, :]
         potential_energy += -0.5*dot(generalised_force,Δ) + one_body_potential(potential, path, bead, particle)
     end
     return potential_energy / path.n_beads
 end
+
 
 function potential_energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator) #needs fixing
     potential_energy = 0.0
