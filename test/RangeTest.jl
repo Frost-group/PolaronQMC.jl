@@ -15,13 +15,14 @@ n_particles = 1
 start_range = 1.0
 ħ = 1.0
 n_beads = 100
+n_dimensions = 1
 
 #for pimc
 n_steps = 40000
 equilibrium_skip = 0.1*n_steps
 observables_skip = 0.02*n_steps
-movers = [[Single!, Bisect!, Displace!],[1.0, 0.3, 0.2]]
-#movers = [[Single!, Displace!],[1.0, 0.2]]
+#movers = [[Single!, Bisect!, Displace!],[1.0, 0.3, 0.2]]
+movers = [[Bisect!],[1.0]]
 observables = [Energy]
 
 regime = Primitive_Regime()
@@ -38,13 +39,14 @@ begin
 
 
     #Estimators and potentials
-        estimators = [Virial_Estimator(n_beads)]
-        #estimators = [Thermodynamic_Estimator()]
+        #estimators = [Virial_Estimator(n_beads)]
+        #estimators = [Virial_Estimator(n_beads),Thermodynamic_Estimator()]
+        estimators = [Thermodynamic_Estimator()]
         potential = HarmonicPotential(ω)
 
 
     #changing
-    temp_range = 1:10
+    temp_range = 1:8
 
 
     #output
@@ -66,7 +68,7 @@ begin
         τ = 1.0 / (T * n_beads)
         β = 1/T
 
-        path = Path(n_beads, n_particles, τ, m = m, λ = λ, start_range = start_range)
+        path = Path(n_beads, n_particles, n_dimensions, τ, m = m, λ = λ, start_range = start_range)
         pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust = true)
 
         output_observables = pimc[2]
@@ -97,13 +99,13 @@ begin
     =#
     
     
-    scatter!(temp_range,observables_range_T[string(Symbol(estimators[1]))], yerr = errors_range_T[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
+    scatter!(temp_range,observables_range_T[string(Symbol(estimators[1]))], yerr = errors_range_T[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])), legend=:bottomleft)
     #scatter!(temp_range,observables_range_T[string(Symbol(estimators[2]))], yerr = errors_range_T[string(Symbol(estimators[2]))], label=string(Symbol(estimators[2])))
     
 end
 
 begin
-    plot(temp_range,comparison_range_T, label="Analytic Energy",xlabel="Temperature",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5)
+    plot(temp_range,comparison_range_T, label="Analytic Energy",xlabel="Temperature",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5, legend=:bottomleft)
     scatter!(temp_range,observables_range_T[string(Symbol(estimators[1]))], yerr = errors_range_T[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
 end
 

@@ -7,7 +7,7 @@
 function Single!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
     bead = rand(1:path.n_beads)
 	width = adjuster.shift_width
-	shift = width * rand([-1,1]) * rand()
+	shift = rand(path.n_dimensions) * width * rand([-1,1])
 
     # We just need to look at the beads +- 1 unit from m
     # CHECK: Non local potential? Coulombic?
@@ -16,7 +16,7 @@ function Single!(path::Path, particle::Int, potential::Potential, regime::Regime
 		kinetic_action(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
 		potential_action(path, bead, particle, potential, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
 
-	path.beads[bead, particle] += shift
+	path.beads[bead, particle, :] += shift
 
     new_action =
 		kinetic_action(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
@@ -28,7 +28,7 @@ function Single!(path::Path, particle::Int, potential::Potential, regime::Regime
 		adjuster.adjust_counter += 1 #updating counter for adjustment of shift width
 		return true
 	else
-		path.beads[bead, particle] -= shift
+		path.beads[bead, particle, :] -= shift
 		adjuster.adjust_counter -= 1 #updating counter for adjustment of shift width
 		return false
 	end
@@ -39,14 +39,14 @@ end
 
 function Displace!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 	width = adjuster.shift_width
-	shift = width * rand([-1,1]) * rand()
+	shift = rand(path.n_dimensions) * width * rand([-1,1])
 
-	old_beads = copy(path.beads[:, particle])
+	old_beads = copy(path.beads[:, particle, :])
     
     old_action = sum(potential_action(path, bead, particle, potential, regime) for bead in 1:path.n_beads)
 	
 	for bead in 1:path.n_beads
-		path.beads[bead, particle] += shift
+		path.beads[bead, particle, :] += shift
 	end
 
     new_action = sum(potential_action(path, bead, particle, potential, regime) for bead in 1:path.n_beads)
@@ -58,7 +58,7 @@ function Displace!(path::Path, particle::Int, potential::Potential, regime::Regi
 		adjuster.adjust_counter += 1 #updating counter for adjustment of shift width
 		return true
 	else
-		path.beads[:, particle] = old_beads
+		path.beads[:, particle, :] = old_beads
 		adjuster.adjust_counter -= 1 #updating counter for adjustment of shift width
 		return false
 	end
@@ -75,7 +75,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 	#println("sb = ", start_bead)
 	#println("ed = ",start_bead+segment_length)
 
-	old_beads = copy(path.beads[:,particle])
+	old_beads = copy(path.beads[:,particle, :])
 
 
 	total_old_action = 0.0
@@ -96,8 +96,8 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 			bead = Int(start_bead + (2^(level-1) * k))
 			#println("bead = ", bead)
 			segment_old_action += potential_action(path, bead, particle, potential, regime)
-			shift = rand([-1,1]) * rand() * sqrt( 2^(level-1) * path.τ * path.λ) 
-			path.beads[bead, particle] = 0.5 * (path.beads[bead - 2^(level-1), particle] + path.beads[bead + 2^(level-1), particle]) + shift
+			shift = rand([-1,1]) * rand(path.n_dimensions) * sqrt( 2^(level-1) * path.τ * path.λ) 
+			path.beads[bead, particle, :] = 0.5 * (path.beads[bead - 2^(level-1), particle, :] + path.beads[bead + 2^(level-1), particle, :]) + shift
 			segment_new_action += potential_action(path, bead, particle, potential, regime)
 		end
 		segment_action_diff = 2^(level-1)* path.τ * (segment_new_action - segment_old_action)
@@ -120,7 +120,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 		return true
 	else
-		path.beads[:, particle] = old_beads
+		path.beads[:, particle, :] = old_beads
 		return false
 	end
 
