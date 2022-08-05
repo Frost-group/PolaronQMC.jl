@@ -36,7 +36,7 @@ mutable struct Single_Adjuster <: Adjuster
     shift_width :: Float64
     adjust_unit :: Float64 #how much shift width is adjusted by each time
     function Single_Adjuster(λ,τ)
-        shift_width = sqrt(4 * λ * τ)
+        shift_width = sqrt(4 * λ * τ) * 0.5
         adjust_unit = shift_width
         new(0,shift_width, adjust_unit)
     end
@@ -49,8 +49,8 @@ mutable struct Displace_Adjuster <: Adjuster
     shift_width :: Float64 
     adjust_unit :: Float64 #how much shift width is adjusted by each time
     function Displace_Adjuster(λ,τ)
-        shift_width = sqrt(4 * λ * τ)*30
-        adjust_unit = 0.5*shift_width
+        shift_width = sqrt(4 * λ * τ)
+        adjust_unit = shift_width
         new(0,shift_width, adjust_unit)
     end
 end

@@ -68,7 +68,7 @@ end
 function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
 	#max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
-	segment_length = 32 + 1 #temporary arbitary choice
+	segment_length = 16 + 1 #temporary arbitary choice
 	max_level = Int(floor(log(segment_length)/log(2))) # = 4 in arbitary setting
 
 	start_bead = rand(1:path.n_beads)
@@ -124,8 +124,8 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 		return false
 	end
 
-
 end
+
 
 
 

@@ -6,10 +6,9 @@ using Plots
 #using PolaronMobility
 end
 
-begin
 
 #initialising variables
-
+begin
     #for Potential
     ω = 1.0
     α = 10.0
@@ -18,12 +17,15 @@ begin
     T = 1.0
     λ = 0.5
     m = ω
-    n_beads = 50
+    n_beads = 100
     τ = 1.0 / (T * n_beads)
     n_particles = 1
-    n_dimensions = 1
-    start_range = 1.0
+    n_dimensions = 3
+    start_range = 2.0
     path = Path(n_beads, n_particles, n_dimensions, τ, m = m, λ = λ, start_range = start_range)
+
+
+    
 
 
     #for comparison energy
@@ -32,13 +34,15 @@ begin
     T_scale_factor = 1/7.61
 
     #for pimc
-    n_steps = 5000
-    equilibrium_skip = 0.3*n_steps
+    n_steps = 8000
+    equilibrium_skip = 0.2*n_steps
     #equilibrium_skip = 0
     observables_skip = 0.01*n_steps
     #observables_skip = 100
-    #movers = [[Single!, Displace!],[1.0, 0.2]]
-    movers = [[Bisect!, Displace!, Single!],[1.0, 0.2, 0.0]]
+    #movers = [[Single!],[1.0]]
+    movers = [[Bisect!,Displace!],[1.0, 0.0]]
+    #movers = [[Single!, Displace!],[1.0, 0.3]]
+    #movers = [[Bisect!, Displace!, Single!],[1.0,0.2,1.0]]
 
     observables = [Energy, Position]
     
@@ -48,9 +52,9 @@ begin
         potential = HarmonicPotential(ω)
     
     #estimator type
-    #estimators = [Virial_Estimator(n_beads)]
-        #estimator = Simple_Estimator()
-        estimators = [Thermodynamic_Estimator()]
+    estimators = [Virial_Estimator(n_beads)]
+        #estimator = [Simple_Estimator()]
+        #estimators = [Thermodynamic_Estimator()]
         
     #regime type
         regime = Primitive_Regime()
@@ -60,7 +64,7 @@ begin
 #running sim
 
 
-pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=false)
+pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)
 acceptance_ratio = pimc[1]
 output_observables = pimc[2]
 
