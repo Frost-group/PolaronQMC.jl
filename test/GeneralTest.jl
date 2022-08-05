@@ -3,7 +3,7 @@ using Revise
 using PolaronQMC
 using Statistics
 using Plots
-using PolaronMobility
+#using PolaronMobility
 end
 
 begin
@@ -18,11 +18,12 @@ begin
     T = 1.0
     λ = 0.5
     m = ω
-    n_beads = 80
+    n_beads = 50
     τ = 1.0 / (T * n_beads)
     n_particles = 1
+    n_dimensions = 1
     start_range = 1.0
-    path = Path(n_beads, n_particles, τ, m = m, λ = λ, start_range = start_range)
+    path = Path(n_beads, n_particles, n_dimensions, τ, m = m, λ = λ, start_range = start_range)
 
 
     #for comparison energy
@@ -31,27 +32,26 @@ begin
     T_scale_factor = 1/7.61
 
     #for pimc
-    n_steps = 1000
-    equilibrium_skip = 0.1*n_steps
+    n_steps = 5000
+    equilibrium_skip = 0.3*n_steps
     #equilibrium_skip = 0
     observables_skip = 0.01*n_steps
     #observables_skip = 100
-    movers = [[Single!, Displace!],[1.0, 0.2]]
-    #adjusters = [Bisect_Adjuster(path),Single_Adjuster(path)]
+    #movers = [[Single!, Displace!],[1.0, 0.2]]
+    movers = [[Bisect!, Displace!, Single!],[1.0, 0.2, 0.0]]
 
-    observables = [Energy]
+    observables = [Energy, Position]
     
     
     #potential type
-        potential = FrohlichPotential(α,ω,ħ,β)
-        #potential = HarmonicPotential(ω)
+        #potential = FrohlichPotential(α,ω,ħ,β)
+        potential = HarmonicPotential(ω)
     
     #estimator type
-    estimators = [Virial_Estimator(n_beads)]
+    #estimators = [Virial_Estimator(n_beads)]
         #estimator = Simple_Estimator()
-        #estimators = [Thermodynamic_Estimator()]
-        #estimator = Virial_Estimator(n_beads)
-
+        estimators = [Thermodynamic_Estimator()]
+        
     #regime type
         regime = Primitive_Regime()
 
@@ -60,13 +60,22 @@ begin
 #running sim
 
 
-pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)
+pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=false)
 acceptance_ratio = pimc[1]
 output_observables = pimc[2]
 
 energy = output_observables["Energy"][string(Symbol(estimators[1]))]
-#analytic_energy = analytic_energy_harmonic(potential,β,ħ)
-comparison_polaron = make_polaron([α], [T*T_scale_factor], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
+position = output_observables["Position"][string(Symbol(estimators[1]))]
+
+
+# comparison energy
+    if typeof(potential) == HarmonicPotential
+        comparison_energy = analytic_energy_harmonic(potential,β,ħ)
+    elseif typeof(potential) == FrohlichPotential
+        comparison_polaron = make_polaron([α], [T*T_scale_factor], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
+        comparison_energy = -comparison_polaron.F
+    end
+
 variances = jackknife(energy)
 
 
@@ -74,17 +83,17 @@ variances = jackknife(energy)
 
 println("acceptance ratio = ", acceptance_ratio)
 println("Mean energy = ", mean(energy))
-#println("analytic energy = ", analytic_energy)
-println("comparison_energy = ", -comparison_polaron.F)
+println("comparison_energy = ", comparison_energy)
+#println("Mean Position = ", mean(position))
 println("jackknife errors = ", sqrt(variances[2]))
 
 
 
 #Plots
-worldline = plot(path.beads[:,1], 1:path.n_beads)
-energyplot = plot(energy)
-
-plot(worldline, energyplot, layout = (2,1), legend = false)
+#posplot = plot(position, ylabel="Mean position")
+energyplot = plot(energy, ylabel="Mean energy")
+posplot = histogram(position)
+plot(posplot, energyplot, layout = (2,1), legend = false)
 
 
 

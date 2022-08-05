@@ -15,7 +15,7 @@ end
 
 # Return the harmonic potential for a single particle.
 function one_body_potential(potential::HarmonicPotential, path::Path, bead::Int, particle::Int)
-    return 0.5 * path.m * potential.ω^2 * path.beads[bead, particle]^2
+    return 0.5 * path.m * potential.ω^2 * norm(path.beads[bead, particle,:])^2
 end
 
 # Returns the Frohlich potential for a single particle
@@ -25,7 +25,7 @@ function one_body_potential(potential::FrohlichPotential, path::Path, bead::Int,
     double_integral = 0.0
     for other_bead in 1:path.n_beads
         if other_bead != bead
-            double_integral += phonon_response(other_bead) / norm(path.beads[bead, particle] .- path.beads[other_bead, particle])
+            double_integral += phonon_response(other_bead) / norm(path.beads[bead, particle, :] .- path.beads[other_bead, particle, :])
         end
     end
     return potential.α * ω^(3/2) / sqrt(8) * double_integral / path.n_beads

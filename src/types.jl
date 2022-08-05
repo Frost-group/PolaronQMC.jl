@@ -29,12 +29,13 @@ Adjuster type to container information about shift width and allow for its auto 
 
 abstract type Adjuster end
 
+
 #Adjuster for the Single! move algorithm
 mutable struct Single_Adjuster <: Adjuster
     adjust_counter :: Int
     shift_width :: Float64
     adjust_unit :: Float64 #how much shift width is adjusted by each time
-    function Single_Adjuster(λ::Float64, τ::Float64)
+    function Single_Adjuster(λ,τ)
         shift_width = sqrt(4 * λ * τ)
         adjust_unit = shift_width
         new(0,shift_width, adjust_unit)
@@ -47,8 +48,8 @@ mutable struct Displace_Adjuster <: Adjuster
     adjust_counter :: Int
     shift_width :: Float64 
     adjust_unit :: Float64 #how much shift width is adjusted by each time
-    function Displace_Adjuster(λ::Float64, τ::Float64)
-        shift_width = sqrt(4 * λ * τ)*100
+    function Displace_Adjuster(λ,τ)
+        shift_width = sqrt(4 * λ * τ)*30
         adjust_unit = 0.5*shift_width
         new(0,shift_width, adjust_unit)
     end
@@ -64,7 +65,7 @@ mutable struct Bisect_Adjuster <: Adjuster
     max_level :: Int
 
 
-    function Bisect_Adjuster(λ::Float64, τ::Float64)
+    function Bisect_Adjuster(λ,τ)
         adjust_counter_array = Dict()
         shift_width_array = Dict()
         
@@ -93,8 +94,9 @@ Generic path mutable type
 mutable struct Path
 	n_beads :: Int64
 	n_particles :: Int64
+    n_dimensions :: Int64
 
-	beads :: CircularArray{Float64, 2}
+	beads :: CircularArray{Float64, 3}
     adjusters :: Dict
 
 	τ :: Float64
@@ -103,8 +105,8 @@ mutable struct Path
 
 
 
-	function Path(n_beads::Int64, n_particles::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 1.0)
-        beads = CircularArray(rand(n_beads, n_particles).*rand([-1,1],n_beads)*start_range)
+	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 1.0)
+        beads = CircularArray(rand(n_beads, n_particles, n_dimensions) .* (rand([-1,1] * start_range, n_beads)))
 
         #creating adjusters
         adjusters = Dict()
@@ -114,7 +116,7 @@ mutable struct Path
 
 
 
-		new(n_beads, n_particles, beads, adjusters, τ, m, λ)
+		new(n_beads, n_particles, n_dimensions, beads, adjusters, τ, m, λ)
 	end
 end
 
