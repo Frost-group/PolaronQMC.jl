@@ -127,7 +127,7 @@ function potential_energy(path::Path, potential::FrohlichPotential, estimator::V
 
         #finding the derivative of the potential
         deriv_potential = zeros(path.n_dimensions) #derivative of potential wrt bead
-        for other_bead in 1:path.n_beads, particle in 1:path.n_particles
+        for other_bead in 1:path.n_beads
             if other_bead != bead
                 prefactor = prefactor_1 * cosh(βn * abs(bead - other_bead) - potential.β/2)
                 deriv_potential += prefactor .* (path.beads[bead,particle,:] - path.beads[other_bead,particle,:]) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
@@ -142,6 +142,8 @@ function potential_energy(path::Path, potential::FrohlichPotential, estimator::V
     end
     return potential_energy / path.n_beads
 end
+
+
 
 
 function potential_energy(path::Path, potential::TwoBodyPotential, estimator::Thermodynamic_Estimator)
@@ -159,10 +161,43 @@ end
 
 
 
-function Energy(path::Path, potential::Potential, estimator::Estimator)
+function Energy(path::Path, potential::Potential, estimator::Union{Thermodynamic_Estimator,Simple_Estimator})
     return kinetic_energy(path, estimator) + potential_energy(path, potential, estimator)
 end
 
+function Energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator)
+    term_one = path.n_dimensions * path.n_particles / (2 * path.τ * path.n_beads)
+
+    #beta conversion g_factor
+    β_conversion_factor = 47.81
+    β_reduced = path.τ * path.n_beads * β_conversion_factor
+
+
+    #finding centroid pos
+    centroid_pos = sum(path.beads)/path.n_beads
+
+    #term 2
+    t2_prefactor = path.τ / (2 * path.n_beads)
+    term_two = 0.0
+    potential_energy = 0.0
+
+    for bead in path.n_beads, particle in path.n_particles
+        potential_energy += one_body_potential(potential, path, bead, particle)
+
+        for other_bead in path.n_beads
+            if other_bead != bead
+
+            g_factor = 0.5 * potential.α * sqrt(ħ/(2*path.m*potential.ω)) * cosh(β_reduced  * ((bead - other_bead)/path.n_beads - 0.5)) * csch(β_reduced * 0.5)
+            term_two += g_factor * dot((bead - centroid_pos),(bead - other_bead)) / norm(bead - other_bead)^3
+            end
+        end
+
+        
+    end
+
+    return term_one - (t2_prefactor * term_two) + (potential_energy)
+    
+end
 
 # Correlation ---------------------------------------------------------------------
 

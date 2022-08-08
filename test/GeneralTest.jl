@@ -11,7 +11,7 @@ end
 begin
     #for Potential
     ω = 1.0
-    α = 1.0
+    α = 4.0
 
     #for path
     T = 1.0
@@ -21,7 +21,7 @@ begin
     τ = 1.0 / (T * n_beads)
     n_particles = 1
     n_dimensions = 3
-    start_range = 2.0
+    start_range = 1.0
     path = Path(n_beads, n_particles, n_dimensions, τ, m = m, λ = λ, start_range = start_range)
 
 
@@ -34,13 +34,13 @@ begin
     T_scale_factor = 1/7.61
 
     #for pimc
-    n_steps = 8000
-    equilibrium_skip = 0.2*n_steps
-    #equilibrium_skip = 0
+    n_steps = 10000
+    #equilibrium_skip = 0.2*n_steps
+    equilibrium_skip = 0
     observables_skip = 0.01*n_steps
     #observables_skip = 100
-    #movers = [[Single!],[1.0]]
     movers = [[Bisect!],[1.0]]
+    #movers = [[Single!],[1.0]]
     #movers = [[Single!, Displace!],[1.0, 0.3]]
     #movers = [[Bisect!, Displace!, Single!],[1.0,0.2,1.0]]
 
@@ -52,9 +52,9 @@ begin
         #potential = HarmonicPotential(ω)
     
     #estimator type
-    #estimators = [Virial_Estimator(100)]
+    estimators = [Virial_Estimator(n_beads)]
         #estimator = [Simple_Estimator()]
-        estimators = [Thermodynamic_Estimator()]
+        #estimators = [Thermodynamic_Estimator()]
         
     #regime type
         regime = Primitive_Regime()
@@ -80,13 +80,14 @@ position = output_observables["Position"][string(Symbol(estimators[1]))]
         comparison_energy = -comparison_polaron.F
     end
 =#
-variances = jackknife(energy)
 
+variances = jackknife(energy)
 
 #post analysis
 
+
 println("acceptance ratio = ", acceptance_ratio)
-println("Mean energy = ", selective_mean(energy, 1000))
+println("Mean energy = ", selective_mean(energy, 200))
 #println("comparison_energy = ", comparison_energy)
 #println("Mean Position = ", mean(position))
 println("jackknife errors = ", sqrt(variances[2]))
@@ -95,22 +96,22 @@ println("jackknife errors = ", sqrt(variances[2]))
 
 #Plots
 #posplot = plot(position, ylabel="Mean position")
-energyplot = plot(energy, ylabel="Mean energy")
+energyplot = plot(energy, ylabel="Mean energy", xlabel="n_steps")
 posplot = histogram(position)
 plot(posplot, energyplot, layout = (2,1), legend = false)
 
 
 
 
+end
 
+#More plotting
 
-
-
+begin
+    plot([path.beads[1]],[path.beads[2]],[path.beads[3]])
 end
 
 begin
-    a = [1,2,3,4,10000]
-    println("sm ",selective_mean(a))
-    println("m ", mean(a))
+    (1.05e-34 * 2pi * 1e12) / 1.38e-23 
 end
 

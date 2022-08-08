@@ -28,7 +28,7 @@ function one_body_potential(potential::FrohlichPotential, path::Path, bead::Int,
             double_integral += phonon_response(other_bead) / norm(path.beads[bead, particle, :] .- path.beads[other_bead, particle, :])
         end
     end
-    return potential.α * ω^(3/2) / sqrt(8) * double_integral / path.n_beads
+    return potential.α * ω^(-1/2) / sqrt(8) * double_integral / path.n_beads
 end
 
 
