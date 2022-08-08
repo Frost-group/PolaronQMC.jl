@@ -15,14 +15,14 @@ begin
 n_particles = 1
 start_range = 1.0
 ħ = 1.0
-n_beads = 80
+n_beads = 100
 n_dimensions = 3
 
 #for pimc
-n_steps = 30000
+n_steps = 2000
 equilibrium_skip = 0.1*n_steps
 observables_skip = 0.02*n_steps
-#movers = [[Single!, Displace!],[1.0, 0.2]]
+#movers = [[Single!, Displace!],[1.0, 0.1]]
 movers = [[Bisect!],[1.0]]
 observables = [Energy]
 regime = Primitive_Regime()
@@ -110,7 +110,6 @@ end
 #Testing α range ------------------------------------------------
 begin
     #kept constant
-    T_scale_factor = 1/7.61
 
     T = 1.0
     τ = 1.0 / (T * n_beads)
@@ -120,11 +119,11 @@ begin
     m = ω
 
     #Estimators and potentials
-        estimators = [Thermodynamic_Estimator()]
+        estimators = [Virial_Estimator(100)]
 
     #changing
-    alpha_range = 20.0:40.0
-    comparison_polaron = make_polaron(alpha_range, [T*T_scale_factor], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
+    alpha_range = 1.0:4.0
+    comparison_polaron = make_polaron(alpha_range, [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
 
 
     #output
@@ -184,7 +183,7 @@ begin
 end
 
 begin
-    plot(alpha_range,comparison_range_L, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5, legend = false, ylims=(-20,150))
+    plot(alpha_range,comparison_range_L, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5, legend=:topleft )
 
     scatter!(alpha_range,observables_range_L[string(Symbol(estimators[1]))], yerr = errors_range_L[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
 end
