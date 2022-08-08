@@ -15,13 +15,15 @@ begin
 n_particles = 1
 start_range = 1.0
 ħ = 1.0
-n_beads = 100
+n_beads = 80
+n_dimensions = 3
 
 #for pimc
-n_steps = 10000
+n_steps = 30000
 equilibrium_skip = 0.1*n_steps
 observables_skip = 0.02*n_steps
-movers = [[Single!, Displace!],[1.0, 0.2]]
+#movers = [[Single!, Displace!],[1.0, 0.2]]
+movers = [[Bisect!],[1.0]]
 observables = [Energy]
 regime = Primitive_Regime()
 
@@ -121,7 +123,7 @@ begin
         estimators = [Thermodynamic_Estimator()]
 
     #changing
-    alpha_range = 25.0:50.0
+    alpha_range = 20.0:40.0
     comparison_polaron = make_polaron(alpha_range, [T*T_scale_factor], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
 
 
@@ -144,7 +146,7 @@ begin
         α = L
         potential = FrohlichPotential(α,ω,ħ,β)
 
-        path = Path(n_beads, n_particles, τ, m = m, λ = λ, start_range = start_range)
+        path = Path(n_beads, n_particles, n_dimensions, τ, m = m, λ = λ, start_range = start_range)
         pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime)
 
         output_observables = pimc[2]
@@ -182,7 +184,7 @@ begin
 end
 
 begin
-    plot(alpha_range,comparison_range_L, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5, legend = false)
+    plot(alpha_range,comparison_range_L, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5, legend = false, ylims=(-20,150))
 
     scatter!(alpha_range,observables_range_L[string(Symbol(estimators[1]))], yerr = errors_range_L[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
 end
@@ -190,6 +192,7 @@ end
 
 begin
     aggregate_alpha_range = []
+    aggregate_error_range = []
     aggregate_observables_range = []
     aggregate_comparison_range = []
 end
@@ -197,14 +200,15 @@ end
 begin
     
     append!(aggregate_alpha_range, alpha_range)
+    append!(aggregate_error_range, errors_range_L)
     append!(aggregate_observables_range, observables_range_L)
     append!(aggregate_comparison_range, comparison_range_L)
 end
 
 
 begin
-    plot(alpha_range,comparison_range_L, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5, legend = false)
-    scatter!(alpha_range,observables_range_L[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
+    plot(aggregate_alpha_range,aggregate_comparison_range, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5, legend = false)
+    scatter!(aggregate_alpha_range,aggregate_observables_range,  label=string(Symbol(estimators[1])))
 end
 
 

@@ -32,8 +32,8 @@ export potential_action, kinetic_action, primitive_action
 # Export simulation run code (PIMC)
 export PIMC
 
-# Export values for comparison
-export analytic_energy_harmonic
+# Export methods for comparison
+export analytic_energy_harmonic, selective_mean
 
 # Export error analysis
 export jackknife

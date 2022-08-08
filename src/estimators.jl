@@ -112,33 +112,33 @@ end
 
 
 function potential_energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator) #needs fixing
+    prefactor_1 = potential.α * potential.ω^1.5 / (2*sqrt(2*path.m)*sinh(potential.β/2))
+    βn = potential.β/path.n_beads
     potential_energy = 0.0
+    
     for bead in 1:path.n_beads, particle in 1:path.n_particles
-        Δ = 0.0
+        Δ = zeros(path.n_dimensions)
 
         for j in -1*estimator.L+1:estimator.L-1
-            Δ += path.beads[bead, particle] - path.beads[bead+j, particle]
+            Δ += path.beads[bead, particle, :] - path.beads[bead+j, particle, :]
         end
-        Δ /= 2*estimator.L
+        Δ ./= 2*estimator.L
 
 
         #finding the derivative of the potential
-        deriv_potential = 0 #derivative of potential wrt bead
+        deriv_potential = zeros(path.n_dimensions) #derivative of potential wrt bead
         for other_bead in 1:path.n_beads, particle in 1:path.n_particles
             if other_bead != bead
-
-                inner_sum = path.τ * (potential.α * potential.ω^(3/2)) / (2*sqrt(2*path.m))
-                inner_sum *= (cosh(potential.ω * path.τ * abs(bead-other_bead) - (potential.ħ * potential.ω * potential.β/2))) / sinh(potential.ħ * potential.ω * potential.β * 0.5)
-                inner_sum *= (path.beads[bead,particle] - path.beads[other_bead,particle]) / (path.beads[bead,particle] - path.beads[other_bead,particle])^3
-                deriv_potential += inner_sum
+                prefactor = prefactor_1 * cosh(βn * abs(bead - other_bead) - potential.β/2)
+                deriv_potential += prefactor .* (path.beads[bead,particle,:] - path.beads[other_bead,particle,:]) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
             end
         end
-        deriv_potential *= -1
+        deriv_potential *= -1*βn
 
 
         #piecing all together
         generalised_force = -1 / path.τ * deriv_potential
-        potential_energy += -0.5 * generalised_force * Δ + one_body_potential(potential, path, bead, particle)
+        potential_energy += -0.5 * dot(generalised_force,Δ) + one_body_potential(potential, path, bead, particle)
     end
     return potential_energy / path.n_beads
 end
