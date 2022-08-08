@@ -11,4 +11,25 @@ end
 
 
 
+function selective_mean(observable_array::Array, limit::Union{Int,Float64})
+    """
+    mean that filters out extreme values
+    """
+    counter = 0
+    mean_value = 0.0
+    for observable_value in observable_array
+        if observable_value > abs(mean_value + 1)*-limit && observable_value < abs(mean_value + 1)*limit
+            counter += 1
+   
+            mean_value = ((counter-1) * mean_value + 1 * observable_value) / counter
+
+        end
+    end
+    return mean_value
+end
+
+
+
+
+
            
