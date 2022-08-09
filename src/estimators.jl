@@ -165,6 +165,7 @@ function Energy(path::Path, potential::Potential, estimator::Union{Thermodynamic
     return kinetic_energy(path, estimator) + potential_energy(path, potential, estimator)
 end
 
+
 function Energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator)
     term_one = path.n_dimensions * path.n_particles / (2 * path.τ * path.n_beads)
 
@@ -195,7 +196,7 @@ function Energy(path::Path, potential::FrohlichPotential, estimator::Virial_Esti
         
     end
 
-    return term_one - (t2_prefactor * term_two) + (potential_energy)
+    return term_one - (t2_prefactor * term_two) + (potential_energy / path.n_beads)
     
 end
 

@@ -15,15 +15,15 @@ begin
 n_particles = 1
 start_range = 1.0
 ħ = 1.0
-n_beads = 100
+n_beads = 500
 n_dimensions = 3
 
 #for pimc
-n_steps = 2000
+n_steps = 30000
 equilibrium_skip = 0.1*n_steps
 observables_skip = 0.02*n_steps
-#movers = [[Single!, Displace!],[1.0, 0.1]]
-movers = [[Bisect!],[1.0]]
+movers = [[Single!],[1.0]]
+#movers = [[Bisect!],[1.0]]
 observables = [Energy]
 regime = Primitive_Regime()
 
@@ -122,7 +122,7 @@ begin
         estimators = [Virial_Estimator(100)]
 
     #changing
-    alpha_range = 1.0:4.0
+    alpha_range = 1.0:5.0
     comparison_polaron = make_polaron(alpha_range, [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
 
 
@@ -155,7 +155,7 @@ begin
             estimator_energy = energy[string(Symbol(estimator))]
             
             #energy
-            append!(observables_range_L[string(Symbol(estimator))],mean(estimator_energy))
+            append!(observables_range_L[string(Symbol(estimator))], mean(estimator_energy))
 
             #errors
             error = sqrt(jackknife(estimator_energy)[2])
