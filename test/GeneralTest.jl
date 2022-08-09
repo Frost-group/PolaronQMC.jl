@@ -17,7 +17,7 @@ begin
     T = 1.0
     λ = 0.5
     m = ω
-    n_beads = 100
+    n_beads = 600
     τ = 1.0 / (T * n_beads)
     n_particles = 1
     n_dimensions = 3
@@ -33,13 +33,13 @@ begin
     β = 1/T
 
     #for pimc
-    n_steps = 30000
-    #equilibrium_skip = 0.2*n_steps
-    equilibrium_skip = 0
-    observables_skip = 0.01*n_steps
+    n_steps = 2500
+    equilibrium_skip = 0.2*n_steps
+    #equilibrium_skip = 
+    observables_skip = 0.03*n_steps
     #observables_skip = 100
-    #movers = [[Bisect!],[1.0]]
-    movers = [[Single!],[1.0]]
+    movers = [[Bisect!],[1.0]]
+    #movers = [[Single!],[1.0]]
     #movers = [[Single!, Displace!],[1.0, 0.3]]
     #movers = [[Bisect!, Displace!, Single!],[1.0,0.2,1.0]]
 
@@ -47,7 +47,7 @@ begin
     
     
     #potential type
-        potential = FrohlichPotential(α,ω,ħ,β)
+        potential = FrohlichPotential(α,ω,ħ)
         #potential = HarmonicPotential(ω)
     
     #estimator type
@@ -70,7 +70,7 @@ output_observables = pimc[2]
 energy = output_observables["Energy"][string(Symbol(estimators[1]))]
 position = output_observables["Position"][string(Symbol(estimators[1]))]
 
-#=
+
 # comparison energy
     if typeof(potential) == HarmonicPotential
         comparison_energy = analytic_energy_harmonic(potential,β,ħ)
@@ -78,7 +78,7 @@ position = output_observables["Position"][string(Symbol(estimators[1]))]
         comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
         comparison_energy = -comparison_polaron.F
     end
-=#
+
 
 variances = jackknife(energy)
 
@@ -87,7 +87,7 @@ variances = jackknife(energy)
 
 println("acceptance ratio = ", acceptance_ratio)
 println("Mean energy = ", mean(energy))
-#println("comparison_energy = ", comparison_energy)
+println("comparison_energy = ", comparison_energy)
 #println("Mean Position = ", mean(position))
 println("jackknife errors = ", sqrt(variances[2]))
 
@@ -102,12 +102,6 @@ plot(posplot, energyplot, layout = (2,1), legend = false)
 
 
 
-end
-
-#More plotting
-
-begin
-    plot([path.beads[1]],[path.beads[2]],[path.beads[3]])
 end
 
 

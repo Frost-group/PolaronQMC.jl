@@ -156,9 +156,8 @@ struct FrohlichPotential <: OneBodyPotential
     α :: Float64
     ω :: Float64
     ħ :: Float64
-    β :: Float64
-    function FrohlichPotential(α::Float64, ω::Float64, ħ::Float64, β::Float64)
-        new(α, ω, ħ, β)
+    function FrohlichPotential(α::Float64, ω::Float64, ħ::Float64)
+        new(α, ω, ħ)
     end
 end
 

@@ -175,6 +175,7 @@ function Energy(path::Path, potential::FrohlichPotential, estimator::Virial_Esti
 
     #beta conversion g_factor
     β_conversion_factor = 47.81
+    β_conversion_factor = 1
     β_reduced = path.τ * path.n_beads * β_conversion_factor
 
     #needs to change to get working for multiple particles
@@ -182,7 +183,7 @@ function Energy(path::Path, potential::FrohlichPotential, estimator::Virial_Esti
     potential_energy = 0.0
 
     for particle in 1:path.n_particles
-        centroid_pos = zeros(3)
+        centroid_pos = zeros(path.n_dimensions)
         for bead in 1:path.n_beads
             centroid_pos += path.beads[bead,particle,:]
         end

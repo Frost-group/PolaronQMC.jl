@@ -37,6 +37,12 @@ function update_shift_width!(adjuster::Bisect_Adjuster)
 end
 
 
+function thermalised_start!(path::Path, n_steps::Int, movers::Array, potential::Potential)
+    st_regime = Primitive_Regime()
+    st_observables = []
+    st_estimators = []
+    pimc = PIMC(n_steps, n_steps * 2 , n_steps * 2, path, movers, st_observables, st_estimators, potential, st_regime, adjust=true)
+end
 
 
 
