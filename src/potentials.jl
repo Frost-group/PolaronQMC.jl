@@ -20,17 +20,16 @@ end
 
 # Returns the Frohlich potential for a single particle
 function one_body_potential(potential::FrohlichPotential, path::Path, bead::Int, particle::Int)
-    ω = potential.ω
-    phonon_response(other_bead) = cosh(ω * path.τ * (abs(bead - other_bead) - path.n_beads / 2.0)) / sinh(ω * path.τ * path.n_beads / 2.0)
-    double_integral = 0.0
+    β = path.τ * path.n_beads
+    inner_integral = 0.0
     for other_bead in 1:path.n_beads
         if other_bead != bead
-            double_integral += phonon_response(other_bead) / norm(path.beads[bead, particle, :] .- path.beads[other_bead, particle, :])
+            g_factor = potential.α/2 * sqrt(potential.ħ/(2*path.m*potential.ω)) * cosh(β * (abs(bead-other_bead)/path.n_beads - 0.5)) * csch(β/2)
+            inner_integral += g_factor / norm(path.beads[bead, particle, :] - path.beads[other_bead, particle, :])
         end
     end
-    return potential.α * ω^(-1/2) / sqrt(8) * double_integral
+    return path.τ * inner_integral
 end
-
 
 
 # Mexican Hat -r^2+r^4 in N-dimensions

@@ -11,16 +11,16 @@ end
 begin
     #for Potential
     ω = 1.0
-    α = 3.0
+    α = 4.0
 
     #for path
-    T = 100.0
+    T = 1.0
     λ = 0.5
     m = ω
-    n_beads = 20
+    n_beads = 100
     τ = 1.0 / (T * n_beads)
     n_particles = 1
-    n_dimensions = 1
+    n_dimensions = 3
     start_range = 1.0
     path = Path(n_beads, n_particles, n_dimensions, τ, m = m, λ = λ, start_range = start_range)
 
@@ -33,7 +33,7 @@ begin
     β = 1/T
 
     #for pimc
-    n_steps = 50000
+    n_steps = 30000
     #equilibrium_skip = 0.2*n_steps
     equilibrium_skip = 0
     observables_skip = 0.01*n_steps

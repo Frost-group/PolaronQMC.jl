@@ -58,6 +58,8 @@ function kinetic_energy(path::Path, estimator::Virial_Estimator)
 end
 =#
 
+#=
+
 function kinetic_energy(path::Path, estimator::Virial_Estimator)
     kinetic_energy = 0.0
 
@@ -75,7 +77,7 @@ function kinetic_energy(path::Path, estimator::Virial_Estimator)
     return term_one - (kinetic_energy / path.n_beads)
 
 end
-
+=#
 
 #Potential energy estimators -------------------------------------------
 
@@ -110,7 +112,7 @@ function potential_energy(path::Path, potential::HarmonicPotential, estimator::V
     return potential_energy / path.n_beads
 end
 
-
+#=
 function potential_energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator) #needs fixing
     prefactor_1 = potential.α * potential.ω^1.5 / (2*sqrt(2*path.m)*sinh(potential.β/2))
     βn = potential.β/path.n_beads
@@ -142,7 +144,7 @@ function potential_energy(path::Path, potential::FrohlichPotential, estimator::V
     end
     return potential_energy / path.n_beads
 end
-
+=#
 
 
 
@@ -168,33 +170,44 @@ end
 
 function Energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator)
     term_one = path.n_dimensions * path.n_particles / (2 * path.τ * path.n_beads)
+    #term prefactor
+    t2_prefactor = path.τ / (2 * path.n_beads)
 
     #beta conversion g_factor
     β_conversion_factor = 47.81
     β_reduced = path.τ * path.n_beads * β_conversion_factor
 
-
-    #finding centroid pos
-    centroid_pos = sum(path.beads)/path.n_beads
-
-    #term 2
-    t2_prefactor = path.τ / (2 * path.n_beads)
+    #needs to change to get working for multiple particles
     term_two = 0.0
     potential_energy = 0.0
 
-    for bead in path.n_beads, particle in path.n_particles
-        potential_energy += one_body_potential(potential, path, bead, particle)
-
-        for other_bead in path.n_beads
-            if other_bead != bead
-
-            g_factor = 0.5 * potential.α * sqrt(ħ/(2*path.m*potential.ω)) * cosh(β_reduced  * ((bead - other_bead)/path.n_beads - 0.5)) * csch(β_reduced * 0.5)
-            term_two += g_factor * dot((bead - centroid_pos),(bead - other_bead)) / norm(bead - other_bead)^3
-            end
+    for particle in 1:path.n_particles
+        centroid_pos = zeros(3)
+        for bead in 1:path.n_beads
+            centroid_pos += path.beads[bead,particle,:]
         end
+        centroid_pos /= path.n_beads
+    
 
-        
+
+
+
+        for bead in 1:path.n_beads
+            potential_energy += one_body_potential(potential, path, bead, particle)
+
+            for other_bead in 1:path.n_beads
+                if other_bead != bead
+
+                g_factor = 0.5 * potential.α * sqrt(potential.ħ/(2*path.m*potential.ω)) * cosh(β_reduced  * (abs(bead - other_bead)/path.n_beads - 0.5)) * csch(β_reduced * 0.5)
+                term_two += g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
+                end
+            end
+
+            
+        end
     end
+
+    #can extend to sum up energy of all particles 
 
     return term_one - (t2_prefactor * term_two) + (potential_energy / path.n_beads)
     
