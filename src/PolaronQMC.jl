@@ -21,7 +21,10 @@ export potential_energy, kinetic_energy, Energy, Correlation, Position, Mean_Pos
 export Estimator, Thermodynamic_Estimator, Virial_Estimator, Simple_Estimator, Simple_Virial_Estimator
 
 # Export adjusters for automatically changing shift width
-export Adjuster, Single_Adjuster, Displace_Adjuster, Bisect_Adjuster, update_shift_width!
+export Adjuster, Single_Adjuster, Displace_Adjuster, Bisect_Adjuster
+
+# Export function used in the optimisation of the running of the simulation
+export update_shift_width!, thermalised_start!
 
 # Export PIMC move algorithms
 export Single!, Displace!, Bisect!, Stage!
@@ -49,7 +52,7 @@ include("comparison.jl") #Comparison with actual/experimental values
 include("actions.jl") # Kinetic and potential actions.
 include("potentials.jl") # Potentials for QMC algorithms.
 include("moves.jl") # PIMC moves.
-include("adjuster_update.jl") # Adjusters to shift width used in moves.
+include("optimisation.jl") # Adjusters to shift width used in moves.
 include("estimators.jl") # Estimators to sample.
 include("PIMC.jl") # Path integrals Monte Carlo algorithm.
 include("errors.jl") # Methods for analysing errors.
