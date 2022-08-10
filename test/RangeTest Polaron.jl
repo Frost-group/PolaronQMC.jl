@@ -16,7 +16,7 @@ begin
     st_start_range = 1.0
 
     st_T = 10.0
-    st_n_steps = 5000
+    st_n_steps = 8000
     st_n_dimensions = 3
     st_n_beads = 100 
     st_τ = 1.0 / (st_T * st_n_beads)
@@ -32,7 +32,7 @@ begin
     st_movers = [[Bisect!],[1.0]]
 
     st_potential = FrohlichPotential(st_α,st_ω,st_ħ)
-    thermalised_start!(path, st_n_steps, st_movers, st_potential)
+    thermalised_start!(path, st_n_steps, st_potential)
 
 end
 
@@ -132,7 +132,7 @@ begin
     m = ω
 
     #Estimators, movers and other components of PIMC
-    estimators = [Virial_Estimator(100)]
+    estimators = [Virial_Estimator()]
     #estimators = [Thermodynamic_Estimator()]
     movers = [[Bisect!],[1.0]]
     observables = [Energy]
@@ -140,7 +140,7 @@ begin
         
 
     #changing
-    alpha_range = 6.0:18.0
+    alpha_range = 1.0:20.0
     comparison_polaron = make_polaron(alpha_range, [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
 
 
@@ -162,7 +162,7 @@ begin
     for L in alpha_range
         
         α = L
-        n_steps = Int(400 * L)
+        n_steps = Int(5000 * L)
         #n_steps = 800
         potential = FrohlichPotential(α,ω,ħ)
         equilibrium_skip = 0.1*n_steps
@@ -259,7 +259,7 @@ begin
     beads_range = 100:100:400
 
     #Estimators and potentials
-        estimators = [Virial_Estimator(100)]
+        estimators = [Virial_Estimator()]
         
 
     #changing

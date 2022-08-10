@@ -39,8 +39,8 @@ begin
 
 
     #Estimators and potentials
-        #estimators = [Virial_Estimator(n_beads)]
-        #estimators = [Virial_Estimator(n_beads),Thermodynamic_Estimator()]
+        #estimators = [Virial_Estimator()]
+        #estimators = [Virial_Estimator(),Thermodynamic_Estimator()]
         estimators = [Thermodynamic_Estimator()]
         potential = HarmonicPotential(ω)
 

@@ -2,7 +2,16 @@
 
 
 
-# function used to update shift width
+"""
+    update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster})
+
+Updates the "shift width" parameter used in Adjusters within Movers.
+
+# Arguments
+- `adjuster`: Type of adjuster specific for the type of move being attempted.
+
+
+"""
 
 function update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster})
     if adjuster.adjust_counter >= 5
@@ -37,11 +46,22 @@ function update_shift_width!(adjuster::Bisect_Adjuster)
 end
 
 
-function thermalised_start!(path::Path, n_steps::Int, movers::Array, potential::Potential)
+
+"""
+    thermalised_start!(path::Path, potential::Potential; n_steps::Int = 2000, movers::Array = [[Bisect!],[1.0]])
+
+Performs PIMC simulation on the path without producing observables, thermalising the system before sampling of observables.
+
+
+"""
+
+
+function thermalised_start!(path::Path, potential::Potential; n_steps::Int = 2000, movers::Array = [[Bisect!],[1.0]])
     st_regime = Primitive_Regime()
     st_observables = []
     st_estimators = []
     pimc = PIMC(n_steps, n_steps * 2 , n_steps * 2, path, movers, st_observables, st_estimators, potential, st_regime, adjust=true)
+    println("Thermalisation complete")
 end
 
 
