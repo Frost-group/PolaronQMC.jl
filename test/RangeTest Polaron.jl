@@ -16,7 +16,7 @@ begin
     st_start_range = 1.0
 
     st_T = 10.0
-    st_n_steps = 8000
+    st_n_steps = 10000
     st_n_dimensions = 3
     st_n_beads = 100 
     st_τ = 1.0 / (st_T * st_n_beads)
@@ -32,7 +32,7 @@ begin
     st_movers = [[Bisect!],[1.0]]
 
     st_potential = FrohlichPotential(st_α,st_ω,st_ħ)
-    thermalised_start!(path, st_n_steps, st_potential)
+    thermalised_start!(path, st_potential, n_steps = st_n_steps)
 
 end
 
@@ -140,7 +140,7 @@ begin
         
 
     #changing
-    alpha_range = 1.0:20.0
+    alpha_range = 1.0:2.0:20.0
     comparison_polaron = make_polaron(alpha_range, [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
 
 
@@ -166,7 +166,7 @@ begin
         #n_steps = 800
         potential = FrohlichPotential(α,ω,ħ)
         equilibrium_skip = 0.1*n_steps
-        observables_skip = 0.02*n_steps
+        observables_skip = 0.03*n_steps
 
         #path = Path(n_beads, n_particles, n_dimensions, τ, m = m, λ = λ, start_range = start_range)
         pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)

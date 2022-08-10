@@ -80,6 +80,8 @@ function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Vir
 
     for particle in 1:path.n_particles
         centroid_pos = zeros(path.n_dimensions)
+
+
         for bead in 1:path.n_beads
             centroid_pos += path.beads[bead,particle,:]
         end
@@ -102,15 +104,46 @@ function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Vir
 end
 
 
+function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator)
+    term_one = path.n_dimensions * path.n_particles / (2 * path.τ * path.n_beads)
+    #term prefactor
+    t2_prefactor = path.τ / (2 * path.n_beads)
+
+    #beta conversion g_factor
+    β_conversion_factor = 47.81
+    β_reduced = path.τ * path.n_beads * β_conversion_factor
+
+
+    function get_term_two(particle, bead, other_bead, centroid_pos)
+        if bead != other_bead
+            g_factor = 0.5 * potential.α * sqrt(potential.ħ/(2*path.m*potential.ω)) * cosh(β_reduced  * (abs(bead - other_bead)/path.n_beads - 0.5)) * csch(β_reduced * 0.5)
+            return g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
+        else 
+            return 0.0
+        end
+    end
+
+    term_two = 0.0
+    for particle in 1:path.n_particles
+
+        centroid_pos = zeros(path.n_dimensions)
+        for bead in 1:path.n_beads
+            centroid_pos += path.beads[bead,particle,:]
+        end
+        centroid_pos /= path.n_beads
+
+        term_two += sum(get_term_two(particle, bead, other_bead, centroid_pos) for bead in 1:path.n_beads, other_bead in 1:path.n_beads)
+    end
+
+    return term_one - (t2_prefactor * term_two)
+end
+
 
 #Potential energy estimators -------------------------------------------
 
+
 function potential_energy(path::Path, potential::OneBodyPotential, estimator::Estimator)
-    potential_energy = 0.0
-    for bead in 1:path.n_beads, particle in 1:path.n_particles
-        potential_energy += one_body_potential(potential, path, bead, particle)
-    end
-    return potential_energy / path.n_beads
+    return sum(one_body_potential(potential, path, bead, particle)/path.n_beads for bead in 1:path.n_beads, particle in 1:path.n_particles)
 end
 
 

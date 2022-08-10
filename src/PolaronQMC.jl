@@ -7,6 +7,7 @@ using Statistics
 using LinearAlgebra
 using OnlineStats
 using Plots
+#temporary
 
 # Export types
 export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, Simple_Regime, Primitive_Regime
@@ -41,6 +42,11 @@ export analytic_energy_harmonic, selective_mean
 # Export error analysis
 export jackknife
 
+# Export visualisation (temp)
+export draw_beads_3d, animate_PIMC
+
+
+
 
 
 
@@ -56,6 +62,9 @@ include("optimisation.jl") # Adjusters to shift width used in moves.
 include("estimators.jl") # Estimators to sample.
 include("PIMC.jl") # Path integrals Monte Carlo algorithm.
 include("errors.jl") # Methods for analysing errors.
+
+#temporary
+include("PolaronQMCVisualisation.jl")
 #include("Schrodinger.jl") # discretised TISE solver
 
 end # module

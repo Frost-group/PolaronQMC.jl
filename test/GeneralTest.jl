@@ -4,6 +4,7 @@ using PolaronQMC
 using Statistics
 using Plots
 using PolaronMobility
+
 end
 
 
@@ -29,12 +30,12 @@ begin
     path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
 
     #potential type --------------------------
-        #potential = FrohlichPotential(α,ω,ħ)
-        potential = HarmonicPotential(ω)
+        potential = FrohlichPotential(α,ω,ħ)
+        #potential = HarmonicPotential(ω)
 
     #for pimc --------------------------------------
         #number of steps
-            n_steps = 8000
+            n_steps = 1000
 
         #skipping between sampling
             equilibrium_skip = 0.2*n_steps
@@ -102,4 +103,8 @@ begin
 end
 
 
+
+begin
+path
+end
 
