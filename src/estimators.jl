@@ -2,6 +2,18 @@
 using Statistics
 using ThreadsX
 
+<<<<<<< HEAD
+=======
+function kinetic_energy(path::Path, potentials)
+    bead = rand(1:path.n_beads)
+	prefactor = -1.0 / (4.0 * path.λ * path.τ^2)
+	kinetic_energy = sum(norm(path.beads[bead, particle, :] - path.beads[bead-1, particle, :])^2 for particle in 1:path.n_particles)
+	return prefactor * kinetic_energy + path.n_dimensions * path.n_particles / (2 * path.τ)
+end
+
+
+
+>>>>>>> parent of 57497aa (Sum over beads)
 function kinetic_energy(path::Path, potential::Potential, estimator::Thermodynamic_Estimator) #thermal dynamic estimator from ceperly paper
 	
     kinetic_energy = 0.0
@@ -111,12 +123,9 @@ function potential_energy(path::Path, potential::ConstantPotential, estimator::T
 end
 
 function potential_energy(path::Path, potential::OneBodyPotential)
-    potential_energy = sum(
-        one_body_potential(potential, path, bead, particle) 
-        for bead in 1:path.n_beads,
-            particle in 1:path.n_particles
-            )
-    return potential_energy / path.n_beads
+    bead = rand(1:path.n_beads)
+    potential_energy = sum(one_body_potential(potential, path, bead, particle) for particle in 1:path.n_particles)
+    return potential_energy
 end
 
 function potential_energy(path::Path, potential::TwoBodyPotential)
@@ -132,7 +141,21 @@ end
 function potential_energy(path::Path, potentials::Array{Potential})
     potential_energy = sum(potential_energy.(path, potentials))
     return potential_energy
+<<<<<<< HEAD
 ends
+=======
+end
+
+
+function Energy(path::Path, potentials::Array{Potential})
+    total_energy = kinetic_energy(path, potentials)
+    total_energy += sum(potential_energy.(path, potentials))
+    return total_energy
+end
+
+
+# Correlation ---------------------------------------------------------------------
+>>>>>>> parent of 57497aa (Sum over beads)
 
 function Correlation(path::Path, potential::Potential, estimator::Estimator)
     correlation = Vector{Float64}(undef, path.n_beads)
