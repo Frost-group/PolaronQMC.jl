@@ -2,18 +2,6 @@
 using Statistics
 using ThreadsX
 
-function kinetic_energy(path::Path, potentials)
-	prefactor = -1.0 / (4.0 * path.λ * path.τ^2)
-	kinetic_energy = sum(
-        norm(path.beads[bead, particle, :] - path.beads[bead-1, particle, :])^2 
-        for bead in 1:path.n_beads, 
-            particle in 1:path.n_particles
-            )
-	return prefactor * kinetic_energy / path.n_beads + path.n_dimensions * path.n_particles / (2 * path.τ) 
-end
-
-
-
 function kinetic_energy(path::Path, potential::Potential, estimator::Thermodynamic_Estimator) #thermal dynamic estimator from ceperly paper
 	
     kinetic_energy = 0.0
@@ -24,8 +12,6 @@ function kinetic_energy(path::Path, potential::Potential, estimator::Thermodynam
 	end
     return term_one - (kinetic_energy * prefactor / path.n_beads)
 end
-
-
 
 
 function kinetic_energy(path::Path, potential::HarmonicPotential, estimator::Virial_Estimator)
@@ -48,8 +34,6 @@ function kinetic_energy(path::Path, potential::HarmonicPotential, estimator::Vir
     return term_one + t2_prefactor * term_two
 
 end
-
-
 
 function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator)
     term_one = path.n_dimensions * path.n_particles / (2 * path.τ * path.n_beads)
@@ -122,8 +106,6 @@ function potential_energy(path::Path, potential::OneBodyPotential, estimator::Es
     return ThreadsX.sum(one_body_potential(potential, path, bead, particle)/path.n_beads for bead in 1:path.n_beads, particle in 1:path.n_particles)
 end
 
-
-
 function potential_energy(path::Path, potential::ConstantPotential, estimator::Thermodynamic_Estimator)
     return potential.V
 end
@@ -150,24 +132,7 @@ end
 function potential_energy(path::Path, potentials::Array{Potential})
     potential_energy = sum(potential_energy.(path, potentials))
     return potential_energy
-end
-
-
-function Energy(path::Path, potentials::Array{Potential})
-    total_energy = kinetic_energy(path, potentials)
-    total_energy += sum(potential_energy.(path, potentials))
-    return total_energy
-end
-
-function Virial_Energy(path::Path, potential::Potential; window_size = 1)
-    window_size = path.n_beads
-    total_energy = path.n_dimensions * path.n_particles / (2 * window_size * path.τ * path.n_beads)
-    general_force = 0.0
-    for bead in 1:path.n_beads, particle in 1:path.n_particles
-        general_force -= primit
-    end
-
-end
+ends
 
 function Correlation(path::Path, potential::Potential, estimator::Estimator)
     correlation = Vector{Float64}(undef, path.n_beads)
