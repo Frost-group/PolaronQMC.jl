@@ -3,7 +3,7 @@ using Revise
 using PolaronQMC
 using Statistics
 using Plots
-using PolaronMobility
+#using PolaronMobility
 
 end
 
@@ -52,7 +52,7 @@ begin
             observables = [Energy, Position]
     
         #estimator type
-            estimators = [Virial_Estimator()]
+            estimators = [Virial_EstimatorX()]
             #estimators = [Thermodynamic_Estimator()]
         
         #regime type
