@@ -2,6 +2,36 @@
 using Statistics
 using ThreadsX
 
+#types of estimators
+abstract type Estimator end
+
+#Energy estimators
+
+struct Simple_Estimator <: Estimator end #Estimator using basic sum of kinetic and potential total_energy
+
+struct Simple_Virial_Estimator <: Estimator end #Estimator using virial theorem for potential term
+
+struct Thermodynamic_Estimator <: Estimator end #Estimator using thermodynamic theory
+
+struct Virial_Estimator <: Estimator end #Estimator derived using virial theorem
+
+struct Virial_EstimatorX <: Estimator end #Estimator derived using virial theorem
+
+
+
+
+#Kinectic energy estimators ---------------------------------
+
+function kinetic_energy(path::Path, potential::Potential, estimator::Union{Simple_Estimator, Simple_Virial_Estimator}) #thermal dynamic estimator from ceperly paper
+	kinetic_energy = 0.0
+	for bead in 1:path.n_beads, particle in 1:path.n_particles
+		kinetic_energy += 0.5*path.m*(path.beads[bead, particle] - path.beads[bead-1, particle])^2
+	end
+	return kinetic_energy / path.n_beads
+end
+
+
+
 function kinetic_energy(path::Path, potential::Potential, estimator::Thermodynamic_Estimator) #thermal dynamic estimator from ceperly paper
 	
     kinetic_energy = 0.0
@@ -12,6 +42,8 @@ function kinetic_energy(path::Path, potential::Potential, estimator::Thermodynam
 	end
     return term_one - (kinetic_energy * prefactor / path.n_beads)
 end
+
+
 
 
 function kinetic_energy(path::Path, potential::HarmonicPotential, estimator::Virial_Estimator)
@@ -34,6 +66,8 @@ function kinetic_energy(path::Path, potential::HarmonicPotential, estimator::Vir
     return term_one + t2_prefactor * term_two
 
 end
+
+
 
 function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator)
     term_one = path.n_dimensions * path.n_particles / (2 * path.τ * path.n_beads)
@@ -106,30 +140,33 @@ function potential_energy(path::Path, potential::OneBodyPotential, estimator::Es
     return ThreadsX.sum(one_body_potential(potential, path, bead, particle)/path.n_beads for bead in 1:path.n_beads, particle in 1:path.n_particles)
 end
 
+
+
 function potential_energy(path::Path, potential::ConstantPotential, estimator::Thermodynamic_Estimator)
     return potential.V
 end
 
-function potential_energy(path::Path, potential::OneBodyPotential)
-    bead = rand(1:path.n_beads)
-    potential_energy = sum(one_body_potential(potential, path, bead, particle) for particle in 1:path.n_particles)
-    return potential_energy
+
+function potential_energy(path::Path, potential::TwoBodyPotential, estimator::Thermodynamic_Estimator)
+    potential_energy = 0.0
+    for bead in 1:path.n_beads, particle_one in 1:path.n_particles, particle_two in 1:path.n_particles
+        if particle_one != particle_two
+            potential_energy += two_body_potential(potential, path, bead, particle_one, particle_two)
+        end
+    end
+    return potential_energy / path.n_beads
 end
 
-function potential_energy(path::Path, potential::TwoBodyPotential)
-    bead = rand(1:path.n_beads)
-    potential_energy = sum(
-        two_body_potential(potential, path, bead, particle_one, particle_two) 
-        for particle_one in 1:path.n_particles, 
-            particle_two in 1:(particle_one-1)
-            )
-    return potential_energy
+
+# Energy ---------------------------------------------------------
+
+
+
+function Energy(path::Path, potential::Potential, estimator::Estimator)
+    return kinetic_energy(path, potential, estimator) + potential_energy(path, potential, estimator)
 end
 
-function potential_energy(path::Path, potentials::Array{Potential})
-    potential_energy = sum(potential_energy.(path, potentials))
-    return potential_energy
-end
+
 
 
 
