@@ -19,7 +19,7 @@ export one_body_potential, two_body_potential
 export potential_energy, kinetic_energy, Energy, Correlation, Position, Mean_Position
 
 # Export estimators
-export Estimator, Thermodynamic_Estimator, Virial_Estimator, Simple_Estimator, Simple_Virial_Estimator
+export Estimator, Thermodynamic_Estimator, Virial_Estimator, Simple_Estimator, Simple_Virial_Estimator, Virial_EstimatorX
 
 # Export adjusters for automatically changing shift width
 export Adjuster, Single_Adjuster, Displace_Adjuster, Bisect_Adjuster

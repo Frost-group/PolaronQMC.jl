@@ -1,5 +1,6 @@
 # estimators.jl
 using Statistics
+using ThreadsX
 
 #types of estimators
 abstract type Estimator end
@@ -13,6 +14,8 @@ struct Simple_Virial_Estimator <: Estimator end #Estimator using virial theorem 
 struct Thermodynamic_Estimator <: Estimator end #Estimator using thermodynamic theory
 
 struct Virial_Estimator <: Estimator end #Estimator derived using virial theorem
+
+struct Virial_EstimatorX <: Estimator end #Estimator derived using virial theorem
 
 
 
@@ -65,44 +68,6 @@ function kinetic_energy(path::Path, potential::HarmonicPotential, estimator::Vir
 end
 
 
-function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator)
-    term_one = path.n_dimensions * path.n_particles / (2 * path.τ * path.n_beads)
-    #term prefactor
-    t2_prefactor = path.τ / (2 * path.n_beads)
-
-    #beta conversion g_factor
-    β_conversion_factor = 47.81
-    #β_conversion_factor = 1
-    β_reduced = path.τ * path.n_beads * β_conversion_factor
-
-    #needs to change to get working for multiple particles
-    term_two = 0.0
-
-    for particle in 1:path.n_particles
-        centroid_pos = zeros(path.n_dimensions)
-
-
-        for bead in 1:path.n_beads
-            centroid_pos += path.beads[bead,particle,:]
-        end
-        centroid_pos /= path.n_beads
-
-        for bead in 1:path.n_beads
-
-            for other_bead in 1:path.n_beads
-                if other_bead != bead
-
-                g_factor = 0.5 * potential.α * sqrt(potential.ħ/(2*path.m*potential.ω)) * cosh(β_reduced  * (abs(bead - other_bead)/path.n_beads - 0.5)) * csch(β_reduced * 0.5)
-                term_two += g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
-                end
-            end
-        end
-    end
-
-    #can extend to sum up energy of all particles 
-    return term_one - (t2_prefactor * term_two)
-end
-
 
 function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator)
     term_one = path.n_dimensions * path.n_particles / (2 * path.τ * path.n_beads)
@@ -110,7 +75,9 @@ function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Vir
     t2_prefactor = path.τ / (2 * path.n_beads)
 
     #beta conversion g_factor
-    β_conversion_factor = 47.81
+    #β_conversion_factor = 47.81
+    β_conversion_factor = 1
+
     β_reduced = path.τ * path.n_beads * β_conversion_factor
 
 
@@ -125,14 +92,41 @@ function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Vir
 
     term_two = 0.0
     for particle in 1:path.n_particles
-
-        centroid_pos = zeros(path.n_dimensions)
-        for bead in 1:path.n_beads
-            centroid_pos += path.beads[bead,particle,:]
-        end
+        centroid_pos = [sum(path.beads[bead,particle,dimension] for bead in 1:path.n_beads) for dimension in 1:path.n_dimensions]
         centroid_pos /= path.n_beads
-
         term_two += sum(get_term_two(particle, bead, other_bead, centroid_pos) for bead in 1:path.n_beads, other_bead in 1:path.n_beads)
+    end
+
+    return term_one - (t2_prefactor * term_two)
+end
+
+#multi threaded
+function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Virial_EstimatorX)
+    term_one = path.n_dimensions * path.n_particles / (2 * path.τ * path.n_beads)
+    #term prefactor
+    t2_prefactor = path.τ / (2 * path.n_beads)
+
+    #beta conversion g_factor
+    #β_conversion_factor = 47.81
+    β_conversion_factor = 1
+
+    β_reduced = path.τ * path.n_beads * β_conversion_factor
+
+
+    function get_term_two(particle, bead, other_bead, centroid_pos)
+        if bead != other_bead
+            g_factor = 0.5 * potential.α * sqrt(potential.ħ/(2*path.m*potential.ω)) * cosh(β_reduced  * (abs(bead - other_bead)/path.n_beads - 0.5)) * csch(β_reduced * 0.5)
+            return g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
+        else 
+            return 0.0
+        end
+    end
+
+    term_two = 0.0
+    for particle in 1:path.n_particles
+        centroid_pos = [ThreadsX.sum(path.beads[bead,particle,dimension] for bead in 1:path.n_beads) for dimension in 1:path.n_dimensions]
+        centroid_pos /= path.n_beads
+        term_two += ThreadsX.sum(get_term_two(particle, bead, other_bead, centroid_pos) for bead in 1:path.n_beads, other_bead in 1:path.n_beads)
     end
 
     return term_one - (t2_prefactor * term_two)
@@ -143,7 +137,7 @@ end
 
 
 function potential_energy(path::Path, potential::OneBodyPotential, estimator::Estimator)
-    return sum(one_body_potential(potential, path, bead, particle)/path.n_beads for bead in 1:path.n_beads, particle in 1:path.n_particles)
+    return ThreadsX.sum(one_body_potential(potential, path, bead, particle)/path.n_beads for bead in 1:path.n_beads, particle in 1:path.n_particles)
 end
 
 

@@ -19,7 +19,7 @@ begin
     #for path ---------
         T = 1.0
         m = ω
-        n_beads = 300
+        n_beads = 100
         τ = 1.0 / (T * n_beads)
         n_particles = 1
         n_dimensions = 3
@@ -35,7 +35,7 @@ begin
 
     #for pimc --------------------------------------
         #number of steps
-            n_steps = 1000
+            n_steps = 2000
 
         #skipping between sampling
             equilibrium_skip = 0.2*n_steps
@@ -70,7 +70,7 @@ begin
     energy = output_observables["Energy"][string(Symbol(estimators[1]))]
     position = output_observables["Position"][string(Symbol(estimators[1]))]
 
-
+    #=
     # comparison energy
         if typeof(potential) == HarmonicPotential
             comparison_energy = analytic_energy_harmonic(potential,β,ħ)
@@ -78,6 +78,7 @@ begin
             comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
             comparison_energy = -comparison_polaron.F
         end
+    =#
 
 
     variances = jackknife(energy)
@@ -87,7 +88,7 @@ begin
 
     println("acceptance ratio = ", acceptance_ratio)
     println("Mean energy = ", mean(energy))
-    println("comparison_energy = ", comparison_energy)
+    #println("comparison_energy = ", comparison_energy)
     println("jackknife errors = ", sqrt(variances[2]))
 
 
@@ -105,6 +106,6 @@ end
 
 
 begin
-path
+
 end
 
