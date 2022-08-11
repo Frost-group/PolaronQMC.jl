@@ -5,7 +5,7 @@
 function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers, observables, estimators, potential::Potential, regime::Regime; adjust = true, visual = false)
 	#setting up storage of output
 
-	# information about the running of the system
+	#information about the running of the system
 		system_stats = Dict()
 		system_stats["acceptance_array"] = Dict()
 		system_stats["attempted_array"] = Dict()
@@ -28,9 +28,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 			end
 		end
 
-		
-
-	
+	#processes that run per step
 	for step in 1:n_steps
 		if step == 0.5*n_steps
 			println("50% complete")
@@ -43,8 +41,6 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 				if movers[2][mover_index] > rand()
 					system_stats["attempted_array"][string(Symbol(movers[1][mover_index]))] += 1
 					system_stats["acceptance_array"][string(Symbol(movers[1][mover_index]))] += movers[1][mover_index](path, particle, potential, regime, adjuster)
-					
-
 				end
 			end
 
@@ -57,17 +53,20 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 
 		#generates observable for each cycle of "observable_skip"
 		if mod(step, observable_skip) == 0 && step > equilibrium_skip
-			#observables_counter += 1
 
 			for observable in observables
 				for estimator in estimators
 					append!(output_observables[string(observable)][string(Symbol(estimator))], observable(path, potential, estimator))
-
-				
-				#output_observables[string(observable)][string(Symbol(estimator))] = (((observables_counter-1) * output_observables[string(observable)][string(Symbol(estimator))]) + observable(path, potential, estimator))/observables_counter  #rolling weighted mean of observable
-				
 				end
 			end
+
+			if visual
+				
+				
+			end
+
+
+
 
 		end
 	end
@@ -79,7 +78,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 	end
 	
 	
-	return [system_stats["acceptance_ratio"], output_observables]
+	return [system_stats["acceptance_ratio"], output_observables, visuals]
 
 end
 
