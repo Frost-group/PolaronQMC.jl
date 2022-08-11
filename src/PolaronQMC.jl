@@ -12,9 +12,6 @@ using Plots
 # Export types
 export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, Simple_Regime, Primitive_Regime
 
-# Export types
-export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential
-
 # Export potentials
 export one_body_potential, two_body_potential
 
@@ -34,7 +31,7 @@ export update_shift_width!, thermalised_start!
 export Single!, Displace!, Bisect!, Stage!
 
 # Export actions
-export potential_action, kinetic_action, primitive_action
+export potential_action, kinetic_action
 
 # Export simulation run code (PIMC)
 export PIMC
