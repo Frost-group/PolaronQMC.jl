@@ -2,31 +2,34 @@
 
 
 
-function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers, observables, estimators, potential::Potential, regime::Regime; adjust = true, visual = false)
+function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers::Array, observables, estimators::Array, potential::Potential, regime::Regime; adjust = true, visual = false)
 	#setting up storage of output
 
-	#information about the running of the system
-		system_stats = Dict()
-		system_stats["acceptance_array"] = Dict()
-		system_stats["attempted_array"] = Dict()
+		#information about the running of the system
+			system_stats = Dict()
+			system_stats["acceptance_array"] = Dict()
+			system_stats["attempted_array"] = Dict()
 
-	#acceptance and attempt arrays for movers
+		#acceptance and attempt arrays for movers
 
-		for mover in movers[1]
-			system_stats["acceptance_array"][string(Symbol(mover))] = 0
-			system_stats["attempted_array"][string(Symbol(mover))] = 0
-		end
-
-	#output arrays for different estimators of observables
-		output_observables = Dict()
-		#observables_counter = 0 #used in weighting of the rolling averages of observables
-		#generating lists for output
-		for observable in observables
-			output_observables[string(observable)] = Dict() 
-			for estimator in estimators
-				output_observables[string(observable)][string(Symbol(estimator))] = []
+			for mover in movers[1]
+				system_stats["acceptance_array"][string(Symbol(mover))] = 0
+				system_stats["attempted_array"][string(Symbol(mover))] = 0
 			end
-		end
+
+		#output arrays for different estimators of observables
+			output_observables = Dict()
+			#observables_counter = 0 #used in weighting of the rolling averages of observables
+			#generating lists for output
+			for observable in observables
+				output_observables[string(observable)] = Dict() 
+				for estimator in estimators
+					output_observables[string(observable)][string(Symbol(estimator))] = []
+				end
+			end
+
+		#position for visuals
+			visual_positions = []
 
 	#processes that run per step
 	for step in 1:n_steps
@@ -54,18 +57,17 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 		#generates observable for each cycle of "observable_skip"
 		if mod(step, observable_skip) == 0 && step > equilibrium_skip
 
+
 			for observable in observables
 				for estimator in estimators
 					append!(output_observables[string(observable)][string(Symbol(estimator))], observable(path, potential, estimator))
+
 				end
 			end
 
 			if visual
-				
-				
+				push!(visual_positions,copy(path.beads))
 			end
-
-
 
 
 		end
@@ -78,7 +80,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 	end
 	
 	
-	return [system_stats["acceptance_ratio"], output_observables, visuals]
+	return [system_stats["acceptance_ratio"], output_observables, visual_positions]
 
 end
 
