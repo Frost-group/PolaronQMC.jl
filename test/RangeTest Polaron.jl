@@ -7,9 +7,8 @@ using Plots
 using PolaronMobility
 end
 
+
 #Thermalised start
-
-
 begin
 
     st_n_particles = 1
@@ -37,7 +36,6 @@ begin
 end
 
 
-
 begin
 #temperature --------------------------------------------
 
@@ -48,7 +46,7 @@ begin
 
 
     #Estimators and potentials
-        estimators = [Thermodynamic_Estimator()]
+        estimators = [Virial_EstimatorX()]
         potential = HarmonicPotential(ω)
 
 
@@ -111,8 +109,6 @@ begin
     
 end
 
-
-
 #Testing α range ------------------------------------------------
 begin
     #kept constant
@@ -124,7 +120,7 @@ begin
 
 
     n_beads = 100
-    T = 10.0
+    T = 15.0
     τ = 1.0 / (T * n_beads)
     ħ = 1.0
     β = 1/T
@@ -132,7 +128,7 @@ begin
     m = ω
 
     #Estimators, movers and other components of PIMC
-    estimators = [Virial_Estimator()]
+    estimators = [Virial_EstimatorX()]
     #estimators = [Thermodynamic_Estimator()]
     movers = [[Bisect!],[1.0]]
     observables = [Energy]
@@ -140,7 +136,7 @@ begin
         
 
     #changing
-    alpha_range = 1.0:2.0:20.0
+    alpha_range = 1.0:2.0:10.0
     comparison_polaron = make_polaron(alpha_range, [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
 
 
@@ -162,13 +158,13 @@ begin
     for L in alpha_range
         
         α = L
-        n_steps = Int(5000 * L)
+        n_steps = Int(2000 * L)
         #n_steps = 800
         potential = FrohlichPotential(α,ω,ħ)
         equilibrium_skip = 0.1*n_steps
         observables_skip = 0.03*n_steps
 
-        #path = Path(n_beads, n_particles, n_dimensions, τ, m = m, λ = λ, start_range = start_range)
+        path = Path(n_beads, n_particles, n_dimensions, τ, m = m, λ = λ, start_range = start_range)
         pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)
 
         output_observables = pimc[2]

@@ -1,20 +1,24 @@
 module PolaronQMCVisualisation
 
-import Plots
+using Revise
+using Plots
+
+export animate_PIMC, draw_beads_3d
 
 
-function draw_beads_3d(path, xlims, ylims, zlims)
+function draw_beads_3d(beads, xlims, ylims, zlims, n_particles)
 
 	p = plot()
 	
-	for particle in 1:path.n_particles
-		x = path[:, particle, 1]
-		y = path[:, particle, 2]
-		z = path[:, particle, 3]
+	for particle in 1:n_particles
+
+		x = beads[:, particle, 1]
+		y = beads[:, particle, 2]
+		z = beads[:, particle, 3]
 		
-		x = reshape(x, length(x))
-		y = reshape(y, length(y))
-		z = reshape(z, length(z))
+		x = Array(reshape(x, length(x)))
+		y = Array(reshape(y, length(y)))
+		z = Array(reshape(z, length(z)))
 
 		push!(x, x[1])
 		push!(y, y[1])
@@ -24,18 +28,19 @@ function draw_beads_3d(path, xlims, ylims, zlims)
 	end
 	return p
 end
+    
+function animate_PIMC(pimc, n_particles)
 
-function animate_PIMC(pimc)
+	xlims = [minimum([minimum(x[:, :, 1]) for x in pimc[3]]), maximum([maximum(x[:, :, 1]) for x in pimc[3]])]
+	ylims = [minimum([minimum(x[:, :, 2]) for x in pimc[3]]), maximum([maximum(x[:, :, 2]) for x in pimc[3]])]
+	zlims = [minimum([minimum(x[:, :, 3]) for x in pimc[3]]), maximum([maximum(x[:, :, 3]) for x in pimc[3]])]
 
-	xlims = [minimum([minimum(x[:, :, 1]) for x in pimc[2]]), maximum([maximum(x[:, :, 1]) for x in pimc[2]])]
-	ylims = [minimum([minimum(x[:, :, 2]) for x in pimc[2]]), maximum([maximum(x[:, :, 2]) for x in pimc[2]])]
-	zlims = [minimum([minimum(x[:, :, 3]) for x in pimc[2]]), maximum([maximum(x[:, :, 3]) for x in pimc[2]])]
-
-	animation = Plots.@animate for p in pimc[2]
-		draw_beads_3d(p, xlims, ylims, zlims)
+	animation = Plots.@animate for p in pimc[3]
+		draw_beads_3d(p, xlims, ylims, zlims, n_particles)
 	end
 
 	return animation
 end
+
 
 end # sub-module
