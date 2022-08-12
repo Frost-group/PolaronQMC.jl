@@ -3,21 +3,22 @@ using Revise
 using PolaronQMC
 using Statistics
 using Plots
+include("../src/PolaronQMCVisualisation.jl")
+using .PolaronQMCVisualisation
 #using PolaronMobility
 
 end
 
 
-#initialising variables
+
 begin
+#initialising variables
     #for Potential
         ω = 1.0
-        α = 10.0
+        α = 1.0
         ħ = 1.0
-
-
     #for path ---------
-        T = 1.0
+        T = 10.0
         m = ω
         n_beads = 100
         τ = 1.0 / (T * n_beads)
@@ -25,45 +26,41 @@ begin
         n_dimensions = 3
         start_range = 1.0
         β = 1/T
-
-
     path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
+    # regime
+        regime = Primitive_Regime()
 
+#variables more subject to change
     #potential type --------------------------
         potential = FrohlichPotential(α,ω,ħ)
         #potential = HarmonicPotential(ω)
 
     #for pimc --------------------------------------
         #number of steps
-            n_steps = 2000
+            n_steps = 40000
 
         #skipping between sampling
-            equilibrium_skip = 0.2*n_steps
-            #equilibrium_skip = 
-            observables_skip = 0.03*n_steps
-            #observables_skip = 100
+            equilibrium_skip = 0*n_steps
+            #equilibrium_skip = 0
+            observables_skip = 0.01*n_steps
+            #observables_skip = 1
 
         #types of moves
-            movers = [[Bisect!],[1.0]]
+            movers = [[Single!],[1.0]]
             #movers = [[Single!],[1.0]]
             #movers = [[Single!, Displace!],[1.0, 0.3]]
 
         #observables
-            observables = [Energy, Position]
+            observables = [Energy,Position]
     
         #estimator type
-            estimators = [Virial_EstimatorX()]
+            estimators = [Virial_Estimator()]
             #estimators = [Thermodynamic_Estimator()]
         
-        #regime type
-            regime = Primitive_Regime()
-
-
-
 #running sim
 
     #thermalised_start!(path,potential,n_steps = 3000)
-    pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)
+    pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=true)
     acceptance_ratio = pimc[1]
     output_observables = pimc[2]
 
@@ -95,17 +92,22 @@ begin
 
     #Plots
     energyplot = plot(energy, ylabel="Mean energy", xlabel="n_steps")
-    posplot = histogram(position)
+    posplot = histogram(position[:,1,1])
     plot(posplot, energyplot, layout = (2,1), legend = false)
-
-
-
 
 end
 
 
 
+
+
+
+
 begin
+# Visualise
+
+anim = animate_PIMC(pimc, n_particles)
+gif(anim, "saved_plots/anim_output.gif", fps = 10)
 
 end
 

@@ -86,10 +86,6 @@ end
 """
 Generic path mutable type 
 """
-
-#One dimensional version
-
-
 mutable struct Path
 	n_beads :: Int64
 	n_particles :: Int64

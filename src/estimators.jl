@@ -191,7 +191,7 @@ function Mean_Position(path::Path, potential::Potential, estimator::Estimator)
 end
 
 function Position(path::Path, potential::Potential, estimator::Estimator)
-    return path.beads[:,1,1]
+    return path.beads
 end
 
 
