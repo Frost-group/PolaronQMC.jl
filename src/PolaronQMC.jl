@@ -34,7 +34,7 @@ export Single!, Displace!, Bisect!, Stage!
 export potential_action, kinetic_action
 
 # Export simulation run code (PIMC)
-export PIMC
+export PIMC, PIMCX
 
 # Export methods for comparison
 export analytic_energy_harmonic, selective_mean

@@ -169,7 +169,6 @@ end
 
 
 
-
 # Correlation ---------------------------------------------------------------------
 
 function Correlation(path::Path, potential::Potential, estimator::Estimator)

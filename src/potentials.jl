@@ -34,7 +34,7 @@ end
 
 # Mexican Hat -r^2+r^4 in N-dimensions
 function one_body_potential(potential::MexicanHatPotential, path::Path, bead::Int, particle::Int)
-    r=norm(path.beads[bead,particle])^2
+    r=norm(path.beads[bead,particle,:])^2
     return 0.5 * potential.ω^2 * (-r^2+r^4)
 end
 
