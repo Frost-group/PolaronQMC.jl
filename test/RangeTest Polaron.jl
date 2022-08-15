@@ -17,7 +17,7 @@ begin
     st_T = 80.0
     st_n_steps = 20000
     st_n_dimensions = 3
-
+    #ability to change beads based of temperature instead.
     fixed_τ = 0.00002
     adjusted_beads = Int(floor(1.0 / (st_T * fixed_τ)))
 
