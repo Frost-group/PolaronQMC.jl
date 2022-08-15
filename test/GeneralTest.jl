@@ -15,12 +15,12 @@ begin
 #initialising variables
     #for Potential
         ω = 1.0
-        α = 2.0
+        α = 10.0
         ħ = 1.0
     #for path ---------
-        T = 10.0
+        T = 15.0
         m = ω
-        n_beads = 300
+        n_beads = 800
         τ = 1.0 / (T * n_beads)
         n_particles = 1
         n_dimensions = 3
@@ -37,30 +37,29 @@ begin
 
     #for pimc --------------------------------------
         #number of steps
-            n_steps = 2000
+            n_steps = 40000
 
         #skipping between sampling
-            equilibrium_skip = 0.0*n_steps
+            equilibrium_skip = 0.2*n_steps
             #equilibrium_skip = 0
-            observables_skip = 0.01*n_steps
+            observables_skip = 0.03*n_steps
             #observables_skip = 1
 
         #types of moves
             movers = [[Bisect!],[1.0]]
             #movers = [[Single!],[1.0]]
-            #movers = [[Single!, Displace!],[1.0, 0.3]]
 
         #observables
             observables = [Energy,Position]
     
         #estimator type
-            estimators = [Virial_Estimator()]
+            estimators = [Virial_EstimatorX()]
             #estimators = [Thermodynamic_Estimator()]
         
 #running sim
 
     #thermalised_start!(path,potential,n_steps = 3000)
-    pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=false)
+    pimc = PIMCX(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=false)
     acceptance_ratio = pimc[1]
     output_observables = pimc[2]
 

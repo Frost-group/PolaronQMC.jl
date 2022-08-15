@@ -2,6 +2,7 @@ begin
 using BenchmarkTools
 using Revise
 using PolaronQMC
+println("Using ", Threads.nthreads(), " threads")
 end
 
 
@@ -38,10 +39,10 @@ begin
     #timing
     println("Unthreaded time")
     pimc1 = @btime PIMC(n_steps, equilibrium_skip, observables_skip, path1, movers, observables, estimators1, potential, regime, adjust=true)
-    
+    println("pimc energy = ", mean(pimc1[2]["Energy"]["Virial_Estimator()"]))
     println("Multi threaded time")
     pimc2 = @btime PIMCX(n_steps, equilibrium_skip, observables_skip, path2, movers, observables, estimators2, potential, regime, adjust=true)
-
+    println("pimc energy = ", mean(pimc2[2]["Energy"]["Virial_EstimatorX()"]))
     println("complete")
 
 
