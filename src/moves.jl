@@ -15,7 +15,7 @@ See also [`Path`](@ref).
 function Single!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
     bead = rand(1:path.n_beads)										# Pick a random bead.
 	width = adjuster.shift_width
-	shift = rand(path.n_dimensions) * width * rand([-1,1])			# Linear random displacement of bead.
+	shift = rand(path.n_dimensions) * width .* rand([-1,1],3)			# Linear random displacement of bead.
 
     # We just need to look at the beads +- 1 unit from m
     # CHECK: Non local potential? Coulombic?
@@ -61,7 +61,7 @@ See also [`Path`](@ref).
 """
 function Displace!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 	width = adjuster.shift_width
-	shift = rand(path.n_dimensions) * width * rand([-1,1])
+	shift = rand(path.n_dimensions) * width .* rand([-1,1],3)
 
 	# Save configuration of paths. Return to this configuration if Metropolis rejects the new configuration.
 	old_beads = copy(path.beads[:, particle, :])
@@ -123,7 +123,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 			bead = Int(start_bead + (2^(level-1) * k))
 			#println("bead = ", bead)
 			segment_old_action += potential_action(path, bead, particle, potential, regime)
-			shift = rand([-1,1]) * rand(path.n_dimensions) * sqrt( 2^(level-1) * path.τ * path.λ) 
+			shift = rand([-1,1],3) .* rand(path.n_dimensions) * sqrt( 2^(level-1) * path.τ * path.λ) 
 			path.beads[bead, particle, :] = 0.5 * (path.beads[bead - 2^(level-1), particle, :] + path.beads[bead + 2^(level-1), particle, :]) + shift
 			segment_new_action += potential_action(path, bead, particle, potential, regime)
 		end

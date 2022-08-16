@@ -53,10 +53,8 @@ function kinetic_energy(path::Path, potential::HarmonicPotential, estimator::Vir
     t2_prefactor = (path.m * potential.ω^2) / (2 * path.n_beads)
     term_two = 0.0
     for particle in 1:path.n_particles
-        centroid_pos = zeros(path.n_dimensions)
-        for bead in 1:path.n_beads
-            centroid_pos += path.beads[bead,particle,:]
-        end
+        centroid_pos = [sum(path.beads[bead,particle,dimension] for bead in 1:path.n_beads) for dimension in 1:path.n_dimensions]
+        centroid_pos /= path.n_beads
 
         for bead in 1:path.n_beads
             term_two += dot(path.beads[bead, particle, :] - centroid_pos, path.beads[bead, particle, :])
@@ -83,7 +81,7 @@ function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Vir
 
     function get_term_two(particle, bead, other_bead, centroid_pos)
         if bead != other_bead
-            g_factor = 0.5 * potential.α * sqrt(potential.ħ/(2*path.m*potential.ω)) * cosh(β_reduced  * (abs(bead - other_bead)/path.n_beads - 0.5)) * csch(β_reduced * 0.5)
+            g_factor = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(2*path.m) * cosh(potential.ω*β * (abs(bead-other_bead)/path.n_beads - 0.5 * potential.ħ)) * csch(potential.ħ * potential.ω * β / 2)
             return g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
         else 
             return 0.0
@@ -103,19 +101,18 @@ end
 #multi threaded
 function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Virial_EstimatorX)
     term_one = path.n_dimensions * path.n_particles / (2 * path.τ * path.n_beads)
-    #term_one = 0.0
     #term prefactor
     t2_prefactor = path.τ / (2 * path.n_beads)
 
     #beta conversion g_factor
-    β_conversion_factor = 47.81
+    #β_conversion_factor = 47.81
 
-    β_reduced = path.τ * path.n_beads * β_conversion_factor
+    β = path.τ * path.n_beads 
 
 
     function get_term_two(particle, bead, other_bead, centroid_pos)
         if bead != other_bead
-            g_factor = 0.5 * potential.α * sqrt(potential.ħ/(2*path.m*potential.ω)) * cosh(β_reduced  * (abs(bead - other_bead)/path.n_beads - 0.5)) * csch(β_reduced * 0.5)
+            g_factor = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(2*path.m) * cosh(potential.ω*β * (abs(bead-other_bead)/path.n_beads - 0.5 * potential.ħ)) * csch(potential.ħ * potential.ω * β / 2)
             #g_factor = 0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(2*path.m) * cosh(β_reduced  * (abs(bead - other_bead)/path.n_beads - 0.5)) * csch(β_reduced * 0.5)
             return g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
         else 

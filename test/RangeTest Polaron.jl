@@ -8,17 +8,17 @@ using PolaronMobility
 end
 
 
-#Thermalised start
+#Thermalised start + Alpha test
 begin
 
     st_n_particles = 1
     st_start_range = 1.0
 
-    st_T = 80.0
-    st_n_steps = 20000
+    st_T = 1.0
+    st_n_steps = 1000
     st_n_dimensions = 3
     #ability to change beads based of temperature instead.
-    fixed_τ = 0.00002
+    fixed_τ = 0.02
     adjusted_beads = Int(floor(1.0 / (st_T * fixed_τ)))
 
     st_n_beads = 50
@@ -33,26 +33,19 @@ begin
 
     #path = Path(st_n_beads, st_n_particles, st_n_dimensions, st_τ)
     path = Path(adjusted_beads, st_n_particles, st_n_dimensions, fixed_τ)
-    st_movers = [[Bisect!, Single!],[1.0, 1.0]]
+    st_movers = [[Bisect!],[1.0]]
 
     st_potential = FrohlichPotential(st_α,st_ω,st_ħ)
     thermalised_start!(path, st_potential, n_steps = st_n_steps)
 
 
-
-
-
-
-#Testing α range ------------------------------------------------
+    #Testing α range ------------------------------------------------
 
     #kept constant
-    λ = 0.5
     n_particles = 1
     start_range = 1.0
     ħ = 1.0
     n_dimensions = 3
-
-
 
 
     n_beads = 25
@@ -63,11 +56,11 @@ begin
 
     ħ = 1.0
     β = 1/T
-    ω = 1.0
+    ω = st_ω
     m = ω
 
     #Estimators, movers and other components of PIMC
-    estimators = [Virial_Estimator(), Virial_EstimatorX()]
+    estimators = [Virial_EstimatorX()]
     #estimators = [Thermodynamic_Estimator()]
     movers = st_movers
     observables = [Energy]
@@ -75,8 +68,8 @@ begin
         
 
     #changing
-    alpha_range = 1.0:2.0:8.0
-    comparison_polaron = make_polaron(alpha_range, [T], [0.0]; ω = 2pi*1.0, rtol = 1e-4, verbose = true, threads = true)
+    alpha_range = 1.0:1.0:4.0
+    comparison_polaron = make_polaron(alpha_range, [T], [0.0]; ω = 1.0, rtol = 1e-4, verbose = true, threads = true)
 
 
     #output
@@ -91,20 +84,20 @@ begin
         errors_range_L[string(Symbol(estimator))] = []
     end
 
-    comparison_range_L = -1*comparison_polaron.F
+    comparison_range_L = comparison_polaron.F
 
     #Starting simulation
     for L in alpha_range
         
         α = L
-        n_steps = Int(6000 * L)
+        n_steps = Int(1000 * L)
         #n_steps = 800
         potential = FrohlichPotential(α,ω,ħ)
         equilibrium_skip = 0.5*n_steps
-        observables_skip = 0.03*n_steps
+        observables_skip = 0.05*n_steps
 
         #path = Path(n_beads, n_particles, n_dimensions, τ, m = m, λ = λ, start_range = start_range)
-        pimc = PIMCX(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)
+        pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)
 
         output_observables = pimc[2]
         energy = output_observables["Energy"]
@@ -136,7 +129,7 @@ begin
 
 
     scatter!(alpha_range,observables_range_L[string(Symbol(estimators[1]))], yerr = errors_range_L[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
-    scatter!(alpha_range,observables_range_L[string(Symbol(estimators[2]))], yerr = errors_range_L[string(Symbol(estimators[2]))], label=string(Symbol(estimators[2])))
+    #scatter!(alpha_range,observables_range_L[string(Symbol(estimators[2]))], yerr = errors_range_L[string(Symbol(estimators[2]))], label=string(Symbol(estimators[2])))
 
 end
 
@@ -151,30 +144,12 @@ begin
     scatter!(alpha_range,observables_range_L[string(Symbol(estimators[2]))] .+ addition, yerr = errors_range_L[string(Symbol(estimators[2]))], label=string(Symbol(estimators[2])))
 end
 
-begin
-polaron2 = make_polaron(alpha_range, [T/2], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
+begin #Changing mobility results (test)
+polaron2 = make_polaron(alpha_range, [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
 polaron2_energy = -polaron2.F
 plot(alpha_range,polaron2_energy, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5, legend=:topleft )
 scatter!(alpha_range,observables_range_L[string(Symbol(estimators[1]))], yerr = errors_range_L[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
 
-
-
-end
-
-
-begin
-    aggregate_alpha_range = []
-    aggregate_error_range = []
-    aggregate_observables_range = []
-    aggregate_comparison_range = []
-end
-
-begin
-    
-    append!(aggregate_alpha_range, alpha_range)
-    append!(aggregate_error_range, errors_range_L)
-    append!(aggregate_observables_range, observables_range_L)
-    append!(aggregate_comparison_range, comparison_range_L)
 end
 
 
@@ -185,23 +160,34 @@ end
 
 
 
-# beads test  ------------------------------------------------
+# beads test  ---------
 
 begin
+
     #kept constant
-
-    T = 1.0
-    β = 1/T
-    ω = 1.0
-    α = 7.0
+    n_particles = 1
+    start_range = 1.0
     ħ = 1.0
-    m = ω
-    n_steps = 500
-    beads_range = 100:100:1000
+    n_dimensions = 3
 
-    #Estimators and potentials
-        estimators = [Virial_EstimatorX()]
+
+    T = 2.0
+    ħ = 1.0
+    ω = 1.0
+    m = 1.0
+    α = 2.0
+
+    #Estimators, movers and other components of PIMC
+    estimators = [Virial_Estimator()]
+    #estimators = [Thermodynamic_Estimator()]
+    movers = [[Bisect!],[1.0]]
+    observables = [Energy]
+    regime = Primitive_Regime()
         
+
+    #changing
+    beads_step = 30
+    beads_range = 1:10
 
 
     #output
@@ -211,21 +197,22 @@ begin
         observables_range_L[string(Symbol(estimator))] = []
     end
 
-    errors_range_L = Dict()
-    for estimator in estimators
-        errors_range_L[string(Symbol(estimator))] = []
-    end
 
 
     #Starting simulation
     for L in beads_range
-        n_beads = L
+
+        
+        n_beads = L*beads_step
+        n_steps = 2000
         τ = 1.0 / (T * n_beads)
 
         potential = FrohlichPotential(α,ω,ħ)
+        equilibrium_skip = 0.5*n_steps
+        observables_skip = 0.05*n_steps
 
         path = Path(n_beads, n_particles, n_dimensions, τ)
-        pimc = PIMCX(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)
+        pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)
 
         output_observables = pimc[2]
         energy = output_observables["Energy"]
@@ -236,23 +223,22 @@ begin
             #energy
             append!(observables_range_L[string(Symbol(estimator))], mean(estimator_energy))
 
-            #errors
-            error = sqrt(jackknife(estimator_energy)[2])
-            append!(errors_range_L[string(Symbol(estimator))], error)
-
         end
     end
-end
-begin
+
+
 
     #Plotting --------------
-    #plot(beads_range,comparison_range_L, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5)
 
-    plot(beads_range,observables_range_L[string(Symbol(estimators[1]))], yerr = errors_range_L[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])))
+    plot(beads_range*beads_step,observables_range_L[string(Symbol(estimators[1]))], label=string(Symbol(estimators[1])), xlabel="Number of beads", ylabel="Energy")
+    scatter!(beads_range*beads_step,observables_range_L[string(Symbol(estimators[1]))])
     #scatter!(alpha_range,observables_range_L[string(Symbol(estimators[2]))], yerr = errors_range_L[string(Symbol(estimators[2]))], label=string(Symbol(estimators[2])))
 
 end
 
+
+
+#Temperature
 begin
     #temperature --------------------------------------------
     
