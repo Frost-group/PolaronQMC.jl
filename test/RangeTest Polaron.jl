@@ -15,10 +15,10 @@ begin
     st_start_range = 1.0
 
     st_T = 1.0
-    st_n_steps = 1000
+    st_n_steps = 20000
     st_n_dimensions = 3
     #ability to change beads based of temperature instead.
-    fixed_τ = 0.02
+    fixed_τ = 0.01
     adjusted_beads = Int(floor(1.0 / (st_T * fixed_τ)))
 
     st_n_beads = 50
@@ -36,7 +36,7 @@ begin
     st_movers = [[Bisect!],[1.0]]
 
     st_potential = FrohlichPotential(st_α,st_ω,st_ħ)
-    thermalised_start!(path, st_potential, n_steps = st_n_steps)
+    #thermalised_start!(path, st_potential, n_steps = st_n_steps)
 
 
     #Testing α range ------------------------------------------------
@@ -62,13 +62,13 @@ begin
     #Estimators, movers and other components of PIMC
     estimators = [Virial_EstimatorX()]
     #estimators = [Thermodynamic_Estimator()]
-    movers = st_movers
+    movers = [[Single!],[1.0]]
     observables = [Energy]
     regime = Primitive_Regime()
         
 
     #changing
-    alpha_range = 1.0:1.0:4.0
+    alpha_range = 1.0:1.0:10.0
     comparison_polaron = make_polaron(alpha_range, [T], [0.0]; ω = 1.0, rtol = 1e-4, verbose = true, threads = true)
 
 
@@ -90,14 +90,14 @@ begin
     for L in alpha_range
         
         α = L
-        n_steps = Int(1000 * L)
-        #n_steps = 800
+        n_steps = Int(30000 * L)
+        #n_steps = 10000
         potential = FrohlichPotential(α,ω,ħ)
-        equilibrium_skip = 0.5*n_steps
-        observables_skip = 0.05*n_steps
+        equilibrium_skip = 0.7*n_steps
+        observables_skip = 0.02*n_steps
 
-        #path = Path(n_beads, n_particles, n_dimensions, τ, m = m, λ = λ, start_range = start_range)
-        pimc = PIMC(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)
+        path = Path(adjusted_beads, n_particles, n_dimensions, fixed_τ)
+        pimc = PIMCX(n_steps::Int, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)
 
         output_observables = pimc[2]
         energy = output_observables["Energy"]
@@ -118,7 +118,7 @@ begin
 
 
     #Plotting --------------
-    plot(alpha_range,comparison_range_L, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5, legend=:topleft)
+    plot(alpha_range,comparison_range_L, label="Comparison Energy",xlabel="α",ylabel="Energy",linestyle=:dash,linecolor=:red, linewidth = 1.5, legend=:bottomleft)
 
     #Auto plotting all estimators 
     #=

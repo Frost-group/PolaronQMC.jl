@@ -15,10 +15,10 @@ begin
 #initialising variables
     #for Potential
         ω = 1.0
-        α = 4.0
+        α = 1.0
         ħ = 1.0
     #for path ---------
-        T = 1.0
+        T = 0.05
         m = 1.0
         
         fixed_τ = 0.02
@@ -36,40 +36,41 @@ begin
 
 #variables more subject to change
     #potential type --------------------------
-        potential = FrohlichPotential(α,ω,ħ)
+        #potential = FrohlichPotential(α,ω,ħ)
         #potential = HarmonicPotential(ω)
-        #potential = MexicanHatPotential(40000.0)
+        potential = MexicanHatPotential(80000.0)
         #potential = ConstantPotential(10.0)
 
     #for pimc --------------------------------------
         #number of steps
-            n_steps = 20000
+            n_steps = 40000
 
         #skipping between sampling
-            equilibrium_skip = 0.2*n_steps
+            equilibrium_skip = 0.1*n_steps
             #equilibrium_skip = 0
-            #observables_skip = 100*n_steps
-            observables_skip = 0.01*n_steps
+            #observables_skip = 0.1*
+            observables_skip = 0.02*n_steps
 
         #types of moves
             #movers = [[Bisect!],[1.0]]
             movers = [[Single!],[1.0]]
+            #movers = [[Displace!],[1.0]]
 
         #observables
-            observables = [Energy, Position]
+            observables = [Position]
     
         #estimator type
-            estimators = [Virial_EstimatorX()]
-            #estimators = [Thermodynamic_Estimator()]
+            #estimators = [Virial_EstimatorX()]
+            estimators = [Thermodynamic_Estimator()]
         
 #running sim
 
     #thermalised_start!(path,potential,n_steps = 3000)
-    pimc = PIMCX(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=true)
+    pimc = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=true)
     acceptance_ratio = pimc[1]
     output_observables = pimc[2]
 
-    energy = output_observables["Energy"][string(Symbol(estimators[1]))]
+    #energy = output_observables["Energy"][string(Symbol(estimators[1]))]
     position = output_observables["Position"][string(Symbol(estimators[1]))]
 
     #=
@@ -89,17 +90,17 @@ begin
 
 
     println("acceptance ratio = ", acceptance_ratio)
-    println("Mean energy = ", mean(energy))
+    #println("Mean energy = ", mean(energy))
     #println("comparison_energy = ", comparison_energy)
     #println("jackknife errors = ", sqrt(variances[2]))
 
 
 
     #Plots
-    energyplot = plot(energy, ylabel="Energy", xlabel="n_steps")
-    posplot = histogram(position[:,1,1])
-    plot(posplot, energyplot, layout = (2,1), legend = false)
-    #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
+    #energyplot = plot(energy, ylabel="Energy", xlabel="n_steps")
+    posplot = histogram(position[:,1,1],bins=150)
+    #plot(posplot, energyplot, layout = (2,1), legend = false)
+    plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
 end
 
