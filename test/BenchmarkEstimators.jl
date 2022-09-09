@@ -2,6 +2,7 @@ begin
 using BenchmarkTools
 using Revise
 using PolaronQMC
+println("Using ", Threads.nthreads(), " threads")
 end
 
 
@@ -19,22 +20,29 @@ begin
     start_range = 1.0
     β = 1/T
 
-    path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
+    path1 = Path(n_beads, n_particles, n_dimensions, τ, m = m)
+    path2 = Path(n_beads, n_particles, n_dimensions, τ, m = m)
 
     observables = [Energy, Position]
     regime = Primitive_Regime()
 
 
 #variables --------------------------------------
-    n_steps = 2000
+    n_steps = 3000
     equilibrium_skip = 0.1*n_steps
     observables_skip = 0.01*n_steps
     movers = [[Bisect!],[1.0]]
-    estimators = [Virial_Estimator()]
+    estimators1 = [Virial_Estimator()]
+    estimators2 = [Virial_EstimatorX()]
     potential = FrohlichPotential(α,ω,ħ)
 
     #timing
-    pimc = @btime PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)
-    println("Complete")
+    println("Unthreaded time")
+    pimc1 = @btime PIMC(n_steps, equilibrium_skip, observables_skip, path1, movers, observables, estimators1, potential, regime, adjust=true)
+    println("pimc energy = ", mean(pimc1[2]["Energy"]["Virial_Estimator()"]))
+    println("Multi threaded time")
+    pimc2 = @btime PIMCX(n_steps, equilibrium_skip, observables_skip, path2, movers, observables, estimators2, potential, regime, adjust=true)
+    println("pimc energy = ", mean(pimc2[2]["Energy"]["Virial_EstimatorX()"]))
+    println("complete")
 
 end
