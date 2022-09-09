@@ -45,6 +45,11 @@ export jackknife
 # Export visualisation (temp)
 export draw_beads_3d, animate_PIMC
 
+# Export quick runs
+export quickrun_frohlich
+
+
+
 
 
 
@@ -62,6 +67,8 @@ include("optimisation.jl") # Adjusters to shift width used in moves.
 include("estimators.jl") # Estimators to sample.
 include("PIMC.jl") # Path integrals Monte Carlo algorithm.
 include("errors.jl") # Methods for analysing errors.
+include("quickruns.jl") #Functions for obtaining results using default parameters.
+
 
 #temporary
 include("PolaronQMCVisualisation.jl")

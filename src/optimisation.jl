@@ -57,7 +57,7 @@ function thermalised_start!(path::Path, potential::Potential; n_steps::Int = 200
     st_regime = Primitive_Regime()
     st_observables = []
     st_estimators = []
-    pimc = PIMCX(n_steps, n_steps * 2 , n_steps * 2, path, movers, st_observables, st_estimators, potential, st_regime, adjust=true)
+    pimc = PIMC(n_steps, n_steps * 2 , n_steps * 2, path, movers, st_observables, st_estimators, potential, st_regime, adjust=true)
     println("Thermalisation complete")
 end
 

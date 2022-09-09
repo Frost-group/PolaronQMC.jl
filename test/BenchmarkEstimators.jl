@@ -45,6 +45,4 @@ begin
     println("pimc energy = ", mean(pimc2[2]["Energy"]["Virial_EstimatorX()"]))
     println("complete")
 
-
-
 end
