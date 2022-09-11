@@ -54,13 +54,11 @@ Performs PIMC simulation on the path without producing observables, thermalising
 
 
 """
-
-
-function thermalised_start!(path::Path, potential::Potential; n_steps::Int = 2000, movers::Array = [[Bisect!],[1.0]])
+function thermalised_start!(path::Path, potential::Potential; n_steps::Int = 2000, movers::Array = [[Bisect!],[1.0]], threads::Bool = true)
     st_regime = Primitive_Regime()
     st_observables = []
     st_estimators = []
-    pimc = PIMC(n_steps, n_steps * 2 , n_steps * 2, path, movers, st_observables, st_estimators, potential, st_regime, adjust=true)
+    pimc = PIMC(n_steps, n_steps * 2 , n_steps * 2, path, movers, st_observables, st_estimators, potential, st_regime, adjust=true, threads=threads)
     println("Thermalisation complete")
 end
 

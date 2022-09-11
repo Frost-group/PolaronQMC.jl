@@ -1,9 +1,16 @@
 # PIMC.jl
+using Base.Threads
 
 
-
-function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers::Array, observables, estimators::Array, potential::Potential, regime::Regime; adjust = true, visual = false)
+#PIMC function with multi-threading support
+function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers::Array, observables, estimators::Array, potential::Potential, regime::Regime; adjust::Bool = true, visual::Bool = false, threads::Bool = true )
 	#setting up storage of output
+		#Conversion of objects to strings to dictionaries
+		movers_string = [string(Symbol(mover)) for mover in movers[1]]
+		estimators_string = []
+		for estimator in estimators
+			push!(estimators_string, string(Symbol(estimator)))
+		end
 
 		#information about the running of the system
 			system_stats = Dict()
@@ -12,71 +19,113 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 
 		#acceptance and attempt arrays for movers
 
-			for mover in movers[1]
-				system_stats["acceptance_array"][string(Symbol(mover))] = 0
-				system_stats["attempted_array"][string(Symbol(mover))] = 0
+			for mover in movers_string
+				system_stats["acceptance_array"][mover] = 0
+				system_stats["attempted_array"][mover] = 0
 			end
 
 		#output arrays for different estimators of observables
 			output_observables = Dict()
-			#observables_counter = 0 #used in weighting of the rolling averages of observables
 			#generating lists for output
 			for observable in observables
 				output_observables[string(observable)] = Dict() 
-				for estimator in estimators
-					output_observables[string(observable)][string(Symbol(estimator))] = []
+				for estimator in estimators_string
+					output_observables[string(observable)][estimator] = []
 				end
 			end
 
+			
 		#position for visuals
 			visual_positions = []
 
+
 	#processes that run per step
-	for step in 1:n_steps
-		if step == 0.5*n_steps
-			println("50% complete")
-		end
+	if threads
+		@threads for step in 1:n_steps
+			
+			#updating n_accepted, moving beads, and changing shift width if necessary
+			for particle in rand(1:path.n_particles, path.n_particles)
+				for mover_index in 1:length(movers[1])
+					adjuster = path.adjusters[string(Symbol(movers[1][mover_index]))]
+					if movers[2][mover_index] > rand()
+						system_stats["attempted_array"][movers_string[mover_index]] += 1
+						system_stats["acceptance_array"][movers_string[mover_index]] += movers[1][mover_index](path, particle, potential, regime, adjuster)
+					end
+				end
 
-		#updating n_accepted, moving beads, and changing shift width if necessary
-		for particle in rand(1:path.n_particles, path.n_particles)
-			for mover_index in 1:length(movers[1])
-				adjuster = path.adjusters[string(Symbol(movers[1][mover_index]))]
-				if movers[2][mover_index] > rand()
-					system_stats["attempted_array"][string(Symbol(movers[1][mover_index]))] += 1
-					system_stats["acceptance_array"][string(Symbol(movers[1][mover_index]))] += movers[1][mover_index](path, particle, potential, regime, adjuster)
+				if adjust #changing shift width automatically
+					for adjuster in values(path.adjusters)
+						update_shift_width!(adjuster)
+					end
 				end
 			end
 
-			if adjust #changing shift width automatically
-				for adjuster in values(path.adjusters)
-					update_shift_width!(adjuster)
+			#generates observable for each cycle of "observable_skip"
+			if mod(step, observable_skip) == 0 && step > equilibrium_skip
+
+
+				for observable in observables
+					for estimator_index in 1:length(estimators)
+						append!(output_observables[string(observable)][estimators_string[estimator_index]], observable(path, potential, estimators[estimator_index]))
+
+					end
 				end
+
+				if visual
+					push!(visual_positions,copy(path.beads))
+				end
+
+
+			end
+		end
+	
+	else
+		for step in 1:n_steps
+			
+			#updating n_accepted, moving beads, and changing shift width if necessary
+			for particle in rand(1:path.n_particles, path.n_particles)
+				for mover_index in 1:length(movers[1])
+					adjuster = path.adjusters[string(Symbol(movers[1][mover_index]))]
+					if movers[2][mover_index] > rand()
+						system_stats["attempted_array"][movers_string[mover_index]] += 1
+						system_stats["acceptance_array"][movers_string[mover_index]] += movers[1][mover_index](path, particle, potential, regime, adjuster)
+					end
+				end
+
+				if adjust #changing shift width automatically
+					for adjuster in values(path.adjusters)
+						update_shift_width!(adjuster)
+					end
+				end
+			end
+
+			#generates observable for each cycle of "observable_skip"
+			if mod(step, observable_skip) == 0 && step > equilibrium_skip
+
+
+				for observable in observables
+					for estimator_index in 1:length(estimators)
+						append!(output_observables[string(observable)][estimators_string[estimator_index]], observable(path, potential, estimators[estimator_index]))
+
+					end
+				end
+
+				if visual
+					push!(visual_positions,copy(path.beads))
+				end
+
+
 			end
 		end
 
-		#generates observable for each cycle of "observable_skip"
-		if mod(step, observable_skip) == 0 && step > equilibrium_skip
-
-
-			for observable in observables
-				for estimator in estimators
-					append!(output_observables[string(observable)][string(Symbol(estimator))], observable(path, potential, estimator))
-
-				end
-			end
-
-			if visual
-				push!(visual_positions,copy(path.beads))
-			end
-
-
-		end
 	end
+
+
 
 	system_stats["acceptance_ratio"] = Dict()
 
-	for mover in movers[1]
-		system_stats["acceptance_ratio"][string(Symbol(mover))] = system_stats["acceptance_array"][string(Symbol(mover))] / system_stats["attempted_array"][string(Symbol(mover))] 
+	for mover in movers_string
+		system_stats["acceptance_ratio"][mover] = system_stats["acceptance_array"][mover] / system_stats["attempted_array"][mover] 
 	end
 	
 	

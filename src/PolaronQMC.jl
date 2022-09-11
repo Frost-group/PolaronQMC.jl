@@ -13,7 +13,7 @@ using Plots
 export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, Simple_Regime, Primitive_Regime
 
 # Export potentials
-export one_body_potential, two_body_potential
+export one_body_potential, one_body_potential_convert, two_body_potential
 
 # Export observables
 export potential_energy, kinetic_energy, Energy, Correlation, Position, Mean_Position
@@ -34,7 +34,7 @@ export Single!, Displace!, Bisect!, Stage!
 export potential_action, kinetic_action
 
 # Export simulation run code (PIMC)
-export PIMC
+export PIMC, PIMCX
 
 # Export methods for comparison
 export analytic_energy_harmonic, selective_mean
@@ -44,6 +44,11 @@ export jackknife
 
 # Export visualisation (temp)
 export draw_beads_3d, animate_PIMC
+
+# Export quick runs
+export quickrun_frohlich
+
+
 
 
 
@@ -62,6 +67,8 @@ include("optimisation.jl") # Adjusters to shift width used in moves.
 include("estimators.jl") # Estimators to sample.
 include("PIMC.jl") # Path integrals Monte Carlo algorithm.
 include("errors.jl") # Methods for analysing errors.
+include("quickruns.jl") #Functions for obtaining results using default parameters.
+
 
 #temporary
 include("PolaronQMCVisualisation.jl")
