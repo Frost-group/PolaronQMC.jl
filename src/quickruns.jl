@@ -1,5 +1,5 @@
 # quickruns.jl
-function quickrun_frohlich(T::Float64, alpha_range, fixed_τ::Float64, thermalisation_steps::Int, steps_base::Int; thermalised = true)
+function quickrun_frohlich(T::Float64, alpha_range, fixed_τ::Float64, thermalisation_steps::Int, steps_base::Int; thermalised::Bool = true, threads::Bool = true)
     #default variables for simulation
         n_particles = 1
         n_dimensions = 3
@@ -15,7 +15,7 @@ function quickrun_frohlich(T::Float64, alpha_range, fixed_τ::Float64, thermalis
     if thermalised
         thermalised_path = Path(adjusted_beads, n_particles, n_dimensions, fixed_τ)
         st_potential = FrohlichPotential(alpha_range[1],ω,ħ)
-        thermalised_start!(thermalised_path, st_potential, n_steps = thermalisation_steps)
+        thermalised_start!(thermalised_path, st_potential, n_steps = thermalisation_steps, threads = threads)
     end
 
     #default simulation running
@@ -51,7 +51,7 @@ function quickrun_frohlich(T::Float64, alpha_range, fixed_τ::Float64, thermalis
                 path = Path(adjusted_beads, n_particles, n_dimensions, fixed_τ)
             end
 
-            pimc = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true)
+            pimc = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, threads=threads)
     
             output_observables = pimc[2]
             energy = output_observables["Energy"]
