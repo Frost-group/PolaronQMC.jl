@@ -15,7 +15,6 @@ struct Thermodynamic_Estimator <: Estimator end #Estimator using thermodynamic t
 
 struct Virial_Estimator <: Estimator end #Estimator derived using virial theorem
 
-struct Virial_EstimatorX <: Estimator end #Estimator derived using virial theorem
 
 
 
