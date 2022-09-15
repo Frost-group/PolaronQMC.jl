@@ -1,5 +1,5 @@
 # quickruns.jl
-function quickrun_frohlich(T::Float64, alpha_range, fixed_τ::Float64, thermalisation_steps::Int, steps_base::Int; thermalised::Bool = true, threads::Bool = true)
+function quickrun_frohlich(T::Float64, alpha_range, fixed_τ::Float64, thermalisation_steps::Int, steps_base::Int; thermalised::Bool = true, threads::Bool = true, verbose::Bool = true)
     #default variables for simulation
         n_particles = 1
         n_dimensions = 3
@@ -15,7 +15,7 @@ function quickrun_frohlich(T::Float64, alpha_range, fixed_τ::Float64, thermalis
     if thermalised
         thermalised_path = Path(adjusted_beads, n_particles, n_dimensions, fixed_τ)
         st_potential = FrohlichPotential(alpha_range[1],ω,ħ)
-        thermalised_start!(thermalised_path, st_potential, n_steps = thermalisation_steps, threads = threads)
+        thermalised_start!(thermalised_path, st_potential, n_steps = thermalisation_steps, threads = threads, verbose = verbose)
     end
 
     #default simulation running
@@ -67,8 +67,9 @@ function quickrun_frohlich(T::Float64, alpha_range, fixed_τ::Float64, thermalis
                 append!(errors_range_L[string(Symbol(estimator))], error)
     
             end
-        
-        println("α = $L PIMC Complete.")
+        if verbose
+            println("α = $L PIMC Complete.")
+        end
         end
 
     return [observables_range_L[string(Symbol(estimators[1]))], errors_range_L[string(Symbol(estimators[1]))]]

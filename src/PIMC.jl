@@ -3,7 +3,7 @@ using Base.Threads
 
 
 #PIMC function with multi-threading support
-function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers::Array, observables, estimators::Array, potential::Potential, regime::Regime; adjust::Bool = true, visual::Bool = false, threads::Bool = true )
+function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers::Array, observables, estimators::Array, potential::Potential, regime::Regime; adjust::Bool = true, visual::Bool = false, threads::Bool = true)
 	#setting up storage of output
 		#Conversion of objects to strings to dictionaries
 		movers_string = [string(Symbol(mover)) for mover in movers[1]]
@@ -85,7 +85,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 			#updating n_accepted, moving beads, and changing shift width if necessary
 			for particle in rand(1:path.n_particles, path.n_particles)
 				for mover_index in 1:length(movers[1])
-					adjuster = path.adjusters[string(Symbol(movers[1][mover_index]))]
+					adjuster = path.adjusters[movers_string[mover_index]]
 					if movers[2][mover_index] > rand()
 						system_stats["attempted_array"][movers_string[mover_index]] += 1
 						system_stats["acceptance_array"][movers_string[mover_index]] += movers[1][mover_index](path, particle, potential, regime, adjuster)
