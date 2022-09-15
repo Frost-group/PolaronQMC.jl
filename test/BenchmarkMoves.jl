@@ -1,29 +1,42 @@
+begin
+using Revise
+using PolaronQMC
 using BenchmarkTools
+end
 
-T = 1.0
-λ = 0.5
-n_beads = 100
-τ = 1.0 / (T * n_beads)
-n_particles = 1
-n_dimensions = 3
+begin
 
+#variables used
+T = 3.0
+β = 1/T
+alpha_range = 1.0
+thermalisation_steps = 100
+steps_base = 800
+fixed_τ = 0.0025
+adjusted_beads = Int(floor(1/(fixed_τ*T)))
 
-path = PolaronQMC.Path(n_beads, n_particles, n_dimensions, τ = τ)
+path = Path(adjusted_beads, 1, 3, fixed_τ)
+
+α = 1.0
+
 
 println("Benchmarking PIMC moves...")
-println("Particles: $n_particles Beads: $n_beads ")
+println("Beads: $adjusted_beads ")
+
+particle = rand(1:path.n_particles)
 
 # Could set histogram limits here etc. ; see
 # https://juliaci.github.io/BenchmarkTools.jl/stable/manual/#Visualizing-benchmark-results
 io=IOContext(stdout)
 
 println("Single!()")
-b= @benchmark Single!(path,1,HarmonicPotential(1.0)) 
-show(io,MIME("text/plain"),b)
+s_bm = @benchmark Single!(path, particle, FrohlichPotential(α, 1.0, 1.0), Primitive_Regime(), path.adjusters["Single!"])
+show(io,MIME("text/plain"), s_bm)
 
-println("Displace!()")
-b= @benchmark Displace!(path,1,HarmonicPotential(1.0))
-show(io,MIME("text/plain"),b)
+println(" ")
 
-#sampled_energy = mean(pimc[3]["Energy"])
+println("Bisect!()")
+b_bm = @benchmark Bisect!(path, particle, FrohlichPotential(α, 1.0, 1.0), Primitive_Regime(), path.adjusters["Bisect!"])
+show(io,MIME("text/plain"),b_bm)
+end
 

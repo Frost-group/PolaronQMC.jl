@@ -128,8 +128,6 @@ function Energy(path::Path, potential::Potential, estimator::Estimator)
 end
 
 
-
-
 # Correlation ---------------------------------------------------------------------
 
 function Correlation(path::Path, potential::Potential, estimator::Estimator)

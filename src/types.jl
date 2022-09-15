@@ -34,7 +34,7 @@ mutable struct Single_Adjuster <: Adjuster
     adjust_counter :: Int
     shift_width :: Float64
     adjust_unit :: Float64 #how much shift width is adjusted by each time
-    function Single_Adjuster(λ,τ)
+    function Single_Adjuster(λ::Float64, τ::Float64)
         shift_width = sqrt(4 * λ * τ) * 0.5
         adjust_unit = shift_width
         new(0,shift_width, adjust_unit)
@@ -47,7 +47,7 @@ mutable struct Displace_Adjuster <: Adjuster
     adjust_counter :: Int
     shift_width :: Float64 
     adjust_unit :: Float64 #how much shift width is adjusted by each time
-    function Displace_Adjuster(λ,τ)
+    function Displace_Adjuster(λ::Float64, τ::Float64)
         shift_width = sqrt(4 * λ * τ)
         adjust_unit = shift_width
         new(0,shift_width, adjust_unit)
@@ -58,7 +58,10 @@ end
 
 
 #Adjuster for the Bisect! move alogrithm
-mutable struct Bisect_Adjuster <: Adjuster
+mutable struct Bisect_Adjuster <: Adjuster end
+
+
+#=
     adjust_counter_array :: Dict
     shift_width_array :: Dict
     max_level :: Int
@@ -79,7 +82,7 @@ mutable struct Bisect_Adjuster <: Adjuster
         new(adjust_counter_array,shift_width_array, max_level)
     end
 end
-
+=#
 
 
 
@@ -107,7 +110,7 @@ mutable struct Path
         adjusters = Dict()
         adjusters["Single!"] = Single_Adjuster(λ,τ)
         adjusters["Displace!"] = Displace_Adjuster(λ,τ)
-        adjusters["Bisect!"] = Bisect_Adjuster(λ,τ)
+        adjusters["Bisect!"] = Bisect_Adjuster()
 
 
 

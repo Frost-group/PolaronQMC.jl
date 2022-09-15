@@ -64,8 +64,8 @@ begin
             observables = [Energy]
     
         #estimator type
-            #estimators = [Virial_Estimator()]
-            estimators = [Thermodynamic_Estimator()]
+            estimators = [Virial_Estimator()]
+            #estimators = [Thermodynamic_Estimator()]
             #estimators = [Simple_Estimator()]
         
 #running sim
