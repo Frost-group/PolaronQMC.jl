@@ -14,6 +14,8 @@ using BenchmarkTools
     adjusted_beads = Int(floor(1/(fixed_τ*T)))
 
     path = Path(adjusted_beads, 1, 3, fixed_τ)
+    particle = rand(1:path.n_particles)
+    bead = rand(1:path.n_beads)
 
     α = 1.0
 
@@ -21,8 +23,6 @@ using BenchmarkTools
     println("Benchmarking PIMC moves...")
     println("Beads: $adjusted_beads ")
 
-    particle = rand(1:path.n_particles)
-    bead = rand(1:path.n_beads)
 
 
 end
@@ -31,12 +31,9 @@ end
 begin
 
 println("PIMC")
-pimcx_bm = @btime PIMC(100, 100, 100, path, [[Bisect!],[1.0]], [], [], FrohlichPotential(α, 1.0, 1.0), Primitive_Regime())
+pimc_bm = @btime PIMC(100, 100, 100, path, [[Bisect!],[1.0]], [], [], FrohlichPotential(α, 1.0, 1.0), Primitive_Regime())
 println("\n")
 
-println("PIMCX")
-pimcx_bm = @btime PIMCX(100, 100, 100, path, [[Bisect!],[1.0]], [], [], FrohlichPotential(α, 1.0, 1.0), Primitive_Regime())
-println("\n")
 
 end
 begin

@@ -165,9 +165,45 @@ struct CoulombPotential <: TwoBodyPotential
     end
 end
 
+"""
+Cache objects containing constant information used in potential calculation to avoid redundant calculations
+"""
+
+abstract type Cache end
+
+"""
+    PotentialCache(path::Path, potential::Potential)
+
+A cache of constant information used when evaluating the potential energy.
+
+# Arguments
+- `path::Path`: collection of all particle imaginary-time paths.
+- `potential::Potential`: the potential controlling the system.
+"""
+struct PotentialCache <: Cache
+    prefactor_1 :: Float64
+    function PotentialCache(path::Path, potential::FrohlichPotential)
+        β = path.n_beads * path.τ
+        prefactor_1 = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(2*path.m) * csch(potential.ħ * potential.ω * β / 2)
+        new(prefactor_1)
+    end
+
+    function PotentialCache(path::Path, potential::HarmonicPotential)
+        prefactor_1 = 0.5 * path.m * potential.ω^2
+        new(prefactor_1)
+    end
+end
 
 
-
+#=
+struct HarmonicCache <: Cache
+    prefactor_1 :: Float64
+    function HarmonicCache(path::Path, potential::HarmonicPotential)
+        prefactor_1 = 0.5 * path.m * potential.ω^2
+        new(prefactor_1)
+    end
+end
+=#
 
 
 
