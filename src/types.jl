@@ -58,32 +58,22 @@ end
 
 
 #Adjuster for the Bisect! move alogrithm
-mutable struct Bisect_Adjuster <: Adjuster end
-
-
-#=
-    adjust_counter_array :: Dict
-    shift_width_array :: Dict
+mutable struct Bisect_Adjuster <: Adjuster
+    segment_length :: Int
     max_level :: Int
-
-
-    function Bisect_Adjuster(λ,τ)
-        adjust_counter_array = Dict()
-        shift_width_array = Dict()
-        
-        #max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
-        max_level = 4
-
-        for level in 0:max_level
-            shift_width_array[string(level)] = sqrt(2^(level) * λ * τ )
-            adjust_counter_array[string(level)] = 0
+    function Bisect_Adjuster(n_beads::Int)
+        if n_beads < 100 #adjusting number of beads adjusted by Bisect dependent on total number of beads
+            segment_length = 9
+        elseif n_beads > 100 && n_beads < 3000
+            segment_length = 17
+        else
+            segment_length = 33
         end
-        
-        new(adjust_counter_array,shift_width_array, max_level)
+
+        max_level = Int(floor(log(segment_length)/log(2))) 
+        new(segment_length, max_level)
     end
 end
-=#
-
 
 
 """
@@ -110,7 +100,7 @@ mutable struct Path
         adjusters = Dict()
         adjusters["Single!"] = Single_Adjuster(λ,τ)
         adjusters["Displace!"] = Displace_Adjuster(λ,τ)
-        adjusters["Bisect!"] = Bisect_Adjuster()
+        adjusters["Bisect!"] = Bisect_Adjuster(n_beads)
 
 
 
@@ -175,9 +165,45 @@ struct CoulombPotential <: TwoBodyPotential
     end
 end
 
+"""
+Cache objects containing constant information used in potential calculation to avoid redundant calculations
+"""
+
+abstract type Cache end
+
+"""
+    PotentialCache(path::Path, potential::Potential)
+
+A cache of constant information used when evaluating the potential energy.
+
+# Arguments
+- `path::Path`: collection of all particle imaginary-time paths.
+- `potential::Potential`: the potential controlling the system.
+"""
+struct PotentialCache <: Cache
+    prefactor_1 :: Float64
+    function PotentialCache(path::Path, potential::FrohlichPotential)
+        β = path.n_beads * path.τ
+        prefactor_1 = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(2*path.m) * csch(potential.ħ * potential.ω * β / 2)
+        new(prefactor_1)
+    end
+
+    function PotentialCache(path::Path, potential::HarmonicPotential)
+        prefactor_1 = 0.5 * path.m * potential.ω^2
+        new(prefactor_1)
+    end
+end
 
 
-
+#=
+struct HarmonicCache <: Cache
+    prefactor_1 :: Float64
+    function HarmonicCache(path::Path, potential::HarmonicPotential)
+        prefactor_1 = 0.5 * path.m * potential.ω^2
+        new(prefactor_1)
+    end
+end
+=#
 
 
 
