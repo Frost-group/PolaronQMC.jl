@@ -34,7 +34,7 @@ function Single!(path::Path, particle::Int, potential::Potential, potentialcache
 	# Metropolis algorithm. 
 	# Accept if bead displacement decreases the action, otherwise accept with probability exp(-ΔAction).
 
-	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
+	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action)) #condition for accepting shift
 		adjuster.adjust_counter += 1 #updating counter for adjustment of shift width
 		return true
 	else
@@ -101,7 +101,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, potentialcache
 	old_beads = deepcopy(path.beads[:,particle, :])
 
 
-	total_old_action = sum(potential_action(path, bead, particle, potential, potentialcache, regime) for bead in start_bead:start_bead+adjuster.segment_length)
+	total_old_action = sum(potential_action(path, bead, particle, potential, potentialcache, regime) for bead in start_bead : start_bead+adjuster.segment_length)
 
 
 	for level in adjuster.max_level:-1:1
@@ -143,5 +143,49 @@ end
 
 
 
+function BisectL!(path::Path, particle::Int, potential::Potential, potentialcache::Cache, regime::Regime, adjuster::Adjuster)
 
+	start_bead = rand(1:path.n_beads)
+
+	old_beads = deepcopy(path.beads[:,particle, :])
+
+
+	total_old_action = sum(potential_actionL(path, bead, particle, potential, potentialcache, regime) for bead in start_bead : start_bead+adjuster.segment_length)
+
+
+	for level in adjuster.max_level:-1:1
+		segment_old_action = 0.0 # old action of the cut out segment
+		segment_new_action = 0.0 # new action of the cut out segment
+
+		
+		ratio = 2^(adjuster.max_level - level) #how many divisions of level makes up full segment
+		
+		for k in 1:ratio
+			bead = Int(start_bead + (2^(level-1) * k))
+			segment_old_action += potential_actionL(path, bead, particle, potential, potentialcache, regime)
+			shift = rand([-1,1],path.n_dimensions) .* rand(path.n_dimensions) * sqrt( 2^(level-1) * path.τ * path.λ) 
+			path.beads[bead, particle, :] = 0.5 * (path.beads[bead - 2^(level-1), particle, :] + path.beads[bead + 2^(level-1), particle, :]) + shift
+			segment_new_action += potential_actionL(path, bead, particle, potential, potentialcache, regime)
+		end
+		segment_action_diff = 2^(level-1)* path.τ * (segment_new_action - segment_old_action)
+		if rand() > exp(-segment_action_diff)
+			return false
+		end
+
+	end
+
+	total_new_action = sum(potential_actionL(path, bead, particle, potential, potentialcache, regime) for bead in start_bead:start_bead+adjuster.segment_length)
+
+	if total_new_action - total_old_action < 0.0
+		return true
+
+	elseif rand() < exp(-(total_new_action - total_old_action))
+		return true
+		
+	else
+		path.beads[:, particle, :] = old_beads
+		return false
+	end
+
+end
 

@@ -9,6 +9,9 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 	#Caching information to avoid inner loop calculations
 		#Potential caches
 			potentialcache = PotentialCache(path, potential)
+			if verbose
+				println("Potential Cache Generated")
+			end
 
 
 		#Conversion of objects to strings to dictionaries

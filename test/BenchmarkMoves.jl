@@ -19,13 +19,19 @@ using BenchmarkTools
 
     α = 1.0
 
+    frohlich_potential = FrohlichPotential(α,1.0,1.0)
+    harmonic_potential = HarmonicPotential(1.0)
+
+
+    frohlichcache = PotentialCache(path, frohlich_potential)
+    harmoniccache = PotentialCache(path, harmonic_potential)
 
     println("Benchmarking PIMC moves...")
     println("Beads: $adjusted_beads ")
 
-
-
+    
 end
+
 
 
 begin
@@ -38,32 +44,41 @@ println("\n")
 end
 begin
 
-
+#=
 #Single
-println("Single!()")
-single_bm = @btime Single!(path, particle, FrohlichPotential(α, 1.0, 1.0), Primitive_Regime(), path.adjusters["Single!"])
+println("Single!() Frohlich")
+single_bm = @btime Single!(path, particle, frohlich_potential, frohlichcache, Primitive_Regime(), path.adjusters["Single!"])
 println("\n")
 
 #Bisect
 println("Bisect!() Harmonic")
-bisect_bm = @btime Bisect!(path, particle, HarmonicPotential(1.0), Primitive_Regime(), path.adjusters["Bisect!"])
-
+bisect_bm = @btime Bisect!(path, particle, harmonic_potential, harmoniccache, Primitive_Regime(), path.adjusters["Bisect!"])
+=#
 
 println("Bisect!() Frohlich")
-bisect_bm = @btime Bisect!(path, particle, FrohlichPotential(α, 1.0, 1.0), Primitive_Regime(), path.adjusters["Bisect!"])
+bisect_bm = @btime Bisect!(path, particle, frohlich_potential, frohlichcache, Primitive_Regime(), path.adjusters["Bisect!"])
 println("\n")
 
 
+println("BisectL!() Frohlich")
+bisectL_bm = @btime BisectL!(path, particle, frohlich_potential, frohlichcache, Primitive_Regime(), path.adjusters["Bisect!"])
+println("\n")
 
+
+end
+begin
 #benchmarking smaller sections
 
+
 println("Frohlich one_body_potential")
-frohlich_bm = @btime one_body_potential(FrohlichPotential(α, 1.0, 1.0), path, bead, particle)
+obp_bm = @btime one_body_potential(frohlich_potential, frohlichcache, path, bead, particle)
 println("\n")
 
-println("Deepcopy")
-deepcopy_bm = @btime deepcopy(path.beads[:,particle, :])
+println("Frohlich one_body_potentialL")
+obp_bm = @btime one_body_potentialL(frohlich_potential, frohlichcache, path, bead, particle)
 println("\n")
+
+
 
 
 end
