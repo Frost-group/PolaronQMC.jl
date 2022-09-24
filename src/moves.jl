@@ -1,5 +1,25 @@
 # moves.jl
 
+function Shift!(bead::Int, path::Path, particle::Int, shift_width::Float64, potentialcache::Cache)
+
+	#actual shifting of the bead
+	shift = rand(path.n_dimensions) * shift_width .* rand([-1,1],path.n_dimensions)
+	path.beads[bead, particle, :] += shift
+
+	#updating the distance matrix using the new shifted position
+
+	new_distances = generate_distances(bead, particle, path)
+
+	potentialcache.distance_matrix[bead,:] = new_distances
+	potentialcache.distance_matrix[:,bead] = new_distances
+
+
+end
+
+
+
+
+
 """
 	Single!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
@@ -13,6 +33,37 @@ Move a single imaginary-time timeslice (bead) on a single particle, or subset of
 See also [`Path`](@ref).
 """
 function Single!(path::Path, particle::Int, potential::Potential, potentialcache::Cache, regime::Regime , adjuster::Adjuster)
+    bead = rand(1:path.n_beads)										# Pick a random bead.						
+
+    # We just need to look at the beads +- 1 unit from m
+    # CHECK: Non local potential? Coulombic?
+    old_action = 
+		kinetic_action(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
+		kinetic_action(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
+		potential_action(path, bead, particle, potential, potentialcache, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+
+	Shift!(bead, path, particle, adjuster.shift_width, potentialcache)
+
+    new_action =
+		kinetic_action(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
+		kinetic_action(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
+		potential_action(path, bead, particle, potential, potentialcache, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+
+	# Metropolis algorithm. 
+	# Accept if bead displacement decreases the action, otherwise accept with probability exp(-ΔAction).
+
+	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action)) #condition for accepting shift
+		potentialcache.old_distance_matrix = copy(potentialcache.distance_matrix)
+		adjuster.adjust_counter += 1 #updating counter for adjustment of shift width
+		return true
+	else
+		potentialcache.distance_matrix = copy(potentialcache.old_distance_matrix)
+		adjuster.adjust_counter -= 1 #updating counter for adjustment of shift width
+		return false
+	end
+end
+
+function SingleL!(path::Path, particle::Int, potential::Potential, potentialcache::Cache, regime::Regime , adjuster::Adjuster)
     bead = rand(1:path.n_beads)										# Pick a random bead.
 	width = adjuster.shift_width
 	shift = rand(path.n_dimensions) * width .* rand([-1,1],path.n_dimensions)			# Linear random displacement of bead.
@@ -22,14 +73,14 @@ function Single!(path::Path, particle::Int, potential::Potential, potentialcache
     old_action = 
 		kinetic_action(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
 		kinetic_action(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
-		potential_action(path, bead, particle, potential, potentialcache, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+		potential_actionL(path, bead, particle, potential, potentialcache, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
 
 	path.beads[bead, particle, :] += shift
 
     new_action =
 		kinetic_action(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
 		kinetic_action(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
-		potential_action(path, bead, particle, potential, potentialcache, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+		potential_actionL(path, bead, particle, potential, potentialcache, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
 
 	# Metropolis algorithm. 
 	# Accept if bead displacement decreases the action, otherwise accept with probability exp(-ΔAction).
@@ -43,8 +94,6 @@ function Single!(path::Path, particle::Int, potential::Potential, potentialcache
 		return false
 	end
 end
-
-
 
 
 """
@@ -95,14 +144,10 @@ end
 
 
 function Bisect!(path::Path, particle::Int, potential::Potential, potentialcache::Cache, regime::Regime, adjuster::Adjuster)
-
 	start_bead = rand(1:path.n_beads)
-
 	old_beads = deepcopy(path.beads[:,particle, :])
 
-
 	total_old_action = sum(potential_action(path, bead, particle, potential, potentialcache, regime) for bead in start_bead : start_bead+adjuster.segment_length)
-
 
 	for level in adjuster.max_level:-1:1
 		segment_old_action = 0.0 # old action of the cut out segment

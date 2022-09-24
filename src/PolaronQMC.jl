@@ -25,10 +25,10 @@ export Estimator, Thermodynamic_Estimator, Virial_Estimator, Simple_Estimator, S
 export Adjuster, Single_Adjuster, Displace_Adjuster, Bisect_Adjuster
 
 # Export function used in the optimisation of the running of the simulation
-export update_shift_width!, thermalised_start!
+export update_shift_width!, thermalised_start!, generate_distances
 
 # Export PIMC move algorithms
-export Single!, Displace!, Bisect!, Stage!, BisectL!
+export Shift!, Single!, Displace!, Bisect!, Stage!, BisectL!, SingleL!
 
 # Export actions
 export potential_action, kinetic_action, potential_actionL

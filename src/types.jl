@@ -180,14 +180,11 @@ A cache of constant information used when evaluating the potential energy.
 - `path::Path`: collection of all particle imaginary-time paths.
 - `potential::Potential`: the potential controlling the system.
 """
-struct PotentialCache <: Cache
+mutable struct PotentialCache <: Cache
 
     potential_prefactor :: Union{Float64, CircularArray{}}
     distance_matrix :: Array
-
-
-
-
+    old_distance_matrix :: Array #proposed distance matrix by a new potential move
 
     function PotentialCache(path::Path, potential::FrohlichPotential)
 
@@ -201,28 +198,24 @@ struct PotentialCache <: Cache
 
             g_factors_array = CircularArray([generate_g_factors(bead, path, potential) for bead in 1:path.n_beads])
 
-        #generating a matrix containing the distance between beads which will be updated after each successful move
-            function generate_distances(bead::Int, path::Path)
-                return [norm(path.beads[bead, particle, :] - path.beads[other_bead, particle, :]) for other_bead in 1:path.n_beads]
-            end
+        #generating a matrix containing the distance between beads which will be updated after each successful move, currently only supports 1 particle
+            particle = 1
+            distance_matrix = reduce(hcat, [generate_distances(bead, particle, path) for bead in 1:path.n_beads]) #array containing the distance between each and every bead
+            old_distance_matrix = copy(distance_matrix)
 
-            distance_matrix = hcat([generate_distances(bead, path) for bead in 1:path.n_beads])
-
-        new(g_factors_array, distance_matrix )
+        new(g_factors_array, distance_matrix, old_distance_matrix)
     end
 
     function PotentialCache(path::Path, potential::HarmonicPotential)
             prefactor_1 = 0.5 * path.m * potential.ω^2
 
-        #generating a matrix containing the distance between beads which will be updated after each successful move
-            function generate_distances(bead::Int, path::Path)
-                return [norm(path.beads[bead, particle, :] - path.beads[other_bead, particle, :]) for other_bead in 1:path.n_beads]
-            end
+        #generating a matrix containing the distance between beads which will be updated after each successful move, currently only supports 1 particle
+            particle = 1
+            distance_matrix = reduce(hcat, [generate_distances(bead, particle, path) for bead in 1:path.n_beads])
+            old_distance_matrix = copy(distance_matrix)
 
-            distance_matrix = hcat([generate_distances(bead, path) for bead in 1:path.n_beads])
+        new(prefactor_1, distance_matrix, old_distance_matrix)
 
-
-        new(prefactor_1, distance_matrix)
     end
 end
 

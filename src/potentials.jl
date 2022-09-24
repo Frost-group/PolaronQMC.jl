@@ -21,8 +21,9 @@ end
 # Returns the Frohlich potential for a single particle
 function one_body_potential(potential::FrohlichPotential, potentialcache::Cache, path::Path, bead::Int, particle::Int)
     β = path.n_beads * path.τ
-    bead_distances = [norm(path.beads[bead, particle, :] - path.beads[other_bead, particle, :]) for other_bead in 1:path.n_beads if other_bead != bead && abs(other_bead - bead) != path.n_beads]
-    inner_integral = sum(potentialcache.cached_value[bead] ./ bead_distances)
+    bead_distances = filter!(!iszero, potentialcache.distance_matrix[bead,:])
+    
+    inner_integral = sum(potentialcache.potential_prefactor[bead] ./ bead_distances)
     return path.τ * inner_integral
 end
 
