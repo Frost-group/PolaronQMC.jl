@@ -15,17 +15,25 @@ end
 
 # Return the harmonic potential for a single particle.
 function one_body_potential(potential::HarmonicPotential, potentialcache::Cache, path::Path, bead::Int, particle::Int)
-    return potentialcache.prefactor_1 * norm(path.beads[bead, particle,:])^2
+    return potentialcache.potential_prefactor * norm(path.beads[bead, particle,:])^2
 end
 
 # Returns the Frohlich potential for a single particle
 function one_body_potential(potential::FrohlichPotential, potentialcache::Cache, path::Path, bead::Int, particle::Int)
+    bead_distances = filter!(!iszero, potentialcache.distance_matrix[bead,:])
+    #println(bead_distances)
+    inner_integral = sum(potentialcache.potential_prefactor[bead] ./ bead_distances)
+    return path.τ * inner_integral
+end
+
+
+function one_body_potentialL(potential::FrohlichPotential, potentialcache::Cache, path::Path, bead::Int, particle::Int)
     β = path.n_beads * path.τ
     inner_integral = 0.0
     for other_bead in 1:path.n_beads
         if other_bead != bead
             #g_factor = -potential.α/2 * sqrt(potential.ħ/(2*path.m*potential.ω)) * cosh(β *(abs(bead-other_bead)/path.n_beads - 0.5)) * csch(β/2)
-            g_factor = potentialcache.prefactor_1 * cosh(potential.ω*β * (abs(bead-other_bead)/path.n_beads - 0.5 * potential.ħ)) 
+            g_factor = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(2*path.m) * csch(potential.ħ * potential.ω * β / 2) * cosh(potential.ω*β * (abs(bead-other_bead)/path.n_beads - 0.5 * potential.ħ)) 
             inner_integral += g_factor / norm(path.beads[bead, particle, :] - path.beads[other_bead, particle, :])
         end
     end

@@ -13,7 +13,7 @@ using Plots
 export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, Simple_Regime, Primitive_Regime, Cache, PotentialCache
 
 # Export potentials
-export one_body_potential, one_body_potential_convert, two_body_potential
+export one_body_potential, one_body_potentialL, two_body_potential
 
 # Export observables
 export potential_energy, kinetic_energy, Energy, Correlation, Position, Mean_Position
@@ -25,13 +25,13 @@ export Estimator, Thermodynamic_Estimator, Virial_Estimator, Simple_Estimator, S
 export Adjuster, Single_Adjuster, Displace_Adjuster, Bisect_Adjuster
 
 # Export function used in the optimisation of the running of the simulation
-export update_shift_width!, thermalised_start!
+export update_shift_width!, thermalised_start!, generate_distances
 
 # Export PIMC move algorithms
-export Single!, Displace!, Bisect!, Stage!
+export Shift!, Single!, Displace!, Bisect!, Stage!, BisectL!, SingleL!
 
 # Export actions
-export potential_action, kinetic_action
+export potential_action, kinetic_action, potential_actionL
 
 # Export simulation run code (PIMC)
 export PIMC, PIMCX
