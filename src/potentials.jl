@@ -15,14 +15,13 @@ end
 
 # Return the harmonic potential for a single particle.
 function one_body_potential(potential::HarmonicPotential, potentialcache::Cache, path::Path, bead::Int, particle::Int)
-    return potentialcache.cached_value * norm(path.beads[bead, particle,:])^2
+    return potentialcache.potential_prefactor * norm(path.beads[bead, particle,:])^2
 end
 
 # Returns the Frohlich potential for a single particle
 function one_body_potential(potential::FrohlichPotential, potentialcache::Cache, path::Path, bead::Int, particle::Int)
-    β = path.n_beads * path.τ
     bead_distances = filter!(!iszero, potentialcache.distance_matrix[bead,:])
-    
+    #println(bead_distances)
     inner_integral = sum(potentialcache.potential_prefactor[bead] ./ bead_distances)
     return path.τ * inner_integral
 end
