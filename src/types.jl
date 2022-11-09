@@ -7,44 +7,24 @@ using CircularArrays
 abstract type Regime end
 
 
-<<<<<<< Updated upstream
-struct Simple_Regime <: Regime  #simple form of calculating action
-=======
 struct Simple_Regime <: Regime  # Simple form of calculating action
->>>>>>> Stashed changes
     function Simple_Regime()
         new()
     end
 end
 
-<<<<<<< Updated upstream
-struct Primitive_Regime <: Regime #Calculating using the primitive approximation as per Ceperly paper
-=======
 
 struct Primitive_Regime <: Regime # Calculating using the primitive approximation as per Ceperly paper
->>>>>>> Stashed changes
     function Primitive_Regime()
         new()
     end
 end
 
-<<<<<<< Updated upstream
-"""
-Adjuster type to container information about shift width and allow for its auto adjustment
-
-"""
-
-abstract type Adjuster end
-
-
-#Adjuster for the Single! move algorithm
-=======
 
 # Adjuster type to container information about shift width and allow for its auto adjustment
 abstract type Adjuster end
 
 
->>>>>>> Stashed changes
 mutable struct Single_Adjuster <: Adjuster
 
     """
@@ -62,10 +42,7 @@ mutable struct Single_Adjuster <: Adjuster
 end
 
 
-<<<<<<< Updated upstream
 #Adjuster for the Displace! move algorithm
-=======
->>>>>>> Stashed changes
 mutable struct Displace_Adjuster <: Adjuster
 
     """
@@ -82,24 +59,11 @@ mutable struct Displace_Adjuster <: Adjuster
     end
 end
 
-<<<<<<< Updated upstream
-
-
-
 #Adjuster for the Bisect! move alogrithm
 mutable struct Bisect_Adjuster <: Adjuster end
 
 
 #=
-=======
-#=
-mutable struct Bisect_Adjuster <: Adjuster end
-
-    """
-    Adjuster for the Bisect! move alogrithm    
-    """
-
->>>>>>> Stashed changes
     adjust_counter_array :: Dict
     shift_width_array :: Dict
     max_level :: Int
@@ -122,13 +86,6 @@ mutable struct Bisect_Adjuster <: Adjuster end
 end =#
 
 
-<<<<<<< Updated upstream
-
-"""
-Generic path mutable type 
-"""
-=======
->>>>>>> Stashed changes
 mutable struct Path
 
     """
@@ -156,8 +113,6 @@ mutable struct Path
         adjusters["Single!"] = Single_Adjuster(λ,τ)
         adjusters["Displace!"] = Displace_Adjuster(λ,τ)
         adjusters["Bisect!"] = Bisect_Adjuster()
-
-
 
 		new(n_beads, n_particles, n_dimensions, beads, adjusters, τ, m, λ)
 	end
