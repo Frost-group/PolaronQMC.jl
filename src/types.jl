@@ -2,25 +2,33 @@
 
 using CircularArrays
 
-"""
-Regime for the simuation to run in
-"""
 
+# Regime for the simuation to run in
 abstract type Regime end
 
 
+<<<<<<< Updated upstream
 struct Simple_Regime <: Regime  #simple form of calculating action
+=======
+struct Simple_Regime <: Regime  # Simple form of calculating action
+>>>>>>> Stashed changes
     function Simple_Regime()
         new()
     end
 end
 
+<<<<<<< Updated upstream
 struct Primitive_Regime <: Regime #Calculating using the primitive approximation as per Ceperly paper
+=======
+
+struct Primitive_Regime <: Regime # Calculating using the primitive approximation as per Ceperly paper
+>>>>>>> Stashed changes
     function Primitive_Regime()
         new()
     end
 end
 
+<<<<<<< Updated upstream
 """
 Adjuster type to container information about shift width and allow for its auto adjustment
 
@@ -30,7 +38,19 @@ abstract type Adjuster end
 
 
 #Adjuster for the Single! move algorithm
+=======
+
+# Adjuster type to container information about shift width and allow for its auto adjustment
+abstract type Adjuster end
+
+
+>>>>>>> Stashed changes
 mutable struct Single_Adjuster <: Adjuster
+
+    """
+    Adjuster for the Single! move algorithm
+    """
+
     adjust_counter :: Int
     shift_width :: Float64
     adjust_unit :: Float64 #how much shift width is adjusted by each time
@@ -42,8 +62,16 @@ mutable struct Single_Adjuster <: Adjuster
 end
 
 
+<<<<<<< Updated upstream
 #Adjuster for the Displace! move algorithm
+=======
+>>>>>>> Stashed changes
 mutable struct Displace_Adjuster <: Adjuster
+
+    """
+    Adjuster for the Displace! move algorithm
+    """
+
     adjust_counter :: Int
     shift_width :: Float64 
     adjust_unit :: Float64 #how much shift width is adjusted by each time
@@ -54,6 +82,7 @@ mutable struct Displace_Adjuster <: Adjuster
     end
 end
 
+<<<<<<< Updated upstream
 
 
 
@@ -62,6 +91,15 @@ mutable struct Bisect_Adjuster <: Adjuster end
 
 
 #=
+=======
+#=
+mutable struct Bisect_Adjuster <: Adjuster end
+
+    """
+    Adjuster for the Bisect! move alogrithm    
+    """
+
+>>>>>>> Stashed changes
     adjust_counter_array :: Dict
     shift_width_array :: Dict
     max_level :: Int
@@ -81,15 +119,22 @@ mutable struct Bisect_Adjuster <: Adjuster end
         
         new(adjust_counter_array,shift_width_array, max_level)
     end
-end
-=#
+end =#
 
 
+<<<<<<< Updated upstream
 
 """
 Generic path mutable type 
 """
+=======
+>>>>>>> Stashed changes
 mutable struct Path
+
+    """
+    Generic path mutable type 
+    """
+
 	n_beads :: Int64
 	n_particles :: Int64
     n_dimensions :: Int64
@@ -118,9 +163,6 @@ mutable struct Path
 	end
 end
 
-"""
-Defined Types for different potentials.
-"""
 
 # Most abstract Potential type.
 abstract type Potential end
@@ -134,23 +176,39 @@ abstract type OneBodyPotential <: Potential end
 # For potentials that depend on two bodies.
 abstract type TwoBodyPotential <: Potential end
 
-# A constant potential.
-struct ConstantPotential <: NoBodyPotential 
+
+struct ConstantPotential <: NoBodyPotential
+
+    """
+    A constant potential
+    """
+
     V :: Float64
     function ConstantPotential(V::Float64)
         new(V)
     end
 end
 
-# A Harmonic potential for a single body.
+
 struct HarmonicPotential <: OneBodyPotential
+
+    """
+    A Harmonic potential for a single body.
+    """
+
     ω :: Float64
     function HarmonicPotential(ω::Float64)
         new(ω)
     end
 end
 
+
 struct FrohlichPotential <: OneBodyPotential
+
+    """
+    Potential for Frohlich Polaron
+    """
+
     α :: Float64
     ω :: Float64
     ħ :: Float64
@@ -159,25 +217,28 @@ struct FrohlichPotential <: OneBodyPotential
     end
 end
 
-# Mexican Hat potential for a single body.
+
 struct MexicanHatPotential <: OneBodyPotential
+
+    """
+    Mexican Hat potential for a single body.
+    """
+
     ω :: Float64
     function MexicanHatPotential(ω::Float64)
         new(ω)
     end
 end
 
-# Coulomb interaction between two bodies.
+
 struct CoulombPotential <: TwoBodyPotential
+
+    """
+    Coulomb interaction between two bodies.
+    """
+
     κ :: Float64
     function CoulombPotential(κ::Float64)
         new(κ)
     end
 end
-
-
-
-
-
-
-

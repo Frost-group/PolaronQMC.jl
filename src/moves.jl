@@ -46,20 +46,20 @@ end
 
 
 
+	function Displace!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
-"""
+	"""
 	Displace!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
 
-Move the entire imaginary-time timeslice (all the beads) on a single particle, or subset of particles, by the same vector per Monte-Carlo iteration.
+	Move the entire imaginary-time timeslice (all the beads) on a single particle, or subset of particles, by the same vector per Monte-Carlo iteration.
 
-# Arguments
-- `path::Path`: collection of all particle imaginary-time paths.
-- `particle::Union{Int, Vector{Int}}`: select a specific particle indexed by this integer, or a subset of particles indexed by integers in this vector.
-- `potentials::Union{Potential, Array{Potential}}`: list of potentials active in the system. Can just be a single potential.
+	Arguments
+	- `path::Path`: collection of all particle imaginary-time paths.
+	- `particle::Union{Int, Vector{Int}}`: select a specific particle indexed by this integer, or a subset of particles indexed by integers in this vector.
+	- `potentials::Union{Potential, Array{Potential}}`: list of potentials active in the system. Can just be a single potential.
 
-See also [`Path`](@ref).
-"""
-function Displace!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
+	See also [`Path`](@ref).
+	"""
 	width = adjuster.shift_width
 	shift = rand(path.n_dimensions) * width .* rand([-1,1],path.n_dimensions)
 

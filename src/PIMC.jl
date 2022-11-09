@@ -127,9 +127,14 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 	for mover in movers_string
 		system_stats["acceptance_ratio"][mover] = system_stats["acceptance_array"][mover] / system_stats["attempted_array"][mover] 
 	end
+<<<<<<< Updated upstream
 	
 	
 	return [system_stats["acceptance_ratio"], output_observables, visual_positions]
 
 end
+=======
+>>>>>>> Stashed changes
 
+	return [system_stats["acceptance_ratio"], output_observables, visual_positions]
+end
