@@ -5,6 +5,7 @@ using Plots
 include("../src/PolaronQMCVisualisation.jl")
 using .PolaronQMCVisualisation
 using PolaronMobility
+using LaTeXStrings
 
 
 begin
@@ -124,11 +125,30 @@ begin
  
     end
 
-    Beta_plot = scatter(T_arr, Mean_energy_arr, yerror = Error_arr, xaxis=:log,  yaxis=:log, ylabel="Energy", xlabel="T", labels = "Data", legend=:topleft)
-    scatter!(T_arr, Comparison_energy_arr, labels = "Theory")
+    default(fontfamily="Computer Modern",
+        titlefont = (20, "Computer Modern"),
+        legendfontsize = 12,
+        guidefont = (18, "Computer Modern"),
+        tickfont = (12, "Computer Modern"),
+        linewidth=2, framestyle=:box, label=nothing, grid=false)
+    #scalefontsizes()
+
+    Beta_plot = scatter(T_arr,
+                        Mean_energy_arr,
+                        yaxis=:log,
+                        xaxis=:log,
+                        labels = "Data",
+                        legend=:topleft,
+                        yerror = Error_arr,
+                        markerstrokewidth=0,
+                        markercolor = "Blue",
+                        ylabel=L"\textrm{Energy\,/\, } E",
+                        xlabel=L"\textrm{Temperature\,/\,} T")
+    scatter!(T_arr, Comparison_energy_arr, labels = "Theory", markerstrokewidth=0, markercolor = "Red",)
     
-    title!("Energy vs T")
+    title!("Energy vs Temperature")
     display(Beta_plot)
+    savefig("./figs/HarmonicEnergyVSTemperature.png")
 end
 
 
