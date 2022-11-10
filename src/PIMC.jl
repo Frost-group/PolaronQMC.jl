@@ -20,7 +20,6 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 	system_stats["attempted_array"] = Dict()
 
 	# Acceptance and attempt arrays for movers
-
 	for mover in movers_string
 		system_stats["acceptance_array"][mover] = 0
 		system_stats["attempted_array"][mover] = 0
@@ -40,11 +39,11 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 	# Position for visuals
 	visual_positions = []
 
-	#processes that run per step
+	# Processes that run per step
 	if threads
 		@threads for step in 1:n_steps
 			
-			#updating n_accepted, moving beads, and changing shift width if necessary
+			# Updating n_accepted, moving beads, and changing shift width if necessary
 			for particle in rand(1:path.n_particles, path.n_particles)
 				for mover_index in 1:length(movers[1])
 					adjuster = path.adjusters[string(Symbol(movers[1][mover_index]))]
@@ -113,11 +112,8 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 				if visual
 					push!(visual_positions,copy(path.beads))
 				end
-
-
 			end
 		end
-
 	end
 
 	system_stats["acceptance_ratio"] = Dict()

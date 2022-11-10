@@ -7,7 +7,7 @@ function Single!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 	Move a single imaginary-time timeslice (bead) on a single particle, or subset of particles, per Monte-Carlo iteration.
 
-	# Arguments
+	Arguments
 	- `path::Path`: collection of all particle imaginary-time paths.
 	- `particle::Union{Int, Vector{Int}}`: select a specific particle indexed by this integer, or a subset of particles indexed by integers in this vector.
 	- `potentials::Union{Potential, Array{Potential}}`: list of potentials active in the system. Can just be a single potential.
@@ -62,6 +62,7 @@ function Displace!(path::Path, particle::Int, potential::Potential, regime::Regi
 
 	See also [`Path`](@ref).
 	"""
+
 	width = adjuster.shift_width
 	shift = rand(path.n_dimensions) * width .* rand([-1,1],path.n_dimensions)
 

@@ -9,6 +9,9 @@ function analytic_energy_harmonic(potential::HarmonicPotential, β::Float64, ħ:
 end
 
 
+function analytic_energy_harmonic2(potential::HarmonicPotential, β::Float64, ħ::Float64)
+    return potential.ω*ħ/2 * (1+exp(-potential.ω*ħ*β))/(1-exp(-ħ*potential.ω*β))
+end
 
 
 function selective_mean(observable_array::Array, limit::Union{Int,Float64})
