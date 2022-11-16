@@ -4,13 +4,13 @@
 #Ways of calculating action
 
 function kinetic_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::Simple_Regime)
-    kinetic_action = 0.5 * path.m * norm(path.beads[bead_two, particle, :] - path.beads[bead_one, particle, :])^2
+    kinetic_action = 0.5 * path.m * norm(path.beads[bead_two, particle, :] - path.beads[bead_one, particle, :])^2 / path.τ
     return kinetic_action
 end
 
 
 function potential_action(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::Simple_Regime)
-    return one_body_potential(potential, path, bead, particle)
+    return one_body_potential(potential, path, bead, particle) * path.τ
 end
 
 
