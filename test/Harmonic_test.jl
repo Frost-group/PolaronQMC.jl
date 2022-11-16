@@ -16,7 +16,8 @@ begin
 
     # Path variables
     T = 1
-    T_arr = 10 .^ range(-1, 0, length = 5)
+    # T_arr = 10 .^ range(-1, 0, length = 5)
+    T_arr = 0.1:0.1:0.6
     m = 1.0
     n_particles = 1
     n_dimensions = 1
@@ -28,7 +29,7 @@ begin
 
     for T in T_arr
         # For fixed τ 
-        fixed_τ = 0.01
+        fixed_τ = 0.4
         adjusted_beads = Int(floor(1/(fixed_τ*T)))
 
         # For fixed number of beads
@@ -39,7 +40,8 @@ begin
         path = Path(adjusted_beads, n_particles, n_dimensions, fixed_τ)
 
         # Set regime
-        regime = Primitive_Regime()
+        # regime = Primitive_Regime()
+        regime = Simple_Regime()
 
         """
         Set Potential Function
@@ -60,12 +62,12 @@ begin
         """
 
         #number of steps
-        n_steps = 200000
+        n_steps = 1000000
 
         #skipping between sampling
-        equilibrium_skip = 0.5 * n_steps
+        equilibrium_skip = 0.1 * n_steps
         #equilibrium_skip = 0
-        observables_skip = 0.001 * n_steps
+        observables_skip = 500
         #observables_skip = 10 * n_steps
 
         #types of moves
@@ -83,7 +85,7 @@ begin
         Run Simulation
         """
 
-        thermalised_start!(path, potential, n_steps = 10000)
+        thermalised_start!(path, potential, n_steps = 100000)
         pimc = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=false)
         acceptance_ratio = pimc[1]
         output_observables = pimc[2]
@@ -112,7 +114,8 @@ begin
         push!(Error_arr, sqrt(variances[2]))
 
         #Plots
-        energyplot = plot(energy, ylabel="Energy", xlabel="x * $observables_skip steps")
+        energyplot = plot(energy[Int(floor(0.9*length(energy))):end], ylabel="Energy", xlabel="x * $observables_skip steps")
+        display(energyplot)
         #posplot = histogram(position[:,1,1])
         #plot(posplot, energyplot, layout = (2,1), legend = false)
         #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
@@ -136,12 +139,10 @@ begin
 
     Beta_plot = scatter(T_arr,
                         Mean_energy_arr,
-                        yaxis=:log,
-                        xaxis=:log,
-                        labels = "Data",
+                        labels = "data",
                         legend=:topleft,
                         yerror = Error_arr,
-                        markerstrokewidth=0,
+                        markerstrokewidth=3,
                         markercolor = "Blue",
                         ylabel=L"\textrm{Energy\,/\, } E",
                         xlabel=L"\textrm{Temperature\,/\,} T")
