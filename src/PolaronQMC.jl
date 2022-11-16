@@ -49,12 +49,6 @@ export draw_beads_3d, animate_PIMC
 export quickrun_frohlich
 
 
-
-
-
-
-
-
 # Export PIMC algorithm
 #export PIMC, draw_beads_3d, animate_PIMC
 

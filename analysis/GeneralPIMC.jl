@@ -5,7 +5,7 @@ using Plots
 using PolaronMobility
 
 
-begin
+function generalPIMC(T, m, n_particles, n_dimensions, start_range)
     
     """
     Initialise System Variables
@@ -15,12 +15,12 @@ begin
     T = 0.1
     m = 1.0
     n_particles = 1
-    n_dimensions = 3
+    n_dimensions = 1
     start_range = 1.0
     β = 1 / T
-
+            
     # For fixed τ 
-    fixed_τ = 0.25
+    fixed_τ = 0.01
     adjusted_beads = Int(floor(1/(fixed_τ*T)))
 
     # For fixed number of beads
@@ -42,9 +42,9 @@ begin
     α = 1.0
     ħ = 1.0
     
-    potential = FrohlichPotential(α,ω,ħ)
-    #potential = HarmonicPotential(ω)
-    #potential = MexicanHatPotential(80.0)
+    #potential = FrohlichPotential(α,ω,ħ)
+    potential = HarmonicPotential(ω)
+    #potential = MexicanHatPotential(80000.0)
     #potential = ConstantPotential(10.0)
 
     """
@@ -70,18 +70,18 @@ begin
     estimators = [Virial_Estimator()]
     #estimators = [Thermodynamic_Estimator()]
     #estimators = [Simple_Estimator()]
- 
+        
     """
     Run Simulation
     """
 
     #thermalised_start!(path, potential, n_steps = 100000)
-    pimc = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=true)
+    pimc = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=false)
     acceptance_ratio = pimc[1]
     output_observables = pimc[2]
 
     energy = output_observables["Energy"][string(Symbol(estimators[1]))]
-    #position = output_observables["Position"][string(Symbol(estimators[1]))]
+    position = output_observables["Position"][string(Symbol(estimators[1]))]
 
     # Comparison energy
     if typeof(potential) == HarmonicPotential
@@ -93,37 +93,8 @@ begin
 
     variances = jackknife(energy)
 
-    # Post analysis
-    println("acceptance ratio = ", acceptance_ratio)
-    println("Mean energy = ", mean(energy))
-    println("comparison_energy = ", comparison_energy)
-    println("jackknife errors = ", sqrt(variances[2]))
-
-    #Plots
-    energyplot = plot(energy, ylabel="Energy", xlabel="x * $observables_skip steps")
-    #posplot = histogram(position[:,1,1])
-    #plot(posplot, energyplot, layout = (2,1), legend = false)
-    #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
-
-
-    # Visualise
-
-    anim = animate_PIMC(pimc, n_particles)
-    gif(anim, "saved_plots/anim_output.gif", fps = 60)
-
+    return energy, variances
 end
 
 
-
-#=
-#testing
-begin
-    estimators = [Thermodynamic_Estimator()]
-
-    estimators_string = []
-    for estimator in estimators
-        push!(estimators_string, string(Symbol(estimator)))
-    end
-end
-=#
-
+generalPIMC()

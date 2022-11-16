@@ -1,12 +1,10 @@
-module PolaronQMCVisualisation
-
+# PolaronQMCVisualisation.jl
 using Revise
 using Plots
 
-export animate_PIMC, draw_beads_3d
 
+function draw_beads_3d(beads, xlims, ylims, zlims, n_particles, frame)
 
-function draw_beads_3d(beads, xlims, ylims, zlims, n_particles)
 
 	p = plot()
 	
@@ -25,22 +23,24 @@ function draw_beads_3d(beads, xlims, ylims, zlims, n_particles)
 		push!(z, z[1])
 
 		plot!(p, x, y, z, marker = :circle, label = "P $particle", legend = false, xlims = xlims, ylims = ylims, zlims = zlims)
+		title!("PIMC Animation [Frame=$(frame)]")
+
 	end
 	return p
 end
     
+
 function animate_PIMC(pimc, n_particles)
 
 	xlims = [minimum([minimum(x[:, :, 1]) for x in pimc[3]]), maximum([maximum(x[:, :, 1]) for x in pimc[3]])]
 	ylims = [minimum([minimum(x[:, :, 2]) for x in pimc[3]]), maximum([maximum(x[:, :, 2]) for x in pimc[3]])]
 	zlims = [minimum([minimum(x[:, :, 3]) for x in pimc[3]]), maximum([maximum(x[:, :, 3]) for x in pimc[3]])]
 
+	frame = 0
 	animation = Plots.@animate for p in pimc[3]
-		draw_beads_3d(p, xlims, ylims, zlims, n_particles)
+		draw_beads_3d(p, xlims, ylims, zlims, n_particles, frame)
+		frame += 1
 	end
 
 	return animation
 end
-
-
-end # sub-module
