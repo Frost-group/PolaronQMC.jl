@@ -16,7 +16,8 @@ function Single!(path::Path, particle::Int, potential::Potential, regime::Regime
 	"""
 
     bead = rand(1:path.n_beads)										# Pick a random bead.
-	width = adjuster.shift_width
+	# width = adjuster.shift_width
+	width = 2.5
 	shift = rand(path.n_dimensions) * width .* rand([-1,1],path.n_dimensions)			# Linear random displacement of bead.
 
     # We just need to look at the beads +- 1 unit from m
