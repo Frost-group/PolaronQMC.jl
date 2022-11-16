@@ -16,7 +16,7 @@ begin
 
     # Path variables
     T = 1
-    T_arr = 10 .^ range(-2, 2, length = 10)
+    T_arr = 10 .^ range(-1, 0, length = 5)
     m = 1.0
     n_particles = 1
     n_dimensions = 1
@@ -60,12 +60,12 @@ begin
         """
 
         #number of steps
-        n_steps = 2000
+        n_steps = 200000
 
         #skipping between sampling
         equilibrium_skip = 0.5 * n_steps
         #equilibrium_skip = 0
-        observables_skip = 0.02 * n_steps
+        observables_skip = 0.001 * n_steps
         #observables_skip = 10 * n_steps
 
         #types of moves
@@ -99,6 +99,7 @@ begin
             comparison_energy = comparison_polaron.F
         end
 
+        println(length(energy))
         variances = jackknife(energy)
 
         # Post analysis

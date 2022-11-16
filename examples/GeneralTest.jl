@@ -14,7 +14,7 @@ begin
     """
 
     # Path variables
-    T = 1
+    T = 0.1
     m = 1.0
     n_particles = 1
     n_dimensions = 1
@@ -54,17 +54,17 @@ begin
     """
 
     #number of steps
-    n_steps = 10000
+    n_steps = 200000
 
     #skipping between sampling
     equilibrium_skip = 0.02 * n_steps
     #equilibrium_skip = 0
-    observables_skip = 0.02 * n_steps
+    observables_skip = 0.001 * n_steps
     #observables_skip = 10 * n_steps
 
     #types of moves
-    movers = [[Bisect!],[1.0]]
-    #movers = [[Single!],[1.0]]
+    #movers = [[Bisect!],[1.0]]
+    movers = [[Single!],[1.0]]
     #movers = [[Displace!,Single!],[0.2,1.0]]
 
     observables = [Energy]
@@ -77,7 +77,7 @@ begin
     Run Simulation
     """
 
-    thermalised_start!(path, potential, n_steps = 1000000)
+    #thermalised_start!(path, potential, n_steps = 100000)
     pimc = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=false)
     acceptance_ratio = pimc[1]
     output_observables = pimc[2]
@@ -92,6 +92,8 @@ begin
         comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
         comparison_energy = comparison_polaron.F
     end
+
+    println(energy)
 
     variances = jackknife(energy)
 
