@@ -43,8 +43,8 @@ end
 
 
 function kinetic_energy(path::Path, potential::HarmonicPotential, estimator::Virial_Estimator)
-    # term_one = (path.n_dimensions * path.n_particles) / (2 * path.τ * path.n_beads) 
-     term_one = (path.n_dimensions * path.n_particles) / (path.τ * path.n_beads) 
+    term_one = (path.n_dimensions * path.n_particles) / (2 * path.τ * path.n_beads) 
+     #term_one = (path.n_dimensions * path.n_particles) / (path.τ * path.n_beads) 
  
      #term 2 prefactor
      t2_prefactor = (path.m * potential.ω^2) / (2 * path.n_beads)
