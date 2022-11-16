@@ -6,19 +6,21 @@ using Statistics
 
 function jackknife(observables_array)
     bin_width = Int(floor(0.1*length(observables_array))) #block binwidth
+    # println("binwidth is: ", bin_width)
     jk_binwidth = length(observables_array)-bin_width #jack knife binwidth, for complementary bins
     n_bins = cld(length(observables_array),bin_width)
-
 
     #getting block estimators
 
     block_bins = collect(Iterators.partition(observables_array,bin_width)) 
     block_estimators = [sum(bin)/bin_width for bin in block_bins]
 
+    #=
     bins = []
     for i in 1:n_bins
         append!(bins,[sample(observables_array,jk_binwidth,replace=false)])
     end
+    =#
 
     #getting bin_variance
 
@@ -28,8 +30,6 @@ function jackknife(observables_array)
     end
     variance_bins /= 1/(n_bins*(n_bins-1))
     
-    
-
 
     #getting jack knife estimators
     jk_estimators = []
@@ -49,7 +49,6 @@ function jackknife(observables_array)
         end
         variance_jk *= (n_bins-1)/n_bins
     return [variance_bins,variance_jk]
-
 end
 
 
