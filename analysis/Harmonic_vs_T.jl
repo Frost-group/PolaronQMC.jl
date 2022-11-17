@@ -18,6 +18,8 @@ begin
     #movers = [[Bisect!],[1.0]]
     movers = [[Single!],[1.0]]
     #movers = [[Displace!,Single!],[0.2,1.0]]
+    Potential = "Harmonic"
+    Estimator = "Virial"
     T_arr = 0.1:0.1:0.8
     Mean_energy_arr = [0.0 for i in 1:length(T_arr)]
     Error_arr = [0.0 for i in 1:length(T_arr)]
@@ -29,18 +31,22 @@ begin
             println("Temp is", T_arr[i])
             # println("i = $(T_arr[i]) on thread $(Threads.threadid())")
             energy, variances = generalPIMC(T_arr[i], #Temperature
-                        1, # mass
-                        1, # no of particles
-                        1, # number of n_dimensions
-                        Simple_Regime(), # regime type
-                        true, # fixing tau or not
-                        0.2, # fixed_τ
-                        200, #n_beads if tau not fixed
-                        10000000, # No. of steps
-                        100000, # number of thermalisation
-                        movers, # moving types
-                        threads # whether thread or not
-                        )
+                                            1.0, # mass
+                                            1.0, # ω (has to be float)
+                                            1.0, # α (has to be float)
+                                            1, # no of particles
+                                            1, # number of n_dimensions
+                                            Simple_Regime(), # regime type
+                                            true, # fixing tau or not
+                                            0.4, # fixed_τ
+                                            200, # n_beads of tau not fixed
+                                            100000, # No. of steps
+                                            10000, # number of thermalisation
+                                            movers, # movers
+                                            "Harmonic", # potential type
+                                            "Virial", # estimators
+                                            threads # not threading
+                                            )            
             #push!(Mean_energy_arr, mean(energy))
             #push!(Error_arr, sqrt(variances[2]))
             Mean_energy_arr[i] = mean(energy)
@@ -51,17 +57,22 @@ begin
             println("Temp is", T_arr[i])
             # println("i = $(T_arr[i]) on thread $(Threads.threadid())")
             energy, variances = generalPIMC(T_arr[i], #Temperature
-                        1, # mass
-                        1, # no of particles
-                        1, # number of n_dimensions
-                        Simple_Regime(), # regime type
-                        true, # fixing tau or not
-                        0.2, # fixed_τ
-                        200, #n_beads if tau not fixed
-                        10000000, # No. of steps
-                        100000, # number of thermalisation
-                        movers
-                        )
+                                            1.0, # mass
+                                            1.0, # ω (has to be float)
+                                            1.0, # α (has to be float)
+                                            1, # no of particles
+                                            1, # number of n_dimensions
+                                            Simple_Regime(), # regime type
+                                            true, # fixing tau or not
+                                            0.4, # fixed_τ
+                                            200, # n_beads of tau not fixed
+                                            100000, # No. of steps
+                                            10000, # number of thermalisation
+                                            movers, # movers
+                                            "Harmonic", # potential type
+                                            "Virial", # estimators
+                                            threads # not threading
+                                            )         
             #push!(Mean_energy_arr, mean(energy))
             #push!(Error_arr, sqrt(variances[2]))
             Mean_energy_arr[i] = mean(energy)
