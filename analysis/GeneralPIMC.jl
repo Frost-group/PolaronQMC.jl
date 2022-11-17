@@ -2,13 +2,11 @@ using Revise
 using PolaronQMC
 using Statistics
 using Plots
-include("../src/PolaronQMCVisualisation.jl")
-using .PolaronQMCVisualisation
 using PolaronMobility
 using LaTeXStrings
 
 
-function generalPIMC(T, m, n_particles, n_dimensions, regime, fixing_tau, fixed_τ, n_beads, n_steps, n_thermalised, movers, start_range = 1.0)
+function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau, fixed_τ, n_beads, n_steps, n_thermalised, movers, potential, estimator, start_range = 1.0)
     
     """
     Initialise System Variables
@@ -16,6 +14,7 @@ function generalPIMC(T, m, n_particles, n_dimensions, regime, fixing_tau, fixed_
 
     # Path variables
     β = 1 / T
+    ħ = 1
             
     # For fixed τ 
     if fixing_tau
@@ -32,36 +31,32 @@ function generalPIMC(T, m, n_particles, n_dimensions, regime, fixing_tau, fixed_
     Set Potential Function
     """
     
-    # Potential variables
-    ω = 1.0
-    α = 1.0
-    ħ = 1.0
-    
-    #potential = FrohlichPotential(α,ω,ħ)
-    potential = HarmonicPotential(ω)
-    #potential = MexicanHatPotential(80000.0)
-    #potential = ConstantPotential(10.0)
+    if potential == "Frohlich"
+        potential = FrohlichPotential(α,ω,ħ)
+    if potential == "Harmonic"
+        potential = HarmonicPotential(ω)
+    if potential == "MexicanHat"
+        potential = MexicanHatPotential(80000.0)
+    if potential == "Constant"
+        potential = ConstantPotential(10.0)
 
     """
     PIMC Variables
     """
 
     #skipping between sampling
-    # equilibrium_skip = 0.5 * n_steps
     equilibrium_skip = 0.1 * n_steps
-    #equilibrium_skip = 0
-    #observables_skip = 0.001 * n_steps
-    observables_skip = 500
-    #observables_skip = 10 * n_steps
-
-    
+    observables_skip = 0.02 * n_steps
 
     observables = [Energy, Position]
     
-    estimators = [Virial_Estimator()]
-    #estimators = [Thermodynamic_Estimator()]
-    #estimators = [Simple_Estimator()]
-        
+    if estimator == "Virial"
+        estimators = [Virial_Estimator()]
+    if estimator == "Thermodynamic"
+        estimators = [Thermodynamic_Estimator()]
+    if estimator == "Simple"
+        estimators = [Simple_Estimator()]
+    
     """
     Run Simulation
     """
@@ -87,20 +82,20 @@ function generalPIMC(T, m, n_particles, n_dimensions, regime, fixing_tau, fixed_
     return energy, variances
 end
 
+begin
+    generalPIMC(0.1, #Temperature
+                1, # mass
+                1, # ω
+                1, # α
+                1, # no of particles
+                1, # number of n_dimensions
+                Simple_Regime(), # regime type
+                true, # fixing tau or not
+                0.4, # fixed_τ
+                200, # n_beads of tau not fixed
+                10000000, # No. of steps
+                100000, # number of thermalisation
+                [[Single!],[1.0]] # movers
+                )
+end
 
-#types of moves
-#movers = [[Bisect!],[1.0]]
-movers = [[Single!],[1.0]]
-#movers = [[Displace!,Single!],[0.2,1.0]]
-generalPIMC(0.1, #Temperature
-            1, # mass
-            1, # no of particles
-            1, # number of n_dimensions
-            Simple_Regime(), # regime type
-            true, # fixing tau or not
-            0.4, # fixed_τ
-            200, #n_beads of tau not fixed
-            10000000, # No. of steps
-            100000, # number of thermalisation
-            movers
-            )

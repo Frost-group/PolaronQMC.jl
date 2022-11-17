@@ -105,10 +105,8 @@ begin
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
-
     # Visualise
-
-    anim = animate_PIMC(pimc, n_particles)
+    anim = animate_PIMC(pimc, n_particles, "3D Fröhlich Potential", "Single 1.0 Mover", "0.1")
     gif(anim, "saved_plots/anim_output.gif", fps = 60)
 
 end
