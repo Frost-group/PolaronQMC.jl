@@ -6,7 +6,7 @@ using PolaronMobility
 using LaTeXStrings
 
 
-function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau, fixed_τ, n_beads, n_steps, n_thermalised, movers, potential, estimator, start_range = 1.0)
+function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau, fixed_τ, n_beads, n_steps, n_thermalised, movers, potential, estimator, threads::Bool = true, start_range = 1.0)
     
     """
     Initialise System Variables
@@ -14,7 +14,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
 
     # Path variables
     β = 1 / T
-    ħ = 1
+    ħ = 1.0
             
     # For fixed τ 
     if fixing_tau
@@ -41,12 +41,13 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     
     if potential == "Frohlich"
         potential = FrohlichPotential(α,ω,ħ)
-    if potential == "Harmonic"
+    elseif potential == "Harmonic"
         potential = HarmonicPotential(ω)
-    if potential == "MexicanHat"
+    elseif potential == "MexicanHat"
         potential = MexicanHatPotential(80000.0)
-    if potential == "Constant"
+    elseif potential == "Constant"
         potential = ConstantPotential(10.0)
+    end
 
     """
     PIMC Variables
@@ -60,11 +61,13 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     
     if estimator == "Virial"
         estimators = [Virial_Estimator()]
-    if estimator == "Thermodynamic"
+
+    elseif estimator == "Thermodynamic"
         estimators = [Thermodynamic_Estimator()]
-    if estimator == "Simple"
-        estimators = [Simple_Estimator()]
     
+    elseif estimator == "Simple"
+        estimators = [Simple_Estimator()]
+    end
     """
     Run Simulation
     """
@@ -81,45 +84,54 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     if typeof(potential) == HarmonicPotential
         comparison_energy = analytic_energy_harmonic(potential,β,ħ)
     elseif typeof(potential) == FrohlichPotential
-        comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
-        comparison_energy = comparison_polaron.F
+        #comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = false) # orginally threads is true
+        #comparison_energy = comparison_polaron.F
+        comparison_energy = 0.0
     end
 
     variances = jackknife(energy)
 
     # Post analysis
+    
     println("acceptance ratio = ", acceptance_ratio)
     println("Mean energy = ", mean(energy))
-    println("comparison_energy = ", comparison_energy)
+    # println("comparison_energy = ", comparison_energy)
     println("jackknife errors = ", sqrt(variances[2]))
-
+    
 
     #Plots
+    #=
     if plot_on
         energyplot = plot(energy[Int(floor(0.9*length(energy))):end], ylabel="Energy", xlabel="x * $observables_skip steps")
         display(energyplot)
     end
+    =#
     #posplot = histogram(position[:,1,1])
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
     return energy, variances
+
 end
 
+#=
 begin
-    generalPIMC(0.1, #Temperature
-                1, # mass
-                1, # ω
-                1, # α
+    A, B = generalPIMC(0.1, #Temperature
+                1.0, # mass
+                1.0, # ω (has to be float)
+                1.0, # α (has to be float)
                 1, # no of particles
                 1, # number of n_dimensions
-                Simple_Regime(), # regime type
+                Primitive_Regime(), # regime type
                 true, # fixing tau or not
-                0.4, # fixed_τ
+                0.01, # fixed_τ
                 200, # n_beads of tau not fixed
-                10000000, # No. of steps
-                100000, # number of thermalisation
-                [[Single!],[1.0]] # movers
+                100000, # No. of steps
+                10000, # number of thermalisation
+                [[Single!],[1.0]], # movers
+                "Frohlich", # potential type
+                "Virial", # estimators
+                true # not threading
                 )
 end
-
+=#
