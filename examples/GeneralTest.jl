@@ -55,10 +55,10 @@ begin
     n_steps = 200000
 
     #skipping between sampling
-    equilibrium_skip = 0.5 * n_steps
-    #equilibrium_skip = 0
+    #equilibrium_skip = 0.5 * n_steps
+    equilibrium_skip = 0
     observables_skip = 0.001 * n_steps
-    #observables_skip = 10 * n_steps
+    #observables_skip = 1
 
     #types of moves
     #movers = [[Bisect!],[1.0]]
@@ -105,9 +105,11 @@ begin
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
+    display(energyplot)
+
     # Visualise
-    anim = animate_PIMC(pimc, n_particles, n_dimensions, "3D Constant Potential", "Bisect 1.0 Mover", "0.1")
-    gif(anim, "saved_plots/anim_output_3D_Hqr,onic_Bisect_1.0.gif", fps = 60)
+    anim = animate_PIMC(pimc, n_particles, n_dimensions, "3D Harmonic Potential", "Single 1.0 Mover", "0.1")
+    gif(anim, "saved_plots/anim_outpu.gif", fps = 60)
 
 end
 
