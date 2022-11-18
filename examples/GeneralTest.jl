@@ -96,7 +96,7 @@ begin
     # Post analysis
     println("acceptance ratio = ", acceptance_ratio)
     println("Mean energy = ", mean(energy))
-    println("comparison_energy = ", comparison_energy)
+    # println("comparison_energy = ", comparison_energy)
     println("jackknife errors = ", sqrt(variances[2]))
 
     #Plots
@@ -106,22 +106,8 @@ begin
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
     # Visualise
-    anim = animate_PIMC(pimc, n_particles, "3D Fröhlich Potential", "Single 1.0 Mover", "0.1")
-    gif(anim, "saved_plots/anim_output.gif", fps = 60)
+    anim = animate_PIMC(pimc, n_particles, n_dimensions, "3D Constant Potential", "Bisect 1.0 Mover", "0.1")
+    gif(anim, "saved_plots/anim_output_3D_Hqr,onic_Bisect_1.0.gif", fps = 60)
 
 end
-
-
-
-#=
-#testing
-begin
-    estimators = [Thermodynamic_Estimator()]
-
-    estimators_string = []
-    for estimator in estimators
-        push!(estimators_string, string(Symbol(estimator)))
-    end
-end
-=#
 
