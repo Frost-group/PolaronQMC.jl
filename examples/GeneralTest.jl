@@ -55,10 +55,10 @@ begin
     n_steps = 200000
 
     #skipping between sampling
-    equilibrium_skip = 0.5 * n_steps
-    #equilibrium_skip = 0
+    #equilibrium_skip = 0.5 * n_steps
+    equilibrium_skip = 0
     observables_skip = 0.001 * n_steps
-    #observables_skip = 10 * n_steps
+    #observables_skip = 1
 
     #types of moves
     #movers = [[Bisect!],[1.0]]
@@ -96,7 +96,7 @@ begin
     # Post analysis
     println("acceptance ratio = ", acceptance_ratio)
     println("Mean energy = ", mean(energy))
-    println("comparison_energy = ", comparison_energy)
+    # println("comparison_energy = ", comparison_energy)
     println("jackknife errors = ", sqrt(variances[2]))
 
     #Plots
@@ -105,23 +105,11 @@ begin
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
+    display(energyplot)
+
     # Visualise
-    anim = animate_PIMC(pimc, n_particles, "3D Fröhlich Potential", "Single 1.0 Mover", "0.1")
-    gif(anim, "saved_plots/anim_output.gif", fps = 60)
+    anim = animate_PIMC(pimc, n_particles, n_dimensions, "3D Harmonic Potential", "Single 1.0 Mover", "0.1")
+    gif(anim, "saved_plots/anim_outpu.gif", fps = 60)
 
 end
-
-
-
-#=
-#testing
-begin
-    estimators = [Thermodynamic_Estimator()]
-
-    estimators_string = []
-    for estimator in estimators
-        push!(estimators_string, string(Symbol(estimator)))
-    end
-end
-=#
 

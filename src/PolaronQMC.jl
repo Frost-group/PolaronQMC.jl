@@ -43,7 +43,7 @@ export analytic_energy_harmonic, selective_mean
 export jackknife
 
 # Export visualisation (temp)
-export draw_beads_3d, animate_PIMC
+export draw_beads_3d, draw_beads_2d, animate_PIMC
 
 # Export quick runs
 export quickrun_frohlich
