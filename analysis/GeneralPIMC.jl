@@ -40,7 +40,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     """
     
     if potential == "Frohlich"
-        potential = FrohlichPotential(α,ω,ħ)
+        potential = FrohlichPotential(α,ω,ħ) # ω is phonon frequency
     elseif potential == "Harmonic"
         potential = HarmonicPotential(ω)
     elseif potential == "MexicanHat"
@@ -55,7 +55,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
 
     #skipping between sampling
     equilibrium_skip = 0.1 * n_steps
-    observables_skip = 0.02 * n_steps
+    observables_skip = 0.0002 * n_steps
 
     observables = [Energy, Position]
     
@@ -84,7 +84,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     if typeof(potential) == HarmonicPotential
         comparison_energy = analytic_energy_harmonic(potential,β,ħ)
     elseif typeof(potential) == FrohlichPotential
-        #comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = false) # orginally threads is true
+        #comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true) # orginally threads is true
         #comparison_energy = comparison_polaron.F
         comparison_energy = 0.0
     end
@@ -95,28 +95,32 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     
     println("acceptance ratio = ", acceptance_ratio)
     println("Mean energy = ", mean(energy))
-    # println("comparison_energy = ", comparison_energy)
+    println("comparison_energy = ", comparison_energy)
     println("jackknife errors = ", sqrt(variances[2]))
+    println("number of energy ", length(energy))
     
 
     #Plots
-    #=
+    
     if plot_on
-        energyplot = plot(energy[Int(floor(0.9*length(energy))):end], ylabel="Energy", xlabel="x * $observables_skip steps")
+        energyplot = scatter(energy[Int(floor(0.8*length(energy))):end], ylabel="Energy", xlabel="x * $observables_skip steps", labels = estimator)
+        #energyplot = scatter(energy, ylabel="Energy", xlabel="x * $observables_skip steps")
+        title!("Energy against steps")
         display(energyplot)
+        savefig("./figs/Energy_conv/Energyvssteps_T=$(T)_energy=$(estimator).png")
     end
-    =#
+    
     #posplot = histogram(position[:,1,1])
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
-    return energy, variances
+    return energy, variances, acceptance_ratio
 
 end
 
 #=
 begin
-    A, B = generalPIMC(0.1, #Temperature
+    generalPIMC(0.1, #Temperature
                 1.0, # mass
                 1.0, # ω (has to be float)
                 1.0, # α (has to be float)
@@ -124,14 +128,14 @@ begin
                 1, # number of n_dimensions
                 Primitive_Regime(), # regime type
                 true, # fixing tau or not
-                0.01, # fixed_τ
+                0.1, # fixed_τ
                 200, # n_beads of tau not fixed
                 100000, # No. of steps
-                10000, # number of thermalisation
+                100000, # number of thermalisation
                 [[Single!],[1.0]], # movers
                 "Frohlich", # potential type
                 "Virial", # estimators
-                true # not threading
+                false # not threading
                 )
 end
 =#
