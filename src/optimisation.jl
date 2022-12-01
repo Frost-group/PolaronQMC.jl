@@ -24,7 +24,7 @@ function update_shift_width!(adjuster::Adjuster)
         adjuster.shift_width = adjuster.shift_width * 1.01
 
     else
-        adjuster.shift_width = adjuster.shift_width * (adjuster.acceptance_rate / 0.234)
+        adjuster.shift_width = adjuster.shift_width * (adjuster.acceptance_rate / 0.5)
     end
 
     adjuster.attempt_counter = 0

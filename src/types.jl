@@ -77,21 +77,21 @@ end
 #Adjuster for the Displace! move algorithm
 mutable struct Displace_Adjuster <: Adjuster end
 
-#=
+
     """
     Adjuster for the Displace! move algorithm
     """
 
-    adjust_counter :: Int
-    shift_width :: Float64 
-    adjust_unit :: Float64 #how much shift width is adjusted by each time
-    function Displace_Adjuster(λ::Float64, τ::Float64)
+    attempt_counter :: Int
+    success_counter :: Int
+    shift_width :: Float64
+    acceptance_rate :: Float64
+    function Single_Adjuster(λ::Float64, τ::Float64)
         shift_width = sqrt(4 * λ * τ)
-        adjust_unit = shift_width
-        new(0,shift_width, adjust_unit)
+        new(0, 0, shift_width, 0)
     end
 end
-=#
+
 
 #Adjuster for the Bisect! move alogrithm
 mutable struct Bisect_Adjuster <: Adjuster end

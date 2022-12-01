@@ -21,7 +21,7 @@ begin
     β = 1 / T
 
     # For fixed τ 
-    fixed_τ = 0.01
+    fixed_τ = 0.1
     adjusted_beads = Int(floor(1/(fixed_τ*T)))
 
     # For fixed number of beads
@@ -53,7 +53,7 @@ begin
     """
 
     #number of steps
-    n_steps = 1000
+    n_steps = 10000
 
     #skipping between sampling
     #equilibrium_skip = 0.5 * n_steps
@@ -63,7 +63,8 @@ begin
 
     #types of moves
     #movers = [[Bisect!],[1.0]]
-    movers = Dict("Single!" => [1.0])
+    #movers = Dict("Single!" => [1.0])
+    movers = Dict("Displace" => [1.0])
     #movers = Dict("Single!" => [1.0], "Displace!" => [0.2])
 
 
@@ -86,6 +87,7 @@ begin
 
     energies = output_observables["Energy"][string(Symbol(estimators[1]))]
     acceptance_rates = adjuster_stats["Single!"]["Acceptance Rate"]
+    shift_widths = adjuster_stats["Single!"]["Shift Width"]
     # position = output_observables["Position"][string(Symbol(estimators[1]))]
 
     # Comparison energy
@@ -121,15 +123,22 @@ begin
         linewidth=2, framestyle=:box, label=nothing, grid=true)
 
     # Plots
-    energyplot = plot(energies, ylabel="Energy", xlabel="x * $observables_skip steps")
+    energyplot = plot(energies, ylabel="Energy", xlab = "Sweeps / $observables_skip\$ n\$")
+    acceptance_rate_plot = plot(acceptance_rates, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
+    shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
+    acceptance_shift_plot = scatter(acceptance_rates, shift_widths, xlab=L"\mathrm{Acceptance\, Rate\, /\, } r", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
+
     #posplot = histogram(position[:,1,1])
+
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
     display(energyplot)
-
-    acceptance_rate_plot = plot(acceptance_rates,xlab = L"\mathrm{Sweeps\, /\, } n",ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600, title="Confine Acceptance Rate")
     display(acceptance_rate_plot)
+    display(shift_width_plot)
+    display(acceptance_shift_plot)
+
+
     #savefig(acceptance_rate_plot, "saved_plots/acceptance_rate_convergence.png")
 
     #=

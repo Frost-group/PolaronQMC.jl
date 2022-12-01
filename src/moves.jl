@@ -111,8 +111,6 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 		total_old_action += potential_action(path, bead, particle, potential, regime)
 	end
 
-
-
 	for level in max_level:-1:1
 		segment_old_action = 0.0 # old action of the cut out segment
 		segment_new_action = 0.0 # new action of the cut out segment
