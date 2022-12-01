@@ -21,30 +21,63 @@ struct Primitive_Regime <: Regime # Calculating using the primitive approximatio
 end
 
 
+mutable struct Path
+
+    """
+    Generic path mutable type 
+    """
+
+	n_beads :: Int64
+	n_particles :: Int64
+    n_dimensions :: Int64
+
+	beads :: CircularArray{Float64, 3}
+    adjusters :: Dict
+
+	τ :: Float64
+    m :: Float64
+	λ :: Float64
+
+	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 1.0)
+        beads = CircularArray(rand(n_beads, n_particles, n_dimensions) .* (rand([-1,1] * start_range, n_beads, n_particles, n_dimensions)))
+
+        # DIctionary of Adjusters
+        adjusters = Dict()
+        adjusters["Single!"] = Single_Adjuster(λ,τ)
+        #adjusters["Displace!"] = Displace_Adjuster(λ,τ)
+        #adjusters["Bisect!"] = Bisect_Adjuster()
+
+		new(n_beads, n_particles, n_dimensions, beads, adjusters, τ, m, λ)
+	end
+end
+
+
 # Adjuster type to container information about shift width and allow for its auto adjustment
 abstract type Adjuster end
 
 
+# Adjuster for the Single! move algorithm
 mutable struct Single_Adjuster <: Adjuster
 
     """
     Adjuster for the Single! move algorithm
     """
 
-    adjust_counter :: Int
+    attempt_counter :: Int
+    success_counter :: Int
     shift_width :: Float64
-    adjust_unit :: Float64 #how much shift width is adjusted by each time
+    acceptance_rate :: Float64
     function Single_Adjuster(λ::Float64, τ::Float64)
         shift_width = sqrt(4 * λ * τ) * 0.5
-        adjust_unit = shift_width
-        new(0,shift_width, adjust_unit)
+        new(0, 0, shift_width, 0)
     end
 end
 
 
 #Adjuster for the Displace! move algorithm
-mutable struct Displace_Adjuster <: Adjuster
+mutable struct Displace_Adjuster <: Adjuster end
 
+#=
     """
     Adjuster for the Displace! move algorithm
     """
@@ -58,6 +91,7 @@ mutable struct Displace_Adjuster <: Adjuster
         new(0,shift_width, adjust_unit)
     end
 end
+=#
 
 #Adjuster for the Bisect! move alogrithm
 mutable struct Bisect_Adjuster <: Adjuster end
@@ -84,39 +118,6 @@ mutable struct Bisect_Adjuster <: Adjuster end
         new(adjust_counter_array,shift_width_array, max_level)
     end
 end =#
-
-
-mutable struct Path
-
-    """
-    Generic path mutable type 
-    """
-
-	n_beads :: Int64
-	n_particles :: Int64
-    n_dimensions :: Int64
-
-	beads :: CircularArray{Float64, 3}
-    adjusters :: Dict
-
-	τ :: Float64
-    m :: Float64
-	λ :: Float64
-
-
-
-	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 1.0)
-        beads = CircularArray(rand(n_beads, n_particles, n_dimensions) .* (rand([-1,1] * start_range, n_beads, n_particles, n_dimensions)))
-
-        #creating adjusters
-        adjusters = Dict()
-        adjusters["Single!"] = Single_Adjuster(λ,τ)
-        adjusters["Displace!"] = Displace_Adjuster(λ,τ)
-        adjusters["Bisect!"] = Bisect_Adjuster()
-
-		new(n_beads, n_particles, n_dimensions, beads, adjusters, τ, m, λ)
-	end
-end
 
 
 # Most abstract Potential type.

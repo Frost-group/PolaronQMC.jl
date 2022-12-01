@@ -3,6 +3,7 @@ using PolaronQMC
 using Statistics
 using Plots
 using PolaronMobility
+using LaTeXStrings
 
 
 begin
@@ -20,7 +21,7 @@ begin
     β = 1 / T
 
     # For fixed τ 
-    fixed_τ = 0.25
+    fixed_τ = 0.01
     adjusted_beads = Int(floor(1/(fixed_τ*T)))
 
     # For fixed number of beads
@@ -42,8 +43,8 @@ begin
     α = 1.0
     ħ = 1.0
     
-    potential = FrohlichPotential(α,ω,ħ)
-    #potential = HarmonicPotential(ω)
+    #potential = FrohlichPotential(α,ω,ħ)
+    potential = HarmonicPotential(ω)
     #potential = MexicanHatPotential(80.0)
     #potential = ConstantPotential(10.0)
 
@@ -52,7 +53,7 @@ begin
     """
 
     #number of steps
-    n_steps = 200000
+    n_steps = 1000
 
     #skipping between sampling
     #equilibrium_skip = 0.5 * n_steps
@@ -62,8 +63,9 @@ begin
 
     #types of moves
     #movers = [[Bisect!],[1.0]]
-    movers = [[Single!],[1.0]]
-    #movers = [[Displace!,Single!],[0.2,1.0]]
+    movers = Dict("Single!" => [1.0])
+    #movers = Dict("Single!" => [1.0], "Displace!" => [0.2])
+
 
     observables = [Energy, Position]
     
@@ -75,13 +77,16 @@ begin
     Run Simulation
     """
 
-    #thermalised_start!(path, potential, n_steps = 100000)
+    # thermalised_start!(path, potential, n_steps = 100000)
     pimc = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=true)
-    acceptance_ratio = pimc[1]
+    
+    # Store outputs
+    adjuster_stats = pimc[1]
     output_observables = pimc[2]
 
-    energy = output_observables["Energy"][string(Symbol(estimators[1]))]
-    #position = output_observables["Position"][string(Symbol(estimators[1]))]
+    energies = output_observables["Energy"][string(Symbol(estimators[1]))]
+    acceptance_rates = adjuster_stats["Single!"]["Acceptance Rate"]
+    # position = output_observables["Position"][string(Symbol(estimators[1]))]
 
     # Comparison energy
     if typeof(potential) == HarmonicPotential
@@ -91,25 +96,52 @@ begin
         comparison_energy = comparison_polaron.F
     end
 
-    variances = jackknife(energy)
-
     # Post analysis
-    println("acceptance ratio = ", acceptance_ratio)
-    println("Mean energy = ", mean(energy))
-    # println("comparison_energy = ", comparison_energy)
-    println("jackknife errors = ", sqrt(variances[2]))
+    variances = jackknife(energies)
+    jacknife_errors = sqrt(variances[2])
+    mean_energy = mean(energies)
+    last_acceptance_rate = last(acceptance_rates)
+    mean_acceptance_rate = mean(acceptance_rates)
+    std_acceptance_rate = std(acceptance_rates)
 
-    #Plots
-    energyplot = plot(energy, ylabel="Energy", xlabel="x * $observables_skip steps")
+    # Output measurements and statistics
+    println("Number of Beads: ", adjusted_beads)
+    println("Mean energy: ", mean_energy)
+    println("Comparison Energy: ", comparison_energy)
+    println("jackknife errors: ", jacknife_errors)
+    println("Final Acceptance Rate: ", last_acceptance_rate)
+    println("Mean Acceptance Rate: ", mean_acceptance_rate, " +/- ", std_acceptance_rate)
+
+    # Define plot parameters
+    default(fontfamily="Computer Modern",
+        titlefont = (16, "Computer Modern"),
+        guidefont = (18, "Computer Modern"),
+        tickfont = (12, "Computer Modern"),
+        legendfontsize = 12,
+        linewidth=2, framestyle=:box, label=nothing, grid=true)
+
+    # Plots
+    energyplot = plot(energies, ylabel="Energy", xlabel="x * $observables_skip steps")
     #posplot = histogram(position[:,1,1])
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
     display(energyplot)
 
-    # Visualise
-    anim = animate_PIMC(pimc, n_particles, n_dimensions, "3D Harmonic Potential", "Single 1.0 Mover", "0.1")
-    gif(anim, "saved_plots/anim_outpu.gif", fps = 60)
+    acceptance_rate_plot = plot(acceptance_rates,xlab = L"\mathrm{Sweeps\, /\, } n",ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600, title="Confine Acceptance Rate")
+    display(acceptance_rate_plot)
+    #savefig(acceptance_rate_plot, "saved_plots/acceptance_rate_convergence.png")
+
+    #=
+    acceptanceshiftplot = scatter(adjuster_stats["Single!"]["Acceptance Rate"],
+                            adjuster_stats["Single!"]["Shift Width"],
+                            xlabel= "Acceptance Rate",
+                            ylabel= "Shift Width")
+    display(acceptanceshiftplot) =#
+
+    # Visualise 
+    #anim = animate_PIMC(pimc, n_particles, n_dimensions, "3D Harmonic Potential", "Single 1.0 Mover", "0.1")
+    #gif(anim, "saved_plots/anim_output.gif", fps = 60) 
 
 end
 

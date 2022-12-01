@@ -15,10 +15,13 @@ function Single!(path::Path, particle::Int, potential::Potential, regime::Regime
 	See also [`Path`](@ref).
 	"""
 
-    bead = rand(1:path.n_beads)										# Pick a random bead.
-	# width = adjuster.shift_width
-	width = 2
+    bead = rand(1:path.n_beads)							# Pick a random bead.
+	width = adjuster.shift_width
+	#width = 2
 	shift = rand(path.n_dimensions) * width .* rand([-1,1],path.n_dimensions)			# Linear random displacement of bead.
+
+	# Attempt one Single move
+	adjuster.attempt_counter += 1
 
     # We just need to look at the beads +- 1 unit from m
     # CHECK: Non local potential? Coulombic?
@@ -30,23 +33,21 @@ function Single!(path::Path, particle::Int, potential::Potential, regime::Regime
 	path.beads[bead, particle, :] += shift
 
     new_action =
-	kinetic_action(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
-	kinetic_action(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
-	potential_action(path, bead, particle, potential, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+		kinetic_action(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
+		kinetic_action(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
+		potential_action(path, bead, particle, potential, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
 
 	# Metropolis algorithm. 
 	# Accept if bead displacement decreases the action, otherwise accept with probability exp(-ΔAction).
 
 	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
-		adjuster.adjust_counter += 1 # Updating counter for adjustment of shift width
+		adjuster.success_counter += 1 # Updating counter for adjustment of shift width
 		return true
 	else
 		path.beads[bead, particle, :] -= shift
-		adjuster.adjust_counter -= 1 # Updating counter for adjustment of shift width
 		return false
 	end
 end
-
 
 
 function Displace!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
