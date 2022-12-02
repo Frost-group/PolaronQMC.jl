@@ -15,7 +15,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     # Path variables
     β = 1 / T
     ħ = 1.0
-            
+    println(movers)     
     # For fixed τ 
     if fixing_tau
         adjusted_beads = Int(floor(1/(fixed_τ*T)))
@@ -54,8 +54,9 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     """
 
     #skipping between sampling
-    equilibrium_skip = 0.1 * n_steps
-    observables_skip = 0.0002 * n_steps
+    equilibrium_skip = 0.2 * n_steps
+    observables_skip = 100
+    #observables_skip = 0.001 * n_steps
 
     observables = [Energy, Position]
     
@@ -72,13 +73,13 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     Run Simulation
     """
 
-    thermalised_start!(path, potential, n_steps = n_thermalised)
+    #thermalised_start!(path, potential, n_steps = n_thermalised)
     pimc = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=false)
-    acceptance_ratio = pimc[1]
+    adjuster_stats = pimc[1]
     output_observables = pimc[2]
 
-    energy = output_observables["Energy"][string(Symbol(estimators[1]))]
-    position = output_observables["Position"][string(Symbol(estimators[1]))]
+    energy = output_observables["Energy"][string(Symbol(estimators[1]))];
+    position = output_observables["Position"][string(Symbol(estimators[1]))];
 
     # Comparison energy
     if typeof(potential) == HarmonicPotential
@@ -92,8 +93,13 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     variances = jackknife(energy)
 
     # Post analysis
-    
-    println("acceptance ratio = ", acceptance_ratio)
+    acceptance_rates = adjuster_stats["Single!"]["Acceptance Rate"]
+    last_acceptance_rate = last(acceptance_rates)
+    mean_acceptance_rate = mean(acceptance_rates)
+    std_acceptance_rate = std(acceptance_rates)
+
+    println("acceptance ratio = ", last_acceptance_rate)
+    println("Mean Acceptance Rate: ", mean_acceptance_rate, " +/- ", std_acceptance_rate)
     println("Mean energy = ", mean(energy))
     println("comparison_energy = ", comparison_energy)
     println("jackknife errors = ", sqrt(variances[2]))
@@ -114,7 +120,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
-    return energy, variances, acceptance_ratio
+    return energy, variances, last_acceptance_rate
 
 end
 
