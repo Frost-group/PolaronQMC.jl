@@ -25,7 +25,8 @@ begin
     delta_tau = 0.2
     Mean_energy_arr = [0.0 for i in 1:length(T_arr)]
     Error_arr = [0.0 for i in 1:length(T_arr)]
-    n_steps = 100000
+    n_steps = 10000
+    n_dimensions = 3
     
     threads = true # Can turn it off by setting to false, if thread turn on cannot do plot inside function generalPIMC
 
@@ -38,7 +39,7 @@ begin
                                             1.0, # ω (has to be float)
                                             1.0, # α (has to be float)
                                             1, # no of particles
-                                            1, # number of n_dimensions
+                                            n_dimensions, # number of n_dimensions
                                             Primitive_Regime(), # regime type
                                             true, # fixing tau or not
                                             delta_tau, # fixed_τ
@@ -63,7 +64,7 @@ begin
                                             1.0, # ω (has to be float)
                                             1.0, # α (has to be float)
                                             1, # no of particles
-                                            1, # number of n_dimensions
+                                            n_dimensions, # number of n_dimensions
                                             Primitive_Regime(), # regime type
                                             true, # fixing tau or not
                                             delta_tau, # fixed_τ
@@ -82,10 +83,12 @@ begin
 end
 
 begin
-    hbar = 1
-    omega = 1
+    ħ = 1.0
+    ω = 1.0
     #T_arr = 0.1:0.1:0.8
-    Analytical_QHO(x) = hbar*omega/2 .+ hbar*omega*exp.(-omega*hbar ./ x)./(1 .-exp.(-hbar*omega ./ x))
+    #Analytical_QHO(x) = ħ*ω/2 .+ ħ*ω*exp.(-ω*ħ ./ x)./(1 .-exp.(-ħ*ω ./ x))
+    Analytical_QHO(x) = n_dimensions/2*ħ*ω * (1 .+ exp.(-ħ*ω ./ x))./(1 .- exp.(-ħ*ω ./ x))
+    
     Energy_plot = plot(Analytical_QHO, 0.1, 1, labels="analytical", legend=:topleft)  
     
     scatter!(T_arr,
@@ -102,7 +105,7 @@ begin
     #scatter!(T_arr, Comparison_energy_arr, labels = "Theory", markerstrokewidth=0, markercolor = "Red",)
     title!("Energy vs Temperature")
     display(Energy_plot)
-    savefig("./figs/QHO_EVST_$(Estimator)_deltatau=$(delta_tau)_nsteps=$(n_steps).png")
+    savefig("./figs/3DQHO_EVST_$(Estimator)_deltatau=$(delta_tau)_nsteps=$(n_steps).png")
     #savefig("../figs/HarmonicEnergyVSTemperature_$(Estimator).png")
     #savefig("./figs/HarmonicEnergyVSTemperature_break_down.png")
 end
