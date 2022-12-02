@@ -75,7 +75,7 @@ end
 
 
 #Adjuster for the Displace! move algorithm
-mutable struct Displace_Adjuster <: Adjuster end
+mutable struct Displace_Adjuster <: Adjuster
 
 
     """
