@@ -14,8 +14,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
 
     # Path variables
     β = 1 / T
-    ħ = 1.0
-    println(movers)     
+    ħ = 1.0 
     # For fixed τ 
     if fixing_tau
         adjusted_beads = Int(floor(1/(fixed_τ*T)))
@@ -83,7 +82,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
 
     # Comparison energy
     if typeof(potential) == HarmonicPotential
-        comparison_energy = analytic_energy_harmonic(potential,β,ħ)
+        comparison_energy = analytic_energy_harmonic(potential,β,ħ, n_dimensions)
     elseif typeof(potential) == FrohlichPotential
         #comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true) # orginally threads is true
         #comparison_energy = comparison_polaron.F
