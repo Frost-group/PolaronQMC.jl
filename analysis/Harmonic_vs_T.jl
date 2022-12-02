@@ -15,21 +15,20 @@ end
 
 begin
     #types of moves
-    #movers = [[Bisect!],[1.0]]
-    movers = [[Single!],[1.0]]
-    #movers = [[Displace!,Single!],[0.2,1.0]]
+    #movers = [[Single!],[1.0]]
+    movers = Dict("Single!" => [1.0])
     Potential = "Harmonic"
     #Estimator = "Thermodynamic"
     Estimator = "Virial"
-    T_arr = 0.1:0.1:1.0
-    #T_arr = 10 .^ range(-2, 2, length = 8)
+    T_arr = 0.1:0.1:0.8
+    #T_arr = [0.1]
     delta_tau = 0.2
-    #T_arr = [0.2] # for a single test
     Mean_energy_arr = [0.0 for i in 1:length(T_arr)]
     Error_arr = [0.0 for i in 1:length(T_arr)]
+    n_steps = 100000
     
     threads = true # Can turn it off by setting to false, if thread turn on cannot do plot inside function generalPIMC
-    #threads = false
+
     if threads
         @threads for i in 1:length(T_arr)
             println("Temp is", T_arr[i])
@@ -40,21 +39,20 @@ begin
                                             1.0, # α (has to be float)
                                             1, # no of particles
                                             1, # number of n_dimensions
-                                            Simple_Regime(), # regime type
+                                            Primitive_Regime(), # regime type
                                             true, # fixing tau or not
                                             delta_tau, # fixed_τ
                                             200, # n_beads of tau not fixed
-                                            1000000, # No. of steps
-                                            100000, # number of thermalisation
-                                            movers, # movers
+                                            n_steps, # No. of steps
+                                            10000, # number of thermalisation
+                                            Dict("Single!" => [1.0]), # movers
                                             Potential, # potential type
                                             Estimator, # estimators
                                             threads # not threading
-                                            )            
-            #push!(Mean_energy_arr, mean(energy))
-            #push!(Error_arr, sqrt(variances[2]))
+                                            )           
             Mean_energy_arr[i] = mean(energy)
             Error_arr[i] = sqrt(variances[2])
+            #println("accept ratio is: ", accept_ratio)
         end
     else
         for i in 1:length(T_arr)
@@ -66,19 +64,17 @@ begin
                                             1.0, # α (has to be float)
                                             1, # no of particles
                                             1, # number of n_dimensions
-                                            Simple_Regime(), # regime type
+                                            Primitive_Regime(), # regime type
                                             true, # fixing tau or not
                                             delta_tau, # fixed_τ
                                             200, # n_beads of tau not fixed
-                                            1000000, # No. of steps
-                                            100000, # number of thermalisation
-                                            movers, # movers
+                                            n_steps, # No. of steps
+                                            10000, # number of thermalisation
+                                            Dict("Single!" => [1.0]), # movers
                                             Potential, # potential type
                                             Estimator, # estimators
                                             threads # not threading
                                             )         
-            #push!(Mean_energy_arr, mean(energy))
-            #push!(Error_arr, sqrt(variances[2]))
             Mean_energy_arr[i] = mean(energy)
             Error_arr[i] = sqrt(variances[2])
         end
@@ -106,7 +102,7 @@ begin
     #scatter!(T_arr, Comparison_energy_arr, labels = "Theory", markerstrokewidth=0, markercolor = "Red",)
     title!("Energy vs Temperature")
     display(Energy_plot)
-    #savefig("./figs/HarmonicEnergyVSTemperature_$(Estimator)_deltatau=$(delta_tau).png")
+    savefig("./figs/QHO_EVST_$(Estimator)_deltatau=$(delta_tau)_nsteps=$(n_steps).png")
     #savefig("../figs/HarmonicEnergyVSTemperature_$(Estimator).png")
     #savefig("./figs/HarmonicEnergyVSTemperature_break_down.png")
 end
