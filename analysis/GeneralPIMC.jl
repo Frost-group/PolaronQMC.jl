@@ -7,7 +7,7 @@ using LaTeXStrings
 
 
 function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau, fixed_τ, n_beads, n_steps, n_thermalised, movers, potential, estimator, threads::Bool = true, start_range = 1.0)
-    
+
     """
     Initialise System Variables
     """

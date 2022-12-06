@@ -43,8 +43,8 @@ begin
     α = 1.0
     ħ = 1.0
     
-    #potential = FrohlichPotential(α,ω,ħ)
-    potential = HarmonicPotential(ω)
+    potential = FrohlichPotential(α,ω,ħ)
+    #potential = HarmonicPotential(ω)
     #potential = MexicanHatPotential(80.0)
     #potential = ConstantPotential(10.0)
 
@@ -53,20 +53,19 @@ begin
     """
 
     #number of steps
-    n_steps = 10000
+    n_steps = 100000
 
     #skipping between sampling
     #equilibrium_skip = 0.5 * n_steps
-    equilibrium_skip = 0
-    observables_skip = 0.001 * n_steps
+    equilibrium_skip = 0.5 
+    observables_skip = 5
     #observables_skip = 1
 
     #types of moves
     #movers = [[Bisect!],[1.0]]
-    #movers = Dict("Single!" => [1.0])
-    movers = Dict("Displace" => [1.0])
+    movers = Dict("Single!" => [1.0])
+    #movers = Dict("Displace!" => [1.0])
     #movers = Dict("Single!" => [1.0], "Displace!" => [0.2])
-
 
     observables = [Energy, Position]
     
@@ -92,7 +91,7 @@ begin
 
     # Comparison energy
     if typeof(potential) == HarmonicPotential
-        comparison_energy = analytic_energy_harmonic(potential,β,ħ)
+        comparison_energy = analytic_energy_harmonic(potential,β,ħ,n_dimensions)
     elseif typeof(potential) == FrohlichPotential
         comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
         comparison_energy = comparison_polaron.F
@@ -108,7 +107,7 @@ begin
 
     # Output measurements and statistics
     println("Number of Beads: ", adjusted_beads)
-    println("Mean energy: ", mean_energy)
+    println("Mean Energy: ", mean_energy)
     println("Comparison Energy: ", comparison_energy)
     println("jackknife errors: ", jacknife_errors)
     println("Final Acceptance Rate: ", last_acceptance_rate)
@@ -123,23 +122,38 @@ begin
         linewidth=2, framestyle=:box, label=nothing, grid=true)
 
     # Plots
-    energyplot = plot(energies, ylabel="Energy", xlab = "Sweeps / $observables_skip\$ n\$")
+    energy_plot = plot(energies, ylabel="Energy", xlab = "Sweeps / $observables_skip\$ n\$")
+    hline!([comparison_energy], linestyle=:dash)
+    energy_hist = histogram(energies, ylab="Frequencies", xlab="Energy")
     acceptance_rate_plot = plot(acceptance_rates, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
     shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
     acceptance_shift_plot = scatter(acceptance_rates, shift_widths, xlab=L"\mathrm{Acceptance\, Rate\, /\, } r", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
+    acceptance_rate_hist = histogram(acceptance_rates, ylab="Frequency", xlab=L"\mathrm{Acceptance\, Rate\, /\, } r")
+    shift_width_hist = histogram(shift_widths, ylab="Frequency", xlab=L"\mathrm{Shift\, Width\, /\, } \Delta x")
+
 
     #posplot = histogram(position[:,1,1])
-
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
-    display(energyplot)
+    display(energy_hist)
+    savefig(energy_hist, "saved_plots/energy_hist.png") 
+   
+    display(energy_plot)
     display(acceptance_rate_plot)
     display(shift_width_plot)
     display(acceptance_shift_plot)
-
-
-    #savefig(acceptance_rate_plot, "saved_plots/acceptance_rate_convergence.png")
+    display(shift_width_hist)
+    display(acceptance_rate_hist)
+ #=
+    savefig(energy_plot, "saved_plots/energy_plot.png")    
+    savefig(acceptance_rate_plot, "saved_plots/acceptance_rate_convergence_02_12.png")
+    savefig(shift_width_plot, "saved_plots/shift_width_convergence_02_12.png")
+    savefig(acceptance_shift_plot, "saved_plots/acceptance_shift_02_12.png")
+    savefig(shift_width_hist, "saved_plots/shift_width_hist_02_12.png")
+    savefig(acceptance_rate_hist, "saved_plots/acceptance_rate_shift_02_12.png")
+    
+    =#
 
     #=
     acceptanceshiftplot = scatter(adjuster_stats["Single!"]["Acceptance Rate"],
