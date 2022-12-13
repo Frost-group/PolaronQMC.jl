@@ -91,7 +91,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 				for mover in keys(movers)
 					update_shift_width!(adjusters[mover])
 					push!(adjuster_stats[mover]["Acceptance Rate"], adjusters[mover].acceptance_rate)
-					push!(adjuster_stats[mover]["Shift Width"], adjusters[mover].shift_width) 
+					push!(adjuster_stats[mover]["Shift Width"], adjusters[mover].shift_width)
 				end
 			end
 

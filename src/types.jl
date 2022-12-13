@@ -43,9 +43,9 @@ mutable struct Path
 
         # DIctionary of Adjusters
         adjusters = Dict()
-        adjusters["Single!"] = Single_Adjuster(λ,τ)
-        #adjusters["Displace!"] = Displace_Adjuster(λ,τ)
-        #adjusters["Bisect!"] = Bisect_Adjuster()
+        adjusters["Single!"] = Single_Adjuster(λ, τ)
+        adjusters["Displace!"] = Displace_Adjuster(λ, τ)
+        adjusters["Bisect!"] = Bisect_Adjuster(λ, τ)
 
 		new(n_beads, n_particles, n_dimensions, beads, adjusters, τ, m, λ)
 	end
@@ -77,7 +77,6 @@ end
 #Adjuster for the Displace! move algorithm
 mutable struct Displace_Adjuster <: Adjuster
 
-
     """
     Adjuster for the Displace! move algorithm
     """
@@ -86,18 +85,32 @@ mutable struct Displace_Adjuster <: Adjuster
     success_counter :: Int
     shift_width :: Float64
     acceptance_rate :: Float64
-    function Single_Adjuster(λ::Float64, τ::Float64)
+    function Displace_Adjuster(λ::Float64, τ::Float64)
         shift_width = sqrt(4 * λ * τ)
         new(0, 0, shift_width, 0)
     end
 end
 
 
-#Adjuster for the Bisect! move alogrithm
-mutable struct Bisect_Adjuster <: Adjuster end
+#Adjuster for the Bisect! move algorithm
+mutable struct Bisect_Adjuster <: Adjuster
+
+    attempt_counter :: Int
+    success_counter :: Int
+    shift_width :: Float64
+    acceptance_rate :: Float64
+
+    function Bisect_Adjuster(λ::Float64, τ::Float64)
+        shift_width = sqrt(τ * λ)
+        new(0, 0, shift_width, 0)
+    end
+end
 
 
 #=
+#Adjuster for the Bisect! move alogrithm
+mutable struct Bisect_Adjuster <: Adjuster end
+
     adjust_counter_array :: Dict
     shift_width_array :: Dict
     max_level :: Int
@@ -115,10 +128,10 @@ mutable struct Bisect_Adjuster <: Adjuster end
             adjust_counter_array[string(level)] = 0
         end
         
-        new(adjust_counter_array,shift_width_array, max_level)
+        new(adjust_counter_array,shift_width_array, max_le vel)
     end
-end =#
-
+end 
+=#
 
 # Most abstract Potential type.
 abstract type Potential end
