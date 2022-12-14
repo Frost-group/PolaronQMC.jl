@@ -25,7 +25,7 @@ begin
     delta_tau = 0.2
     Mean_energy_arr = [0.0 for i in 1:length(T_arr)]
     Error_arr = [0.0 for i in 1:length(T_arr)]
-    n_steps = 10000
+    n_steps = 20000
     n_dimensions = 3
     
     threads = true # Can turn it off by setting to false, if thread turn on cannot do plot inside function generalPIMC
@@ -34,7 +34,7 @@ begin
         @threads for i in 1:length(T_arr)
             println("Temp is", T_arr[i])
             # println("i = $(T_arr[i]) on thread $(Threads.threadid())")
-            energy, variances, accept_ratio = generalPIMC(T_arr[i], #Temperature
+            energy, variances, accept_ratio, comp = generalPIMC(T_arr[i], #Temperature
                                             1.0, # mass
                                             1.0, # ω (has to be float)
                                             1.0, # α (has to be float)
@@ -45,7 +45,7 @@ begin
                                             delta_tau, # fixed_τ
                                             200, # n_beads of tau not fixed
                                             n_steps, # No. of steps
-                                            10000, # number of thermalisation
+                                            1000, # number of thermalisation
                                             Dict("Single!" => [1.0]), # movers
                                             Potential, # potential type
                                             Estimator, # estimators
@@ -59,7 +59,7 @@ begin
         for i in 1:length(T_arr)
             println("Temp is", T_arr[i])
             # println("i = $(T_arr[i]) on thread $(Threads.threadid())")
-            energy, variances, accept_ratio = generalPIMC(T_arr[i], #Temperature
+            energy, variances, accept_ratio, comp = generalPIMC(T_arr[i], #Temperature
                                             1.0, # mass
                                             1.0, # ω (has to be float)
                                             1.0, # α (has to be float)
@@ -95,7 +95,7 @@ begin
             Mean_energy_arr,
             labels = Estimator,
             legend=:topleft,
-            xaxis=:log,
+            #xaxis=:log,
             yerror = Error_arr,
             markerstrokewidth=3,
             markercolor = "Red",
@@ -105,7 +105,5 @@ begin
     #scatter!(T_arr, Comparison_energy_arr, labels = "Theory", markerstrokewidth=0, markercolor = "Red",)
     title!("Energy vs Temperature")
     display(Energy_plot)
-    savefig("./figs/3DQHO_EVST_$(Estimator)_deltatau=$(delta_tau)_nsteps=$(n_steps).png")
-    #savefig("../figs/HarmonicEnergyVSTemperature_$(Estimator).png")
-    #savefig("./figs/HarmonicEnergyVSTemperature_break_down.png")
+    savefig("./figs/3D-QHO_EVST_$(Estimator)_deltatau=$(delta_tau)_nsteps=$(n_steps).png")
 end
