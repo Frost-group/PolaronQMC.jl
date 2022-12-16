@@ -39,7 +39,7 @@ mutable struct Path
 	λ :: Float64
 
 	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 1.0)
-        beads = CircularArray(rand(n_beads, n_particles, n_dimensions) .* (rand([-1,1] * start_range, n_beads, n_particles, n_dimensions)))
+        beads = CircularArray(rand(n_beads, n_particles, n_dimensions) .* (rand([-1, 1] * start_range, n_beads, n_particles, n_dimensions)))
 
         # DIctionary of Adjusters
         adjusters = Dict()
@@ -86,7 +86,7 @@ mutable struct Displace_Adjuster <: Adjuster
     shift_width :: Float64
     acceptance_rate :: Float64
     function Displace_Adjuster(λ::Float64, τ::Float64)
-        shift_width = sqrt(4 * λ * τ)
+        shift_width = 1
         new(0, 0, shift_width, 0)
     end
 end

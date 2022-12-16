@@ -97,15 +97,82 @@ function Displace!(path::Path, particle::Int, potential::Potential, regime::Regi
 	end
 end
 
-	
+
+function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
+
+	max_level = 4
+	segment_length = Int((2^max_level) + 1)
+
+	start_bead = rand(1:path.n_beads)
+	old_beads = deepcopy(path.beads[:,particle, :])
+
+	# Attempt one Single move
+	adjuster.attempt_counter += 1
+
+	total_old_action = 0.0
+	for bead in start_bead:start_bead+segment_length
+		total_old_action += potential_action(path, bead, particle, potential, regime)
+	end
+
+	for level in max_level:-1:1
+
+		# Number of Beads in Level
+		beads_level = 2^(max_level - level)
+
+		for k in 1:beads_level
+
+			# Find bead of interest
+			if k == 1
+				bead = Int(start_bead + (2^(level-1) * k))
+			else
+				bead = Int(start_bead + (2^(level-1) + (2^(level) * (k-1))))
+			end
+
+			# Find beads of which to find midpoint
+			r0, r1 = bead - 2^(level-1), bead + 2^(level-1)
+
+			println("level: ", level, " bead: ", bead, " midpoints: ", [r0, r1], "\n")
+
+			# Move by normally distributed shift
+			width = sqrt( 2^(level-1) * path.τ * path.λ) * adjuster.shift_width
+			shift = rand([-1,1],path.n_dimensions) .* rand(path.n_dimensions) * width
+			
+			# Perform move and calculate change to action
+			midpoint = 0.5 * (path.beads[r0, particle, :] + path.beads[r1, particle, :])
+			path.beads[bead, particle, :] =  midpoint + shift
+		end
+	end
+
+	print("\n")
+
+	total_new_action = 0.0
+	for bead in start_bead:start_bead+segment_length
+		total_new_action += potential_action(path, bead, particle, potential, regime)
+	end
+
+	if total_new_action - total_old_action < 0.0
+		adjuster.success_counter += 1
+		return true
+
+	elseif rand() < exp(-(total_new_action - total_old_action))
+		adjuster.success_counter += 1
+		return true
+		
+	else
+		path.beads[:, particle, :] = old_beads
+		return false
+	end
+end
+
+
+#=
 function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
 	#max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
-	segment_length = 64 + 1 #temporary arbitary choice
+	segment_length = 8 + 1 #temporary arbitary choice
 	max_level = Int(floor(log(segment_length)/log(2))) # = 4 in arbitary setting
 
 	start_bead = rand(1:path.n_beads)
-
 	old_beads = deepcopy(path.beads[:,particle, :])
 
 	# Attempt one Single move
@@ -124,6 +191,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 		
 		for k in 1:ratio
 			bead = Int(start_bead + (2^(level-1) * k))
+			print("level: ", level, " bead: ", bead, "\n")
 			#println("bead = ", bead)
 			segment_old_action += potential_action(path, bead, particle, potential, regime)
 			width = adjuster.shift_width * (2^0.5)^(level-1)
@@ -133,9 +201,12 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 			segment_new_action += potential_action(path, bead, particle, potential, regime)
 		end
 		segment_action_diff = 2^(level-1)* path.τ * (segment_new_action - segment_old_action)
+		#=
 		if rand() > exp(-segment_action_diff)
+			print("Move Rejected")
 			return false
 		end
+		=#
 	end
 
 	total_new_action = 0.0
@@ -156,3 +227,4 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 		return false
 	end
 end
+=#

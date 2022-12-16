@@ -53,12 +53,12 @@ begin
     """
 
     #number of steps
-    n_steps = 5000
+    n_steps = 1000
 
     #skipping between sampling
-    #equilibrium_skip = 0.5 * n_steps
-    equilibrium_skip = 0.5
-    observables_skip = 5
+    equilibrium_skip = 0.5 * n_steps
+    #equilibrium_skip = 1
+    observables_skip = 0.01 * n_steps
     #observables_skip = 1
 
     #types of moves
@@ -73,6 +73,8 @@ begin
     #estimators = [Thermodynamic_Estimator()]
     #estimators = [Simple_Estimator()]
  
+    initial_pos = Array(path.beads)
+
     """
     Run Simulation
     """
@@ -90,7 +92,7 @@ begin
     energies = output_observables["Energy"][string(Symbol(estimators[1]))]
     acceptance_rates = adjuster_stats[mover]["Acceptance Rate"]
     shift_widths = adjuster_stats[mover]["Shift Width"]
-    # position = output_observables["Position"][string(Symbol(estimators[1]))]
+    position = output_observables["Position"][string(Symbol(estimators[1]))]
 
     # Comparison energy
     if typeof(potential) == HarmonicPotential
@@ -133,30 +135,25 @@ begin
     acceptance_shift_plot = scatter(acceptance_rates, shift_widths, xlab=L"\mathrm{Acceptance\, Rate\, /\, } r", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
     acceptance_rate_hist = histogram(acceptance_rates, ylab="Frequency", xlab=L"\mathrm{Acceptance\, Rate\, /\, } r")
     #shift_width_hist = histogram(shift_widths, ylab="Frequency", xlab=L"\mathrm{Shift\, Width\, /\, } \Delta x")
-
-
     #posplot = histogram(position[:,1,1])
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
     display(energy_hist)
-    savefig(energy_hist, "saved_plots/energy_hist.png") 
-   
     display(energy_plot)
     display(acceptance_rate_plot)
     display(shift_width_plot)
-    display(acceptance_shift_plot)
+    #display(acceptance_shift_plot)
     #display(shift_width_hist)
     display(acceptance_rate_hist)
- 
+
+    #savefig(energy_hist, "saved_plots/energy_hist.png") 
     #savefig(energy_plot, "saved_plots/energy_plot.png")    
     #savefig(acceptance_rate_plot, "saved_plots/acceptance_rate_convergence_02_12.png")
     #savefig(shift_width_plot, "saved_plots/shift_width_convergence_02_12.png")
     #savefig(acceptance_shift_plot, "saved_plots/acceptance_shift_02_12.png")
     #savefig(shift_width_hist, "saved_plots/shift_width_hist_02_12.png")
-    savefig(acceptance_rate_hist, "saved_plots/acceptance_rate_shift_02_12.png")
-    
-    
+    #savefig(acceptance_rate_hist, "saved_plots/acceptance_rate_shift_02_12.png")
 
     #=
     acceptanceshiftplot = scatter(adjuster_stats["Single!"]["Acceptance Rate"],
