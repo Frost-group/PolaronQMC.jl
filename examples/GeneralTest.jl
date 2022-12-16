@@ -16,7 +16,7 @@ begin
     T = 0.1
     m = 1.0
     n_particles = 1
-    n_dimensions = 3
+    n_dimensions = 1
     start_range = 1.0
     β = 1 / T
 
@@ -25,7 +25,7 @@ begin
     adjusted_beads = Int(floor(1/(fixed_τ*T)))
 
     # For fixed number of beads
-    n_beads = 9
+    n_beads = 50
     τ = 1.0 / (T * n_beads)
 
     path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
@@ -53,7 +53,8 @@ begin
     """
 
     #number of steps
-    n_steps = 1000
+    n_steps = 100000
+
 
     #skipping between sampling
     equilibrium_skip = 0.5 * n_steps
@@ -92,7 +93,7 @@ begin
     energies = output_observables["Energy"][string(Symbol(estimators[1]))]
     acceptance_rates = adjuster_stats[mover]["Acceptance Rate"]
     shift_widths = adjuster_stats[mover]["Shift Width"]
-    position = output_observables["Position"][string(Symbol(estimators[1]))]
+    position1 = output_observables["Position"][string(Symbol(estimators[1]))]
 
     # Comparison energy
     if typeof(potential) == HarmonicPotential
@@ -102,7 +103,7 @@ begin
         comparison_energy = comparison_polaron.F
     end
 
-    #=
+    
     # Post analysis
     variances = jackknife(energies)
     jacknife_errors = sqrt(variances[2])
@@ -119,7 +120,7 @@ begin
     println("jackknife errors: ", jacknife_errors)
     println("Final Acceptance Rate: ", last_acceptance_rate)
     println("Mean Acceptance Rate: ", mean_acceptance_rate, " +/- ", std_acceptance_rate)
-    =#
+    
 
     # Define plot parameters
     default(fontfamily="Computer Modern",
@@ -133,10 +134,10 @@ begin
     energy_plot = plot(energies, ylabel="Energy", xlab = "Sweeps / $observables_skip\$ n\$")
     hline!([comparison_energy], linestyle=:dash)
     energy_hist = histogram(energies, ylab="Frequencies", xlab="Energy")
-    acceptance_rate_plot = plot(acceptance_rates, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
-    shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
-    acceptance_shift_plot = scatter(acceptance_rates, shift_widths, xlab=L"\mathrm{Acceptance\, Rate\, /\, } r", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
-    acceptance_rate_hist = histogram(acceptance_rates, ylab="Frequency", xlab=L"\mathrm{Acceptance\, Rate\, /\, } r")
+    #acceptance_rate_plot = plot(acceptance_rates, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
+    #shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
+    #acceptance_shift_plot = scatter(acceptance_rates, shift_widths, xlab=L"\mathrm{Acceptance\, Rate\, /\, } r", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
+    #acceptance_rate_hist = histogram(acceptance_rates, ylab="Frequency", xlab=L"\mathrm{Acceptance\, Rate\, /\, } r")
     #shift_width_hist = histogram(shift_widths, ylab="Frequency", xlab=L"\mathrm{Shift\, Width\, /\, } \Delta x")
     #posplot = histogram(position[:,1,1])
     #plot(posplot, energyplot, layout = (2,1), legend = false)
@@ -144,11 +145,11 @@ begin
 
     display(energy_hist)
     display(energy_plot)
-    display(acceptance_rate_plot)
-    display(shift_width_plot)
+    #display(acceptance_rate_plot)
+    #display(shift_width_plot)
     #display(acceptance_shift_plot)
     #display(shift_width_hist)
-    display(acceptance_rate_hist)
+    #display(acceptance_rate_hist)
 
     #savefig(energy_hist, "saved_plots/energy_hist.png") 
     #savefig(energy_plot, "saved_plots/energy_plot.png")    
@@ -169,11 +170,7 @@ begin
     #anim = animate_PIMC(pimc, n_particles, n_dimensions, "3D Harmonic Potential", "Single 1.0 Mover", "0.1")
     #gif(anim, "saved_plots/anim_output.gif", fps = 60) 
     
-
-    for n in 0:3
-        positions = scatter(position[1+9*n:1+9*(n+1)-1])
-        display(positions)
-    end
-    
+    posplot = histogram(position1[:,1,1])
+    display(posplot)
 end
 
