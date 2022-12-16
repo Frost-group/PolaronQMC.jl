@@ -76,15 +76,15 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 
 			# Updating n_accepted, moving beads, and changing shift width if necessary
 			for particle in rand(1:path.n_particles, path.n_particles)
-				#for sweep in 1:path.n_beads
-				for mover in keys(movers)
-					if movers[mover][1] > rand()
-						getfield(Main, Symbol(mover))(
-							path, particle, potential, regime, adjusters[mover]
-						)
+				for sweep in 1:path.n_beads
+					for mover in keys(movers)
+						if movers[mover][1] > rand()
+							getfield(Main, Symbol(mover))(
+								path, particle, potential, regime, adjusters[mover]
+							)
+						end
 					end
 				end
-				#end
 			end
 
 			# Changing shift width automatically and save results

@@ -53,7 +53,7 @@ begin
     """
 
     #number of steps
-    n_steps = 100000
+    n_steps = 2000
 
 
     #skipping between sampling
