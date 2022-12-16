@@ -7,7 +7,7 @@ using LaTeXStrings
 
 
 function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau, fixed_τ, n_beads, n_steps, n_thermalised, movers, potential, estimator, threads::Bool = true, start_range = 1.0)
-
+    
     """
     Initialise System Variables
     """
@@ -53,7 +53,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     """
 
     #skipping between sampling
-    equilibrium_skip = 0.2 * n_steps
+    equilibrium_skip = 0.4 * n_steps
     observables_skip = 100
     #observables_skip = 0.001 * n_steps
 
@@ -84,9 +84,9 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     if typeof(potential) == HarmonicPotential
         comparison_energy = analytic_energy_harmonic(potential,β,ħ, n_dimensions)
     elseif typeof(potential) == FrohlichPotential
-        #comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true) # orginally threads is true
-        #comparison_energy = comparison_polaron.F
-        comparison_energy = 0.0
+        comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true) # orginally threads is true
+        comparison_energy = -comparison_polaron.F
+        #comparison_energy = 0.0
     end
 
     variances = jackknife(energy)
@@ -119,7 +119,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixing_tau
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
-    return energy, variances, last_acceptance_rate
+    return energy, variances, mean_acceptance_rate, comparison_energy
 
 end
 
