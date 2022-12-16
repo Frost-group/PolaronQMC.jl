@@ -25,11 +25,11 @@ begin
     adjusted_beads = Int(floor(1/(fixed_τ*T)))
 
     # For fixed number of beads
-    n_beads = 200
+    n_beads = 9
     τ = 1.0 / (T * n_beads)
 
-    # path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
-    path = Path(adjusted_beads, n_particles, n_dimensions, fixed_τ)
+    path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
+    #path = Path(adjusted_beads, n_particles, n_dimensions, fixed_τ)
 
     # Set regime
     regime = Primitive_Regime()
@@ -102,6 +102,7 @@ begin
         comparison_energy = comparison_polaron.F
     end
 
+    #=
     # Post analysis
     variances = jackknife(energies)
     jacknife_errors = sqrt(variances[2])
@@ -111,12 +112,14 @@ begin
     std_acceptance_rate = std(acceptance_rates)
 
     # Output measurements and statistics
-    println("Number of Beads: ", adjusted_beads)
+    #println("Number of Beads: ", adjusted_beads)
+    println("Number of Beads: ", n_beads)
     println("Mean Energy: ", mean_energy)
     println("Comparison Energy: ", comparison_energy)
     println("jackknife errors: ", jacknife_errors)
     println("Final Acceptance Rate: ", last_acceptance_rate)
     println("Mean Acceptance Rate: ", mean_acceptance_rate, " +/- ", std_acceptance_rate)
+    =#
 
     # Define plot parameters
     default(fontfamily="Computer Modern",
@@ -165,6 +168,12 @@ begin
     # Visualise 
     #anim = animate_PIMC(pimc, n_particles, n_dimensions, "3D Harmonic Potential", "Single 1.0 Mover", "0.1")
     #gif(anim, "saved_plots/anim_output.gif", fps = 60) 
+    
 
+    for n in 0:3
+        positions = scatter(position[1+9*n:1+9*(n+1)-1])
+        display(positions)
+    end
+    
 end
 

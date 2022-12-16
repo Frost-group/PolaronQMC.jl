@@ -68,14 +68,15 @@ function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Vir
     term_one = 0.0 #Not sure why is 0
     term_one = (path.n_dimensions * path.n_particles) / (2 * path.τ * path.n_beads) # same as harmonic
     t2_prefactor = path.τ / (2 * path.n_beads)
-    # F = -dV/dr ∝ 1/(r(τ)-r(τ'))^2
+    # F = -dV/dr ∝ r/(r(τ)-r(τ'))^3
     β = path.τ * path.n_beads
 
 
     function get_term_two(particle, bead, other_bead, centroid_pos)
         if bead != other_bead
             #g_factor = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(2*path.m) * cosh(potential.ω*β * (abs(bead-other_bead)/path.n_beads - 0.5 * potential.ħ)) * csch(potential.ħ * potential.ω * β / 2)
-            g_factor = 0.5 * potential.α * (potential.ħ * potential.ω)^3/2 / pi * sqrt(2/path.m) * cosh(potential.ω * β * potential.ħ * (abs(bead-other_bead)/path.n_beads - 0.5))* csch(potential.ħ * potential.ω * β / 2)
+            #g_factor = 0.5 * potential.α * (potential.ħ * potential.ω)^3/2 / pi * sqrt(1/2/path.m) * cosh(potential.ω * β * potential.ħ * (abs(bead-other_bead)/path.n_beads - 0.5))* csch(potential.ħ * potential.ω * β / 2)
+            g_factor = 0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(1/2/path.m) * cosh(potential.ω * β * potential.ħ * (abs(bead-other_bead)/path.n_beads - 0.5))* csch(potential.ħ * potential.ω * β / 2)
             return g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
         else 
             return 0.0
@@ -134,13 +135,30 @@ end
 # Correlation ---------------------------------------------------------------------
 
 function Correlation(path::Path, potential::Potential, estimator::Estimator)
-    correlation = Vector{Float64}(undef, path.n_beads)
+    correlation = Vector{Float64}(undef, path.n_beads-1)
+    #=
     for Δτ in 1:path.n_beads, bead_one in 1:path.n_beads
         bead_two = mod1(bead_one + Δτ, path.n_beads)
         correlation[Δτ] += dot(path.beads[bead_one, :, :], path.beads[bead_two, :, :])
-    end		
-    return correlation ./ path.n_beads
+    end
+    =#
+    for Δτ in 1:(path.n_beads-1)
+        
+        for bead_one in 1:path.n_beads
+            bead_two = bead_one + Δτ
+            if bead_two <= path.n_beads
+                correlation[Δτ] += dot(path.beads[bead_one, :, :], path.beads[bead_two, :, :])
+            end
+        end
+        correlation[Δτ] /= (path.n_beads - Δτ)
+    end				
+    return [correlation]
 end
+
+function autoCorrelation(path::Path, potential::Potential, estimator::Estimator)
+
+end
+
 
 # Position ------------------------------------------------------------------------
 

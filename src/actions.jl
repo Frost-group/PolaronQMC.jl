@@ -85,11 +85,11 @@ function potential_action(path::Path, bead::Int, particle::Int, potential::OneBo
 
     See also [`Path`](@ref), [`OneBodyPotential`](@ref). 
     """
-    #=
+    
     if potential == FrohlichPotential
         return 2 * path.τ * one_body_potential(potential, path, bead, particle)
     end
-    =#
+    
 
     return path.τ * one_body_potential(potential, path, bead, particle)
 end
