@@ -1,4 +1,5 @@
 # moves.jl
+using Distributions
 
 function Single!(path::Path, particle::Int, potential::Potential, regime::Regime , adjuster::Adjuster)
 	
@@ -100,7 +101,7 @@ end
 
 function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
-	max_level = 4
+	max_level = 3
 	segment_length = Int((2^max_level) + 1)
 
 	start_bead = rand(1:path.n_beads)
@@ -131,15 +132,17 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 			# Find beads of which to find midpoint
 			r0, r1 = bead - 2^(level-1), bead + 2^(level-1)
 
-			println("level: ", level, " bead: ", bead, " midpoints: ", [r0, r1], "\n")
+			#println("level: ", level, " bead: ", bead, " midpoints: ", [r0, r1], "\n")
 
 			# Move by normally distributed shift
-			width = sqrt( 2^(level-1) * path.τ * path.λ) * adjuster.shift_width
-			shift = rand([-1,1],path.n_dimensions) .* rand(path.n_dimensions) * width
+			#width = sqrt( 2^(level-1) * path.τ * path.λ) * adjuster.shift_width
+			width = sqrt( 2^(level-1) * path.τ * path.λ)
+			#shift = rand([-1,1],path.n_dimensions) .* rand(path.n_dimensions) * width
+			shift = width .* rand(Distributions.Normal(0, 1), path.n_dimensions) # We want normal distribution
 			
 			# Perform move and calculate change to action
 			midpoint = 0.5 * (path.beads[r0, particle, :] + path.beads[r1, particle, :])
-			path.beads[bead, particle, :] =  midpoint + shift
+			path.beads[bead, particle, :] = midpoint + shift
 		end
 	end
 
@@ -150,18 +153,26 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 		total_new_action += potential_action(path, bead, particle, potential, regime)
 	end
 
+	
+
 	if total_new_action - total_old_action < 0.0
 		adjuster.success_counter += 1
+		#println("Success1")
+		#println(path.beads[:, particle, :])
 		return true
 
 	elseif rand() < exp(-(total_new_action - total_old_action))
 		adjuster.success_counter += 1
+		#println("Success2")
+		#println(path.beads[:, particle, :])
 		return true
 		
 	else
 		path.beads[:, particle, :] = old_beads
+		#println(path.beads[:, particle, :])
 		return false
 	end
+
 end
 
 
