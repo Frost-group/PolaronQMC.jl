@@ -136,7 +136,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 			# Move by normally distributed shift
 			#width = sqrt( 2^(level-1) * path.τ * path.λ) * adjuster.shift_width
-			width = sqrt( 2^(level-1) * path.τ * path.λ)
+			width = sqrt( 2^(level-1) * path.τ * path.λ) * adjuster.shift_width
 			#shift = rand([-1,1],path.n_dimensions) .* rand(path.n_dimensions) * width
 			shift = width .* rand(Distributions.Normal(0, 1), path.n_dimensions) # We want normal distribution
 			

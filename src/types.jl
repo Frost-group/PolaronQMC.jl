@@ -101,8 +101,7 @@ mutable struct Bisect_Adjuster <: Adjuster
     acceptance_rate :: Float64
 
     function Bisect_Adjuster(λ::Float64, τ::Float64)
-        shift_width = sqrt(τ * λ)
-        new(0, 0, shift_width, 0)
+        new(0, 0, 1, 0)
     end
 end
 
