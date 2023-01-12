@@ -13,23 +13,23 @@ using LaTeXStrings
     """
 
     # Path variables
-    T = 0.8
+    T = 0.1
     m = 1.0
     n_particles = 1
     n_dimensions = 3
     start_range = 1.0
     β = 1 / T
 
-    # For fixed τ 
-    fixed_τ = 0.01
+    # For fixed τ
+    fixed_τ = 0.1
     adjusted_beads = Int(floor(1/(fixed_τ*T)))
 
     # For fixed number of beads
-    n_beads = 40
+    n_beads = 200
     τ = 1.0 / (T * n_beads)
 
-    path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
-    #path = Path(adjusted_beads, n_particles, n_dimensions, fixed_τ)
+    #path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
+    path = Path(adjusted_beads, n_particles, n_dimensions, fixed_τ)
 
     # Set regime
     regime = Primitive_Regime()
@@ -53,7 +53,7 @@ using LaTeXStrings
     """
 
     # number of steps
-    n_steps = 2000
+    n_steps = 20000
 
 
     #skipping between sampling
@@ -134,21 +134,21 @@ using LaTeXStrings
     energy_plot = plot(energies, ylabel="Energy", xlab = "Sweeps / $observables_skip\$ n\$")
     hline!([comparison_energy], linestyle=:dash)
     energy_hist = histogram(energies, ylab="Frequencies", xlab="Energy")
-    #acceptance_rate_plot = plot(acceptance_rates, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
-    #shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
-    #acceptance_shift_plot = scatter(acceptance_rates, shift_widths, xlab=L"\mathrm{Acceptance\, Rate\, /\, } r", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
+    acceptance_rate_plot = plot(acceptance_rates, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
+    shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
+    acceptance_shift_plot = scatter(acceptance_rates, shift_widths, xlab=L"\mathrm{Acceptance\, Rate\, /\, } r", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
     acceptance_rate_hist = histogram(acceptance_rates, ylab="Frequency", xlab=L"\mathrm{Acceptance\, Rate\, /\, } r")
-    #shift_width_hist = histogram(shift_widths, ylab="Frequency", xlab=L"\mathrm{Shift\, Width\, /\, } \Delta x")
+    shift_width_hist = histogram(shift_widths, ylab="Frequency", xlab=L"\mathrm{Shift\, Width\, /\, } \Delta x")
     #posplot = histogram(position[:,1,1])
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
 
     display(energy_hist)
     display(energy_plot)
-    #display(acceptance_rate_plot)
-    #display(shift_width_plot)
-    #display(acceptance_shift_plot)
-    #display(shift_width_hist)
+    display(acceptance_rate_plot)
+    display(shift_width_plot)
+    display(acceptance_shift_plot)
+    display(shift_width_hist)
     display(acceptance_rate_hist)
 
     #savefig(energy_hist, "saved_plots/energy_hist.png") 
@@ -173,4 +173,3 @@ using LaTeXStrings
     posplot = histogram(position1[:,1,1])
     display(posplot)
 end
-

@@ -97,6 +97,23 @@ mutable struct Bisect_Adjuster <: Adjuster
 
     attempt_counter :: Int
     success_counter :: Int
+    value :: Float64
+    acceptance_rate :: Float64
+
+    function Bisect_Adjuster(λ::Float64, τ::Float64)
+        value = sqrt(τ * λ)
+        new(0, 0, value, 0)
+    end
+end
+
+
+#=
+
+#Adjuster for the Bisect! move algorithm
+mutable struct Bisect_Adjuster <: Adjuster
+
+    attempt_counter :: Int
+    success_counter :: Int
     #shift_width :: Float64
     max_level :: Int
     acceptance_rate :: Float64
@@ -108,7 +125,6 @@ mutable struct Bisect_Adjuster <: Adjuster
 end
 
 
-#=
 #Adjuster for the Bisect! move alogrithm
 mutable struct Bisect_Adjuster <: Adjuster end
 

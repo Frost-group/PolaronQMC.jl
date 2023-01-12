@@ -32,29 +32,45 @@ function update_shift_width!(n_beads, adjuster::Union{Single_Adjuster, Displace_
 end
 
 
-function update_shift_width!(n_beads, adjuster::Bisect_Adjuster)
+function update_shift_width!(n_beads, adjuster::Union{Bisect_Adjuster})
 
     adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
-    
-    if adjuster.acceptance_rate < 0.6
-        if adjuster.max_level > 1
-        #adjuster.shift_width *= 0.9
-            adjuster.max_level -= 1
-        end
 
-    elseif adjuster.acceptance_rate > 0.6
-        if 2^(adjuster.max_level+1)+1 <= n_beads
-        #adjuster.shift_width *=  1.1
-            adjuster.max_level += 1
-        end
+    if adjuster.acceptance_rate < 0.5
+        adjuster.value *= 0.9
 
-    #else
-        #adjuster.shift_width *= (adjuster.acceptance_rate / 0.5)
+    elseif adjuster.acceptance_rate > 0.5
+        adjuster.value *=  1.1
+
+    else
+        adjuster.value *= (adjuster.acceptance_rate / 0.5)
     end
 
     adjuster.attempt_counter = 0
     adjuster.success_counter = 0
 end
+
+#=
+function update_shift_width!(n_beads, adjuster::Bisect_Adjuster)
+
+    adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
+    
+    if adjuster.acceptance_rate < 0.6
+        if adjuster.value > 1
+            adjuster.value -= 1
+        end
+
+    elseif adjuster.acceptance_rate > 0.6
+        if 2^(adjuster.value+1)+1 <= n_beads
+            adjuster.value += 1
+        end
+    end
+
+    adjuster.attempt_counter = 0
+    adjuster.success_counter = 0
+end
+=#
+
 
 #=
 function update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster})
