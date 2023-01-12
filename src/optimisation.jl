@@ -13,7 +13,7 @@ Updates the "shift width" parameter used in Adjusters within Movers.
 
 """
 
-function update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster})
+function update_shift_width!(n_beads, adjuster::Union{Single_Adjuster, Displace_Adjuster})
 
     adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
 
@@ -32,18 +32,24 @@ function update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster}
 end
 
 
-function update_shift_width!(adjuster::Bisect_Adjuster)
+function update_shift_width!(n_beads, adjuster::Bisect_Adjuster)
 
     adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
+    
+    if adjuster.acceptance_rate < 0.6
+        if adjuster.max_level > 1
+        #adjuster.shift_width *= 0.9
+            adjuster.max_level -= 1
+        end
 
-    if adjuster.acceptance_rate < 0.01
-        adjuster.shift_width *= 0.9
+    elseif adjuster.acceptance_rate > 0.6
+        if 2^(adjuster.max_level+1)+1 <= n_beads
+        #adjuster.shift_width *=  1.1
+            adjuster.max_level += 1
+        end
 
-    elseif adjuster.acceptance_rate > 0.99
-        adjuster.shift_width *=  1.1
-
-    else
-        adjuster.shift_width *= (adjuster.acceptance_rate / 0.5)
+    #else
+        #adjuster.shift_width *= (adjuster.acceptance_rate / 0.5)
     end
 
     adjuster.attempt_counter = 0
