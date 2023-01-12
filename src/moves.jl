@@ -101,7 +101,10 @@ end
 
 function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
-	max_level = 3
+	#max_level = 3
+	max_level = adjuster.max_level
+	#println("max_level:", max_level)
+	#segment_length = Int((2^max_level) + 1)\
 	segment_length = Int((2^max_level) + 1)
 
 	start_bead = rand(1:path.n_beads)
@@ -136,7 +139,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 			# Move by normally distributed shift
 			#width = sqrt( 2^(level-1) * path.τ * path.λ) * adjuster.shift_width
-			width = sqrt( 2^(level-1) * path.τ * path.λ) * adjuster.shift_width
+			width = sqrt( 2^(level-1) * path.τ * path.λ)
 			#shift = rand([-1,1],path.n_dimensions) .* rand(path.n_dimensions) * width
 			shift = width .* rand(Distributions.Normal(0, 1), path.n_dimensions) # We want normal distribution
 			
@@ -146,7 +149,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 		end
 	end
 
-	print("\n")
+	#print("\n")
 
 	total_new_action = 0.0
 	for bead in start_bead:start_bead+segment_length
