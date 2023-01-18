@@ -150,8 +150,6 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 		total_new_action += potential_action(path, bead, particle, potential, regime)
 	end
 
-	
-
 	if total_new_action - total_old_action < 0.0
 		adjuster.success_counter += 1
 		#println("Success1")
@@ -169,7 +167,6 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 		#println(path.beads[:, particle, :])
 		return false
 	end
-
 end
 
 

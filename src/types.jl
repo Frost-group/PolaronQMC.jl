@@ -108,7 +108,6 @@ end
 
 
 #=
-
 #Adjuster for the Bisect! move algorithm
 mutable struct Bisect_Adjuster <: Adjuster
 

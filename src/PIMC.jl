@@ -91,7 +91,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 			# Changing shift width automatically and save results
 			if adjust
 				for mover in keys(movers)
-					update_shift_width!(path.n_beads, adjusters[mover])
+					update_shift_width!(adjusters[mover])
 					push!(adjuster_stats[mover]["Acceptance Rate"], adjusters[mover].acceptance_rate)
 					push!(adjuster_stats[mover]["Shift Width"], adjusters[mover].value)
 				end

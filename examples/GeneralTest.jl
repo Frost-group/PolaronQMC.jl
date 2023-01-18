@@ -53,7 +53,7 @@ using LaTeXStrings
     """
 
     # number of steps
-    n_steps = 20000
+    n_steps = 200
 
 
     #skipping between sampling
