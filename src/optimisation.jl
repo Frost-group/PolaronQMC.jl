@@ -36,15 +36,15 @@ function update_shift_width!(adjuster::Union{Bisect_Adjuster})
 
     adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
 
-    if adjuster.acceptance_rate < 0.5
-        adjuster.value *= 0.9
+    #if adjuster.acceptance_rate < 0.01
+        #adjuster.value *= 0.9
 
-    elseif adjuster.acceptance_rate > 0.5
-        adjuster.value *=  1.1
+    #elseif adjuster.acceptance_rate > 0.99
+        #adjuster.value *=  1.1
 
-    else
-        adjuster.value *= (adjuster.acceptance_rate / 0.5)
-    end
+    #else
+        #adjuster.value *= (adjuster.acceptance_rate / 0.5)
+    #end
 
     adjuster.attempt_counter = 0
     adjuster.success_counter = 0
