@@ -13,6 +13,7 @@ using LaTeXStrings
     """
 
     # Path variables
+    version = Int(floor(rand()*1000))
     T = 0.1
     m = 1.0
     n_particles = 1
@@ -25,11 +26,11 @@ using LaTeXStrings
     adjusted_beads = Int(floor(1/(fixed_τ*T)))
 
     # For fixed number of beads
-    n_beads = 200
+    n_beads = 1500
     τ = 1.0 / (T * n_beads)
 
-    #path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
-    path = Path(adjusted_beads, n_particles, n_dimensions, fixed_τ)
+    path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
+    #path = Path(adjusted_beads, n_particles, n_dimensions, fixed_τ)
 
     # Set regime
     regime = Primitive_Regime()
@@ -40,11 +41,11 @@ using LaTeXStrings
     
     # Potential variables
     ω = 1.0
-    α = 1.0
+    α = 4.0
     ħ = 1.0
     
-    #potential = FrohlichPotential(α,ω,ħ)
-    potential = HarmonicPotential(ω)
+    potential = FrohlichPotential(α,ω,ħ)
+    #potential = HarmonicPotential(ω)
     #potential = MexicanHatPotential(80.0)
     #potential = ConstantPotential(10.0)
 
@@ -53,20 +54,20 @@ using LaTeXStrings
     """
 
     # number of steps
-    n_steps = 200
+    n_steps = 30
 
 
     #skipping between sampling
-    equilibrium_skip = 0.5 * n_steps
-    #equilibrium_skip = 1
+    #equilibrium_skip = 0.1 * n_steps
+    equilibrium_skip = 0
     #observables_skip = 0.001 * n_steps
-    observables_skip = 10
+    observables_skip = 2
 
     # types of moves
     movers = Dict("Bisect!" => [1.0])
     #movers = Dict("Single!" => [1.0])
     #movers = Dict("Displace!" => [1.0])
-    #movers = Dict("Single!" => [1.0], "Displace!" => [0.2])
+    #movers = Dict("Single!" => [1.0], "Bisect!" => [0.2])
 
     observables = [Energy, Position]
     
@@ -74,7 +75,7 @@ using LaTeXStrings
     #estimators = [Thermodynamic_Estimator()]
     #estimators = [Simple_Estimator()]
  
-    initial_pos = Array(path.beads)
+    #initial_pos = Array(path.beads)
 
     """
     Run Simulation
@@ -115,6 +116,7 @@ using LaTeXStrings
     # Output measurements and statistics
     #println("Number of Beads: ", adjusted_beads)
     println("Number of Beads: ", n_beads)
+    println("α: ", α)
     println("Mean Energy: ", mean_energy)
     println("Comparison Energy: ", comparison_energy)
     println("jackknife errors: ", jacknife_errors)
@@ -134,11 +136,11 @@ using LaTeXStrings
     energy_plot = plot(energies, ylabel="Energy", xlab = "Sweeps / $observables_skip\$ n\$")
     hline!([comparison_energy], linestyle=:dash)
     energy_hist = histogram(energies, ylab="Frequencies", xlab="Energy")
-    acceptance_rate_plot = plot(acceptance_rates, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
+    acceptance_rate_plot = plot(acceptance_rates[Int(length(acceptance_rates)*0.9):end], xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
     shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
     acceptance_shift_plot = scatter(acceptance_rates, shift_widths, xlab=L"\mathrm{Acceptance\, Rate\, /\, } r", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
     acceptance_rate_hist = histogram(acceptance_rates, ylab="Frequency", xlab=L"\mathrm{Acceptance\, Rate\, /\, } r")
-    shift_width_hist = histogram(shift_widths, ylab="Frequency", xlab=L"\mathrm{Shift\, Width\, /\, } \Delta x")
+    #shift_width_hist = histogram(shift_widths, ylab="Frequency", xlab=L"\mathrm{Shift\, Width\, /\, } \Delta x")
     #posplot = histogram(position[:,1,1])
     #plot(posplot, energyplot, layout = (2,1), legend = false)
     #plot(posplot, xlabel="Position", ylabel="Prob Amplitude", legend = false)
@@ -148,7 +150,7 @@ using LaTeXStrings
     display(acceptance_rate_plot)
     display(shift_width_plot)
     display(acceptance_shift_plot)
-    display(shift_width_hist)
+    #display(shift_width_hist)
     display(acceptance_rate_hist)
 
     #savefig(energy_hist, "saved_plots/energy_hist.png") 
@@ -170,6 +172,12 @@ using LaTeXStrings
     #anim = animate_PIMC(pimc, n_particles, n_dimensions, "3D Harmonic Potential", "Single 1.0 Mover", "0.1")
     #gif(anim, "saved_plots/anim_output.gif", fps = 60) 
     
-    posplot = histogram(position1[:,1,1])
+    posplot = histogram(position1[:,1,1], xlab = "Position")
     display(posplot)
 end
+#=
+begin
+    A = analytic_energy_harmonic(HarmonicPotential(1.0),1/0.7,1.0,1)
+    println(A)
+end
+=#
