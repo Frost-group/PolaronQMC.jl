@@ -101,12 +101,16 @@ end
 
 function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
-	max_level = 3
+	max_level = 9
 	#max_level = adjuster.value
 	segment_length = Int((2^max_level) + 1)
-
+	#println("seg len:", segment_length)
 	start_bead = rand(1:path.n_beads)
 	old_beads = deepcopy(path.beads[:,particle, :])
+	τλ = path.τ * path.λ
+	#λ = path.λ
+	n_dim = path.n_dimensions
+
 
 	# Attempt one Single move
 	adjuster.attempt_counter += 1
@@ -117,6 +121,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 	end
 
 	for level in max_level:-1:1
+		level_fac = 2^(level-1)
 
 		# Number of Beads in Level
 		beads_level = 2^(max_level - level)
@@ -125,17 +130,23 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 			# Find bead of interest
 			if k == 1
-				bead = Int(start_bead + (2^(level-1) * k))
+				#bead = Int(start_bead + (2^(level-1) * k))
+				bead = Int(start_bead + (level_fac * k))
 			else
-				bead = Int(start_bead + (2^(level-1) + (2^(level) * (k-1))))
+				#bead = Int(start_bead + (2^(level-1) + (2^(level) * (k-1))))
+				bead = Int(start_bead + (level_fac * k))
 			end
 
 			# Find beads of which to find midpoint
-			r0, r1 = bead - 2^(level-1), bead + 2^(level-1)
+			r0, r1 = bead - level_fac, bead + level_fac
 
 			# Move by normally distributed shift
-			width = sqrt( 2^(level-1) * path.τ * path.λ) * adjuster.value
-			shift = width .* rand(Distributions.Normal(0, 1), path.n_dimensions) # We want normal distribution
+			#print(adjuster.value)
+			#width = sqrt( 2^(level-1) * τλ) * adjuster.value
+			width = sqrt(level_fac * τλ) * 1
+			#width = sqrt( 2^(level-1) * path.τ * path.λ)
+			#println(width)
+			shift = width .* rand(Distributions.Normal(0, 1), n_dim) # We want normal distribution
 			
 			# Perform move and calculate change to action
 			midpoint = 0.5 * (path.beads[r0, particle, :] + path.beads[r1, particle, :])
