@@ -101,7 +101,7 @@ end
 
 function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
-	max_level = 9
+	max_level = 4
 	#max_level = adjuster.value
 	segment_length = Int((2^max_level) + 1)
 	#println("seg len:", segment_length)
