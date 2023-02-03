@@ -4,7 +4,8 @@ using Statistics
 using Plots
 using PolaronMobility
 using LaTeXStrings
-
+using DelimitedFiles
+using JLD
 
 @time begin
     
@@ -54,14 +55,14 @@ using LaTeXStrings
     """
 
     # number of steps
-    n_steps = 30
+    n_steps = 2000
 
 
     #skipping between sampling
     #equilibrium_skip = 0.1 * n_steps
-    equilibrium_skip = 0
+    equilibrium_skip = 1
     #observables_skip = 0.001 * n_steps
-    observables_skip = 2
+    observables_skip = 50
 
     # types of moves
     movers = Dict("Bisect!" => [1.0])
@@ -96,6 +97,13 @@ using LaTeXStrings
     shift_widths = adjuster_stats[mover]["Shift Width"]
     position1 = output_observables["Position"][string(Symbol(estimators[1]))]
 
+    #=
+    writedlm("data_arr/$(string(Symbol(potential)))_energies_α$(α)_nsteps$(n_steps).txt", energies)
+    writedlm("data_arr/$(string(Symbol(potential)))_acceptance_rates_α$(α)_nsteps$(n_steps).txt", energies)
+    writedlm("data_arr/$(string(Symbol(potential)))_shift_widths_α$(α)_nsteps$(n_steps).txt", energies)
+    =#
+    
+
     # Comparison energy
     if typeof(potential) == HarmonicPotential
         comparison_energy = analytic_energy_harmonic(potential,β,ħ,n_dimensions)
@@ -112,6 +120,10 @@ using LaTeXStrings
     last_acceptance_rate = last(acceptance_rates)
     mean_acceptance_rate = mean(acceptance_rates)
     std_acceptance_rate = std(acceptance_rates)
+
+    save("data_arr/$(string(Symbol(potential)))_shift_widths_α$(α)_nsteps$(n_steps).jld", "position", position1, "energies", energies,
+                    "acceptance_rates", acceptance_rates, "shift_widths", shift_widths,
+                    "jacknife_errors", jacknife_errors, "comparison_energy", comparison_energy)
 
     # Output measurements and statistics
     #println("Number of Beads: ", adjusted_beads)
@@ -180,4 +192,9 @@ begin
     A = analytic_energy_harmonic(HarmonicPotential(1.0),1/0.7,1.0,1)
     println(A)
 end
+=#
+#=
+save("data_arr/$(string(Symbol(potential)))_shift_widths_α$(α)_nsteps$(n_steps).jld", "position", position1, "energies", energies,
+        "acceptance_rates", acceptance_rates, "shift_widths", shift_widths,
+        "jacknife_errors", jacknife_errors, "comparison_energy", comparison_energy)
 =#
