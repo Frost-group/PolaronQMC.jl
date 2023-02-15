@@ -4,7 +4,7 @@
 #Ways of calculating action
 
 function kinetic_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::Simple_Regime)
-    kinetic_action = 0.5 * path.m * norm(path.beads[bead_two, particle, :] - path.beads[bead_one, particle, :])^2 / path.τ
+    kinetic_action = 0.5 * path.m * norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / path.τ
     return kinetic_action
 end
 
@@ -42,7 +42,7 @@ function kinetic_action(path::Path, bead_one::Int, bead_two::Int, particle::Int,
     kinetic_action = path.n_dimensions * path.n_particles / 2.0 * log(4π * path.λ * path.τ)
 
     # Contribution from the link connecting the two beads.
-	kinetic_action += norm(path.beads[bead_two, particle, :] - path.beads[bead_one, particle, :])^2 / (4 * path.λ * path.τ)
+	kinetic_action += norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / (4 * path.λ * path.τ)
 
 	return kinetic_action
 end

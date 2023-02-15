@@ -2,7 +2,7 @@
 
 julia_version = "1.8.2"
 manifest_format = "2.0"
-project_hash = "d5680d9953a27ccf1f3a8317910e491360a962ba"
+project_hash = "b15bef13a578eab9af2a042b0d984be145f8b46c"
 
 [[deps.AbstractTrees]]
 git-tree-sha1 = "03e0550477d86222521d254b741d470ba17ea0b5"
@@ -108,7 +108,7 @@ uuid = "2a0fbf3d-bb9c-48f3-b0a9-814d99fd7ab9"
 version = "0.1.27"
 
 [[deps.Cairo_jll]]
-deps = ["Artifacts", "Bzip2_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
+deps = ["Artifacts", "Bzip2_jll", "CompilerSupportLibraries_jll", "Fontconfig_jll", "FreeType2_jll", "Glib_jll", "JLLWrappers", "LZO_jll", "Libdl", "Pixman_jll", "Pkg", "Xorg_libXext_jll", "Xorg_libXrender_jll", "Zlib_jll", "libpng_jll"]
 git-tree-sha1 = "4b859a208b2397a7a623a03449e4636bdb17bcf2"
 uuid = "83423d85-b0ee-5818-9007-b63ccbeb887a"
 version = "1.16.1+1"
@@ -525,9 +525,9 @@ version = "1.0.0"
 
 [[deps.JLD]]
 deps = ["Compat", "FileIO", "H5Zblosc", "HDF5", "Printf"]
-git-tree-sha1 = "cd46c18390e9bbc37a2098dfb355ec5f18931900"
+git-tree-sha1 = "ec6afa4fd3402e4dd5b15b3e5dd2f7dd52043ce8"
 uuid = "4138dd39-2aa7-5051-a626-17a0bb65d9c8"
-version = "0.13.2"
+version = "0.13.3"
 
 [[deps.JLLWrappers]]
 deps = ["Preferences"]
@@ -1087,9 +1087,9 @@ version = "0.7.6"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "Random", "StaticArraysCore", "Statistics"]
-git-tree-sha1 = "dfec37b90740e3b9aa5dc2613892a3fc155c3b42"
+git-tree-sha1 = "efa8acd030667776248eabb054b1836ac81d92f0"
 uuid = "90137ffa-7385-5640-81b9-e52037218182"
-version = "1.5.6"
+version = "1.5.7"
 
 [[deps.StaticArraysCore]]
 git-tree-sha1 = "ec2bd695e905a3c755b33026954b119ea17f2d22"

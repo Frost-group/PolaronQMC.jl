@@ -15,7 +15,7 @@ end
 
 # Return the harmonic potential for a single particle.
 function one_body_potential(potential::HarmonicPotential, path::Path, bead::Int, particle::Int)
-    return 0.5 * path.m * potential.ω^2 * norm(path.beads[bead, particle,:])^2
+    return 0.5 * path.m * potential.ω^2 * norm(path.beads[mod1(bead, path.n_beads), particle,:])^2
 end
 
 # Returns the Frohlich potential for a single particle
@@ -35,7 +35,7 @@ function one_body_potential(potential::FrohlichPotential, path::Path, bead::Int,
             #g_factor = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(1/2/path.m) * cosh(potential.ω * β * potential.ħ * (abs(bead-other_bead)/path.n_beads - 0.5))* csch(potential.ħ * potential.ω * β / 2)
             #inner_integral += g_factor / norm(path.beads[bead, particle, :] - path.beads[other_bead, particle, :])
             g_factor = -0.5 * α * (ħω)^3/2 * sqrt(1/2/m) * cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5))* csch(ħω * β / 2)
-            inner_integral += g_factor / norm(path.beads[bead, particle, :] - path.beads[other_bead, particle, :])
+            inner_integral += g_factor / norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :])
         end
     end
     return path.τ * inner_integral # Note that this path.τ multiplication refer to dτ'
@@ -44,7 +44,7 @@ end
 
 # Mexican Hat -r^2+r^4 in N-dimensions
 function one_body_potential(potential::MexicanHatPotential, path::Path, bead::Int, particle::Int)
-    r=norm(path.beads[bead,particle,:])^2
+    r=norm(path.beads[mod1(bead, path.n_beads), particle,:])^2
     return 0.5 * potential.ω^2 * (-r^2+r^4)
 end
 
@@ -55,6 +55,6 @@ end
 
 # Return the Coulomb potential between two particles.
 function two_body_potential(potential::CoulombPotential, path::Path, bead::Int, particle_one::Int, particle_two::Int)
-    return -potential.κ / norm(path.beads[bead, particle_one, :] .- path.beads[bead, particle_two, :])
+    return -potential.κ / norm(path.beads[mod1(bead, path.n_beads), particle_one, :] .- path.beads[mod1(bead, path.n_beads), particle_two, :])
 end
 

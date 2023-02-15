@@ -42,11 +42,11 @@ using JLD
     
     # Potential variables
     ω = 1.0
-    α = 4.0
+    α = 1.0
     ħ = 1.0
     
-    potential = FrohlichPotential(α,ω,ħ)
-    #potential = HarmonicPotential(ω)
+    #potential = FrohlichPotential(α,ω,ħ)
+    potential = HarmonicPotential(ω)
     #potential = MexicanHatPotential(80.0)
     #potential = ConstantPotential(10.0)
 
@@ -55,7 +55,7 @@ using JLD
     """
 
     # number of steps
-    n_steps = 2000
+    n_steps = 5000
 
 
     #skipping between sampling
@@ -65,8 +65,8 @@ using JLD
     observables_skip = 50
 
     # types of moves
-    movers = Dict("Bisect!" => [1.0])
-    #movers = Dict("Single!" => [1.0])
+    #movers = Dict("Bisect!" => [1.0])
+    movers = Dict("Single!" => [1.0])
     #movers = Dict("Displace!" => [1.0])
     #movers = Dict("Single!" => [1.0], "Bisect!" => [0.2])
 
@@ -89,8 +89,8 @@ using JLD
     adjuster_stats = pimc[1]
     output_observables = pimc[2]
 
-    mover = "Bisect!"
-    #mover = "Single!"
+    #mover = "Bisect!"
+    mover = "Single!"
 
     energies = output_observables["Energy"][string(Symbol(estimators[1]))]
     acceptance_rates = adjuster_stats[mover]["Acceptance Rate"]

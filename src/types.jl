@@ -1,6 +1,6 @@
 # types.jl
 
-using CircularArrays
+using StaticArrays
 
 
 # Regime for the simuation to run in
@@ -31,7 +31,7 @@ mutable struct Path
 	n_particles :: Int64
     n_dimensions :: Int64
 
-	beads :: CircularArray{Float64, 3}
+	beads :: SizedArray
     adjusters :: Dict
 
 	τ :: Float64
@@ -39,9 +39,11 @@ mutable struct Path
 	λ :: Float64
 
 	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 1.0)
-        beads = CircularArray(rand(n_beads, n_particles, n_dimensions) .* (rand([-1, 1] * start_range, n_beads, n_particles, n_dimensions)))
+        
+        beads = @SArray randn(n_beads, n_particles, n_dimensions) 
+        beads *= start_range
 
-        # DIctionary of Adjusters
+        # Dictionary of Adjusters
         adjusters = Dict()
         adjusters["Single!"] = Single_Adjuster(λ, τ)
         adjusters["Displace!"] = Displace_Adjuster(λ, τ)
@@ -65,11 +67,11 @@ mutable struct Single_Adjuster <: Adjuster
 
     attempt_counter :: Int
     success_counter :: Int
-    shift_width :: Float64
+    value :: Float64
     acceptance_rate :: Float64
     function Single_Adjuster(λ::Float64, τ::Float64)
-        shift_width = sqrt(4 * λ * τ) * 0.5
-        new(0, 0, shift_width, 0)
+        value = sqrt(4 * λ * τ) * 0.5
+        new(0, 0, value, 0)
     end
 end
 
@@ -83,11 +85,11 @@ mutable struct Displace_Adjuster <: Adjuster
 
     attempt_counter :: Int
     success_counter :: Int
-    shift_width :: Float64
+    value :: Float64
     acceptance_rate :: Float64
     function Displace_Adjuster(λ::Float64, τ::Float64)
-        shift_width = 1
-        new(0, 0, shift_width, 0)
+        value = 1
+        new(0, 0, value, 0)
     end
 end
 
