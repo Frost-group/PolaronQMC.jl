@@ -2,7 +2,8 @@ using DelimitedFiles
 using JLD
 
 begin
-    file = "data_arr/$(string(Symbol(potential)))_shift_widths_α$(α)_nsteps$(n_steps).jld"
+    #file = "data_arr/$(string(Symbol(potential)))_shift_widths_α$(α)_nsteps$(n_steps).jld"
+    file = "data_arr/Frohlich/Frohlich_T=0.1_α4.0_nsteps25000_dim=3_v357.jld"
     position1 = load(file)["position"]
     energies = load(file)["energies"]
     acceptance_rates = load(file)["acceptance_rates"]
@@ -31,5 +32,11 @@ begin
     display(acceptance_rate_hist)
     posplot = histogram(position1[:,1,1], xlab = "Position")
     display(posplot)
+
+    println("Mean Energy: ", mean(energies))
+    println("Comparison Energy: ", comparison_energy)
+    println("jackknife errors: ", jacknife_errors)
+    println("Final Acceptance Rate: ", last_acceptance_rate)
+    println("Mean Acceptance Rate: ", mean_acceptance_rate, " +/- ", std_acceptance_rate)
 
 end
