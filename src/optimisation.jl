@@ -1,6 +1,6 @@
 
 
-function update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster}, potential::HarmonicPotential)
+function update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster}, potential::Potential)
 
     adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
 
