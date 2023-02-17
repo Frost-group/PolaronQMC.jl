@@ -101,7 +101,7 @@ end
 function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
 	# Segment length to perform Bisect
-	max_level = 3
+	max_level = 5
 	segment_length = Int((2^max_level) + 1)
 
 	start_bead = rand(1:path.n_beads)
@@ -146,8 +146,8 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 			shift = width .* rand(Distributions.Normal(0, 1), n_dim)
 
 			# Perform move and calculate change to action
-			midpoint = 0.5 * (path.beads[r0, particle, :] + path.beads[r1, particle, :])
-			path.beads[bead, particle, :] = midpoint + shift
+			midpoint = 0.5 * (path.beads[mod1(r0, n_beads), particle, :] + path.beads[mod1(r1, n_beads), particle, :])
+			path.beads[mod1(bead, n_beads), particle, :] = midpoint + shift
 		end
 	end
 
