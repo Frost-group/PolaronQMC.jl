@@ -7,6 +7,7 @@ using Statistics
 using LinearAlgebra
 using OnlineStats
 using Plots
+using JLD
 #temporary
 
 # Export types
