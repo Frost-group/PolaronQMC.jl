@@ -12,7 +12,7 @@ using JLD
     """
     Initialise System Variables
     """
-
+    pot = "Frohlich"
     # Path variables
     version = Int(floor(rand()*1000))
     T = 0.1
@@ -23,7 +23,7 @@ using JLD
     β = 1 / T
 
     # For fixed τ
-    fixed_τ = 0.1
+    fixed_τ = 0.05
     adjusted_beads = Int(floor(1/(fixed_τ*T)))
 
     # For fixed number of beads
@@ -42,11 +42,11 @@ using JLD
     
     # Potential variables
     ω = 1.0
-    α = 1.0
+    α = 3.0
     ħ = 1.0
     
-    #potential = FrohlichPotential(α,ω,ħ)
-    potential = HarmonicPotential(ω)
+    potential = FrohlichPotential(α,ω,ħ)
+    #potential = HarmonicPotential(ω)
     #potential = MexicanHatPotential(80.0)
     #potential = ConstantPotential(10.0)
 
@@ -55,12 +55,12 @@ using JLD
     """
 
     # number of steps
-    n_steps = 5000
+    n_steps = 4000
 
 
     #skipping between sampling
     #equilibrium_skip = 0.1 * n_steps
-    equilibrium_skip = 1
+    equilibrium_skip = 400
     #observables_skip = 0.001 * n_steps
     observables_skip = 50
 
@@ -121,10 +121,18 @@ using JLD
     mean_acceptance_rate = mean(acceptance_rates)
     std_acceptance_rate = std(acceptance_rates)
 
-    save("data_arr/$(string(Symbol(potential)))_shift_widths_α$(α)_nsteps$(n_steps).jld", "position", position1, "energies", energies,
+    if pot == "Harmonic"
+        save("data_arr/Harmonic/$(string(Symbol(potential)))_shift_widths_α$(α)_nsteps$(n_steps)_v$(version).jld", "position", position1, "energies", energies,
                     "acceptance_rates", acceptance_rates, "shift_widths", shift_widths,
                     "jacknife_errors", jacknife_errors, "comparison_energy", comparison_energy)
-
+    
+    elseif pot == "Frohlich"
+        save("data_arr/Frohlich/$(string(Symbol(potential)))_shift_widths_α$(α)_nsteps$(n_steps)_v$(version).jld", "position", position1, "energies", energies,
+                    "acceptance_rates", acceptance_rates, "shift_widths", shift_widths,
+                    "jacknife_errors", jacknife_errors, "comparison_energy", comparison_energy)
+    
+    end
+    
     # Output measurements and statistics
     #println("Number of Beads: ", adjusted_beads)
     println("Number of Beads: ", n_beads)
