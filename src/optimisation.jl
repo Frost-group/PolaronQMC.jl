@@ -11,7 +11,7 @@ function update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster}
         adjuster.value *=  1.01
 
     else
-        adjuster.value *= (adjuster.acceptance_rate / 0.5)
+        adjuster.value *= (adjuster.acceptance_rate / 0.4) #originally it's 0.5
     end
 
     adjuster.attempt_counter = 0
