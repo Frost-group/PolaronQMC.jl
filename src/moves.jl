@@ -142,7 +142,8 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 			r0, r1 = bead - level_fac, bead + level_fac
 
 			# Find normally distributed shift
-			width = sqrt(level_fac * τλ) * adjuster.value
+			#width = sqrt(level_fac * τλ) * adjuster.value
+			width = sqrt(level_fac * τλ) # turn off adjustor for bisect first
 			shift = width .* rand(Distributions.Normal(0, 1), n_dim)
 
 			# Perform move and calculate change to action
