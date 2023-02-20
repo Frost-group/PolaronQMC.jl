@@ -38,7 +38,7 @@ function one_body_potential(potential::FrohlichPotential, path::Path, bead::Int,
             #g_factor = -0.5 * α * (ħω)^(3/2) * sqrt(1/2/m) * cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5))* csch(ħω * β / 2)
             #g_factor = cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5))
             
-            nner_integral += cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5)) / norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :])
+            inner_integral += cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5)) / norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :])
             #inner_integral += g_factor / norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :])
         end
     end
