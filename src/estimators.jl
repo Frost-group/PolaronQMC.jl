@@ -64,19 +64,21 @@ function kinetic_energy(path::Path, potential::HarmonicPotential, estimator::Vir
 
 
 function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Virial_Estimator)
-    #term prefactor
-    term_one = 0.0 #Not sure why is 0
-    term_one = (path.n_dimensions * path.n_particles) / (2 * path.τ * path.n_beads) # same as harmonic
-    t2_prefactor = path.τ / (2 * path.n_beads)
-    # F = -dV/dr ∝ r/(r(τ)-r(τ'))^3
     β = path.τ * path.n_beads
 
-
+    #term prefactor
+    #term_one = 0.0 #Not sure why is 0
+    term_one = (path.n_dimensions * path.n_particles) / (2 * path.τ * path.n_beads) # same as harmonic
+    t2_prefactor = path.τ / (2 * path.n_beads) * 0.5 * potential.α * (potential.ħ * potential.ω)^(3/2) * sqrt(1/2/path.m) * csch(potential.ħ * potential.ω * β / 2)
+    ħω = potential.ω * potential.ħ
+    # F = -dV/dr ∝ r/(r(τ)-r(τ'))^3
+    
     function get_term_two(particle, bead, other_bead, centroid_pos)
         if bead != other_bead
             #g_factor = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(2*path.m) * cosh(potential.ω*β * (abs(bead-other_bead)/path.n_beads - 0.5 * potential.ħ)) * csch(potential.ħ * potential.ω * β / 2)
             #g_factor = 0.5 * potential.α * (potential.ħ * potential.ω)^3/2 / pi * sqrt(1/2/path.m) * cosh(potential.ω * β * potential.ħ * (abs(bead-other_bead)/path.n_beads - 0.5))* csch(potential.ħ * potential.ω * β / 2)
-            g_factor = 0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(1/2/path.m) * cosh(potential.ω * β * potential.ħ * (abs(bead-other_bead)/path.n_beads - 0.5))* csch(potential.ħ * potential.ω * β / 2)
+            #g_factor = 0.5 * potential.α * (potential.ħ * potential.ω)^(3/2) * sqrt(1/2/path.m) * cosh(potential.ω * β * potential.ħ * (abs(bead-other_bead)/path.n_beads - 0.5)) * csch(potential.ħ * potential.ω * β / 2)
+            g_factor = cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5))
             return g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
         else 
             return 0.0
@@ -91,7 +93,7 @@ function kinetic_energy(path::Path, potential::FrohlichPotential, estimator::Vir
     end
 
     #return term_one - (t2_prefactor * term_two) #original one from George
-    return term_one - (t2_prefactor * term_two) # -1 (from eqn) * -1 (frm dV/dr) * -1 (force formula)
+    return term_one + (t2_prefactor * term_two) # -1 (from eqn) * -1 (frm dV/dr) * -1 (force formula) * (-1) from potential [updated]
     #return term_one - (t2_prefactor * term_two) + (1.5 * potential.ħ * potential.ω * coth(potential.ω * potential.ħ * β)) #Phonon Kinetic Energy
 end
 
@@ -128,7 +130,12 @@ end
 
 
 function Energy(path::Path, potential::Potential, estimator::Estimator)
-    return kinetic_energy(path, potential, estimator) + potential_energy(path, potential, estimator)
+    KE = kinetic_energy(path, potential, estimator)
+    PE = potential_energy(path, potential, estimator)
+    println("kinetic is:", KE)
+    println("Potential is:", PE)
+    return KE + PE
+    #return kinetic_energy(path, potential, estimator) + potential_energy(path, potential, estimator)
 end
 
 
