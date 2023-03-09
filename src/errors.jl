@@ -51,6 +51,44 @@ function jackknife(observables_array)
     return [variance_bins,variance_jk]
 end
 
+function autoCorrelation(observable_arr, observable_skip)
+    len = length(observable_arr)
+    """
+    observable_arr: Usually energy array
+    """
+    autoCorrelation = zeros(length(observable_arr)-1)
+    O_avg = mean(observable_arr)
+    #=
+    Var = 0.0
+    for j in eachindex(observable_arr)
+        Var += (observable_arr[j] - O_avg)^2
+    end
+    Var /= length(observable_arr)
+    =#
+    Var = var(observable_arr) * (len-1)
+
+    for i in 1:length(observable_arr)-1
+
+        for k in 1:length(observable_arr)
+            k2 = i + k
+            if k2 > length(observable_arr)
+                break
+            end
+            E1 = observable_arr[k]
+            E2 = observable_arr[k2]
+            autoCorrelation[i] += (E1-O_avg) * (E2 - O_avg)
+        end
+        #println("normalised:", length(observable_arr) - i)
+        #autoCorrelation[i] /= (length(observable_arr) - i)
+        autoCorrelation[i] /= Var
+    end
+    return autoCorrelation
+end
+
+function autoCorrelationTime(Ck)
+    return 1 + 2*sum(Ck)
+end
+
 
 
     
