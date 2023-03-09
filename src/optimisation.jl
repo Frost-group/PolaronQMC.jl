@@ -1,6 +1,7 @@
+# optimisation.jl
 
 
-function update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster}, potential::Potential)
+function updateAdjuster(adjuster::Union{SingleAdjuster, DisplaceAdjuster}, potential::Potential)
 
     adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
 
@@ -19,7 +20,7 @@ function update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster}
 end
 
 
-function update_shift_width!(adjuster::Union{Bisect_Adjuster}, potential::HarmonicPotential)
+function updateAdjuster(adjuster::Union{BisectAdjuster}, potential::HarmonicPotential)
 
     adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
 
@@ -38,7 +39,7 @@ function update_shift_width!(adjuster::Union{Bisect_Adjuster}, potential::Harmon
 end
 
 
-function update_shift_width!(adjuster::Union{Bisect_Adjuster}, potential::FrohlichPotential)
+function updateAdjuster(adjuster::Union{BisectAdjuster}, potential::FrohlichPotential)
 
     adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
 

@@ -1,27 +1,26 @@
 # actions.jl
 
 
-#Ways of calculating action
+# Ways of calculating action
 
-function kinetic_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::Simple_Regime)
+# not used?
+function totalAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, potential::OneBodyPotential, regime::Regime)
+    return kinecticAction(path, bead_one, bead_two, particle, regime) + potential_action(path, bead_one, particle, potential, regime)
+end
+
+"""
+Calculate Kinetic Actions
+"""
+
+
+function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::SimpleRegime)
     kinetic_action = 0.5 * path.m * norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / path.τ
     return kinetic_action
 end
 
 
-function potential_action(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::Simple_Regime)
-    return one_body_potential(potential, path, bead, particle) * path.τ
-end
-
-
-function total_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, potential::OneBodyPotential, regime::Simple_Regime)
-    return kinectic_action(path, bead_one, bead_two, particle, regime) + potential_action(path, bead_one, particle, potential, regime)
-end
-
-
-
 #Primitive method (based off Ceperly paper)
-function kinetic_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::Primitive_Regime)
+function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::PrimitiveRegime)
 
     """
     kinetic_action(path::Path, bead_one::Int, bead_two::Int, particle::Int)
@@ -47,8 +46,16 @@ function kinetic_action(path::Path, bead_one::Int, bead_two::Int, particle::Int,
 	return kinetic_action
 end
 
+"""
+Calculate Potential Action
+"""
 
-function potential_action(path::Path, bead::Int, particle::Int, potential::ConstantPotential, regime::Primitive_Regime)
+function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::SimpleRegime)
+    return oneBodyPotential(potential, path, bead, particle) * path.τ
+end
+
+
+function potentialAction(path::Path, bead::Int, particle::Int, potential::ConstantPotential, regime::PrimitiveRegime)
 
     """
     potential_action(path::Path, bead::Int, particle::Int, potential::ConstantPotential)
@@ -69,7 +76,7 @@ function potential_action(path::Path, bead::Int, particle::Int, potential::Const
 end
 
 
-function potential_action(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::Primitive_Regime)
+function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::PrimitiveRegime)
 
     """
     potential_action(path::Path, bead::Int, particle::Int, potential::OneBodyPotential)
@@ -87,15 +94,14 @@ function potential_action(path::Path, bead::Int, particle::Int, potential::OneBo
     """
     
     if typeof(potential) == FrohlichPotential
-        return 2 * path.τ * one_body_potential(potential, path, bead, particle)
+        return 2 * path.τ * oneBodyPotential(potential, path, bead, particle)
     end
-    
 
-    return path.τ * one_body_potential(potential, path, bead, particle)
+    return path.τ * oneBodyPotential(potential, path, bead, particle)
 end
 
 
-function potential_action(path::Path, bead::Int, particle::Int, potential::TwoBodyPotential, regime::Primitive_Regime)
+function potentialAction(path::Path, bead::Int, particle::Int, potential::TwoBodyPotential, regime::PrimitiveRegime)
 
     """
     potential_action(path::Path, bead::Int, particle::Int, potential::TwoBodyPotential)
@@ -112,11 +118,6 @@ function potential_action(path::Path, bead::Int, particle::Int, potential::TwoBo
     See also [`Path`](@ref), [`TwoBodyPotential`](@ref). 
     """
 
-    potential_action = sum(two_body_potential(potential, path, bead, particle, other_particle) for other_particle in 1:path.n_particles if particle != other_particle)
+    potential_action = sum(twoBodyPotential(potential, path, bead, particle, other_particle) for other_particle in 1:path.n_particles if particle != other_particle)
     return path.τ * potential_action 
-end
-
-
-function total_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, potential::Potential, regime::Primitive_Regime)
-        return kinetic_action(path, bead_one, bead_two, particle, regime) + potential_action(path, bead_two, particle, potential, regime)
 end

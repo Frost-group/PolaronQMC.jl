@@ -1,7 +1,7 @@
 # moves.jl
 using Distributions
 
-function Single!(path::Path, particle::Int, potential::Potential, regime::Regime , adjuster::Adjuster)
+function moveBead(mover::SingleMover, path::Path, particle::Int, potential::Potential, regime::Regime)
 	
 	"""
 	Single!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
@@ -17,31 +17,31 @@ function Single!(path::Path, particle::Int, potential::Potential, regime::Regime
 	"""
 
     bead = rand(1:path.n_beads)	
-	width = adjuster.value
+	width = mover.adjusters[particle].value
 	shift = rand(path.n_dimensions) * width .* rand([-1,1],path.n_dimensions)			# Linear random displacement of bead.
 
 	# Attempt one Single move
-	adjuster.attempt_counter += 1
+	mover.adjusters[particle].attempt_counter += 1
 
     # We just need to look at the beads +- 1 unit from m
     # CHECK: Non local potential? Coulombic?
     old_action = 
-		kinetic_action(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
-		kinetic_action(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
-		potential_action(path, bead, particle, potential, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+		kineticAction(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
+		kineticAction(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
+		potentialAction(path, bead, particle, potential, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
 
 	path.beads[bead, particle, :] += shift
 
     new_action =
-		kinetic_action(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
-		kinetic_action(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
-		potential_action(path, bead, particle, potential, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+		kineticAction(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
+		kineticAction(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
+		potentialAction(path, bead, particle, potential, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
 
 	# Metropolis algorithm. 
 	# Accept if bead displacement decreases the action, otherwise accept with probability exp(-ΔAction).
 
 	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
-		adjuster.success_counter += 1 # Updating counter for adjustment of shift width
+		mover.adjusters[particle].success_counter += 1 # Updating counter for adjustment of shift width
 		return true
 	else
 		path.beads[mod1(bead, path.n_beads), particle, :] -= shift
@@ -50,7 +50,7 @@ function Single!(path::Path, particle::Int, potential::Potential, regime::Regime
 end
 
 
-function Displace!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
+function moveBead(mover::DisplaceMover, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
 	"""
 	Displace!(path::Path, particle::Int, potentials::Union{Potential, Array{Potential}})
@@ -65,31 +65,31 @@ function Displace!(path::Path, particle::Int, potential::Potential, regime::Regi
 	See also [`Path`](@ref).
 	"""
 
-	width = adjuster.shift_width
+	width = mover.adjusters[particle].value
 	shift = rand(path.n_dimensions) * width .* rand([-1,1],path.n_dimensions)
 
 	# Attempt one Single move
-	adjuster.attempt_counter += 1
+	mover.adjusters[particle].attempt_counter += 1
 
 	# Save configuration of paths. Return to this configuration if Metropolis rejects the new configuration.
 	old_beads = copy(path.beads[:, particle, :])
 
     # Evaluate old action. 
 	# The kinetic action is unchanged because the relative bead positions are preserved, so we only need to evaluate the potential action at each bead.
-    old_action = sum(potential_action(path, bead, particle, potential, regime) for bead in 1:path.n_beads)
+    old_action = sum(potentialAction(path, bead, particle, potential, regime) for bead in 1:path.n_beads)
 	
 	# Displace every bead on each specified particle by the same random vector.
 	for bead in 1:path.n_beads
 		path.beads[bead, particle, :] += shift
 	end
 
-    new_action = sum(potential_action(path, bead, particle, potential, regime) for bead in 1:path.n_beads)
+    new_action = sum(potentialAction(path, bead, particle, potential, regime) for bead in 1:path.n_beads)
 
 	if new_action - old_action <= 0.0
-		adjuster.success_counter += 1
+		mover.adjusters[particle].success_counter += 1
 		return true
 	elseif rand() <= exp(-(new_action - old_action))
-		adjuster.success_counter += 1
+		mover.adjusters[particle].success_counter += 1
 		return true
 	else
 		path.beads[:, particle, :] = old_beads
@@ -98,7 +98,7 @@ function Displace!(path::Path, particle::Int, potential::Potential, regime::Regi
 end
 
 
-function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
+function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
 
 	# Segment length to perform Bisect
 	max_level = 5
@@ -112,13 +112,12 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 	n_beads = path.n_beads
 	n_dim = path.n_dimensions
 
-
 	# Attempt one Single move
-	adjuster.attempt_counter += 1
+	mover.adjusters[particle].attempt_counter += 1
 
 	total_old_action = 0.0
 	for bead in start_bead:start_bead+segment_length
-		total_old_action += potential_action(path, bead, particle, potential, regime)
+		total_old_action += potentialAction(path, bead, particle, potential, regime)
 	end
 
 	for level in max_level:-1:1
@@ -142,8 +141,7 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 			r0, r1 = bead - level_fac, bead + level_fac
 
 			# Find normally distributed shift
-			#width = sqrt(level_fac * τλ) * adjuster.value
-			width = sqrt(level_fac * τλ) # turn off adjustor for bisect first
+			width = sqrt(level_fac * τλ) * mover.adjusters[particle].value
 			shift = width .* rand(Distributions.Normal(0, 1), n_dim)
 
 			# Perform move and calculate change to action
@@ -154,15 +152,15 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 	total_new_action = 0.0
 	for bead in start_bead:start_bead+segment_length
-		total_new_action += potential_action(path, bead, particle, potential, regime)
+		total_new_action += potentialAction(path, bead, particle, potential, regime)
 	end
 
 	if total_new_action - total_old_action < 0.0
-		adjuster.success_counter += 1
+		mover.adjusters[particle].success_counter += 1
 		return true
 
 	elseif rand() < exp(-(total_new_action - total_old_action))
-		adjuster.success_counter += 1
+		mover.adjusters[particle].success_counter += 1
 		return true
 		
 	else

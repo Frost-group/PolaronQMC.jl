@@ -27,14 +27,14 @@ using JLD
     adjusted_beads = Int(floor(1/(fixed_τ*T)))
 
     # For fixed number of beads
-    n_beads = 3000
+    n_beads = 500
     τ = 1.0 / (T * n_beads)
 
     path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
     #path = Path(adjusted_beads, n_particles, n_dimensions, fixed_τ)
 
     # Set regime
-    regime = Primitive_Regime()
+    regime = PrimitiveRegime()
 
     """
     Set Potential Function
@@ -42,7 +42,7 @@ using JLD
     
     # Potential variables
     ω = 1.0
-    α = 5.0
+    α = 4.0
     ħ = 1.0
     
     potential = FrohlichPotential(α,ω,ħ)
@@ -55,24 +55,24 @@ using JLD
     """
 
     # number of steps
-    n_steps = 500
+    n_steps = 300
 
 
     #skipping between sampling
     #equilibrium_skip = 0.1 * n_steps
     equilibrium_skip = 10
     #observables_skip = 0.001 * n_steps
-    observables_skip = 20
+    observables_skip = 10
 
     # types of moves
     #movers = Dict("Bisect!" => [1.0])
-    movers = Dict("Single!" => [1.0])
+    movers = SingleMover(path)
     #movers = Dict("Displace!" => [1.0])
     #movers = Dict("Single!" => [1.0], "Bisect!" => [0.2])
 
     observables = [Energy, Position]
     
-    estimators = [Virial_Estimator()]
+    estimators = [VirialEstimator()]
     #estimators = [Thermodynamic_Estimator()]
     #estimators = [Simple_Estimator()]
  
@@ -83,7 +83,7 @@ using JLD
     """
 
     # thermalised_start!(path, potential, n_steps = 100000)
-    pimc = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=true)
+    pimc = PIMC(n_steps, equilibrium_skip, observables_skip, path, mover, estimators, potential, regime, energies, positions, adjust=true, visual=true)
     
     # Store outputs
     adjuster_stats = pimc[1]
@@ -112,7 +112,7 @@ using JLD
         comparison_energy = comparison_polaron.F
     end
 
-    
+
     # Post analysis
     variances = jackknife(energies)
     jacknife_errors = sqrt(variances[2])

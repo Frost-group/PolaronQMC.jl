@@ -1,119 +1,116 @@
 # PIMC.jl
 using Base.Threads
+using StaticArrays
+using PyCall
 
 
 # PIMC function with multi-threading support
-function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, movers::Dict, observables, estimators::Array, potential::Potential, regime::Regime; adjust::Bool = true, visual::Bool = false, threads::Bool = false)
-	
+function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover::Mover, estimators::Array, potential::Potential, regime::Regime, energies::Bool, positions::Bool; adjust::Bool = true, threads::Bool = false)
+
 	# Conversion of estimators to subscripable string
-	estimators_string = [string(Symbol(estimator)) for estimator in estimators]
+	estimators_string = [split(string(Symbol(estimator)), "Estimator()")[1] for estimator in estimators]
 
-	# Initialise independent adjusters for each mover
-	adjusters = Dict()
-	for mover in keys(movers)
-		adjusters[mover] = path.adjusters[mover]
-	end
+	# Dictionary to store all PIMC data
+	data = Dict()
 
-	# Output arrays for different estimators of observables
-	output_observables = Dict()
-	for observable in observables
-		output_observables[string(observable)] = Dict() 
+	# Create data structures for energies
+	if energies
 		for estimator in estimators_string
-			output_observables[string(observable)][estimator] = []
+			data["Energy:$(estimator)"] = []
 		end
 	end
 
-	# Output dictionary that stores width and acceptance rate
-	adjuster_stats = Dict()
-	for mover in keys(movers)
-		adjuster_stats[mover]= Dict("Acceptance Rate" => [], "Shift Width" => [])
+	# Create data structures for positions
+	if positions
+		for particle in 1:path.n_particles
+			for dimension in 1:path.n_dimensions
+				data["Position:p$(particle)d$(dimension)"] = []
+			end
+		end
 	end
 
-	# Position for visuals
-	visual_positions = []
+	# Create data structures for adjuster stats
+	if adjust
+		for particle in 1:path.n_particles
+			data["Acceptance Rate:p$(particle)"] = fill(NaN, n_steps)
+			data["Adjuster Value:p$(particle)"] = fill(NaN, n_steps)
+		end
+	end
 
 	# Processes that run per step
 	if threads
 		@threads for step in 1:n_steps
-			
-			# Updating n_accepted, moving beads, and changing shift width if necessary
-			for particle in rand(1:path.n_particles, path.n_particles)
-				for mover_index in 1:length(movers[1])
-					adjuster = path.adjusters[string(Symbol(movers[1][mover_index]))]
-					if movers[2][mover_index] > rand()
-						system_stats["attempted_array"][movers_string[mover_index]] += 1
-						system_stats["acceptance_array"][movers_string[mover_index]] += movers[1][mover_index](path, particle, potential, regime, adjuster)
-					end
-				end
-
-				# Changing shift width automatically
-				if adjust 
-					for adjuster in values(path.adjusters)
-						update_shift_width!(adjuster)
-					end
-				end
-			end
-
-			# Generates observable for each cycle of "observable_skip"
-			if mod(step, observable_skip) == 0 && step > equilibrium_skip
-
-				for observable in observables
-					for estimator_index in 1:length(estimators)
-						append!(output_observables[string(observable)][estimators_string[estimator_index]], observable(path, potential, estimators[estimator_index]))
-
-					end
-				end
-
-				if visual
-					push!(visual_positions,copy(path.beads))
-				end
-			end
-		end
-
-	else
-		for step in 1:n_steps
-			println("step is ", step)
 
 			# Updating n_accepted, moving beads, and changing shift width if necessary
 			for particle in rand(1:path.n_particles, path.n_particles)
 				for sweep in 1:path.n_beads
-				#for sweep in 1:100
-					for mover in keys(movers)
-						if movers[mover][1] > rand()
-							getfield(Main, Symbol(mover))(
-								path, particle, potential, regime, adjusters[mover]
-							)
-						end
-					end
+					moveBead(mover, path, particle, potential, regime)
 				end
-			end
-
-			# Changing shift width automatically and save results
-			if adjust
-				for mover in keys(movers)
-					update_shift_width!(adjusters[mover], potential)
-					push!(adjuster_stats[mover]["Acceptance Rate"], adjusters[mover].acceptance_rate)
-					push!(adjuster_stats[mover]["Shift Width"], adjusters[mover].value)
+			
+				# Changing shift width automatically and save results
+				if adjust
+					updateAdjuster(mover.adjusters[particle], potential)
+					data["Acceptance Rate"][particle, step] = mover.adjusters[particle].acceptance_rate
+					data["Adjuster Value"][particle, step] = mover.adjusters[particle].value
 				end
 			end
 
 			# Generates observable for each cycle of "observable_skip"
 			if mod(step, observable_skip) == 0 && step > equilibrium_skip
 
-				for observable in observables
-					for estimator_index in 1:length(estimators)
-						append!(output_observables[string(observable)][estimators_string[estimator_index]], observable(path, potential, estimators[estimator_index]))
-
+				# Add energy of system for step to data
+				if energies
+					for (index, estimator) in enumerate(estimators_string)
+						data["Energy"][estimator][step] = Energy(path, potential, estimators[index])
 					end
 				end
 
-				# Save position in memory for animation
-				if visual
-					push!(visual_positions,copy(path.beads))
+				# Add positions for step to data for each particle
+				if positions
+					for particle in 1:path.n_particles
+						push!(data["Position"][particle], copy(path.beads[:, particle, :]))
+					end
+				end
+			end
+		end
+	else
+		for step in 1:n_steps
+
+			# Updating n_accepted, moving beads, and changing shift width if necessary
+			for particle in rand(1:path.n_particles, path.n_particles)
+				for sweep in 1:path.n_beads
+					moveBead(mover, path, particle, potential, regime)
+				end
+			
+				# Changing shift width automatically and save results
+				if adjust
+					updateAdjuster(mover.adjusters[particle], potential)
+					data["Acceptance Rate:p$(particle)"][step] = mover.adjusters[particle].acceptance_rate
+					data["Adjuster Value:p$(particle)"][step] = mover.adjusters[particle].value
+				end
+			end
+
+			# Generates observable for each cycle of "observable_skip"
+			if mod(step, observable_skip) == 0 && step > equilibrium_skip
+
+				# Add energy of system for step to data
+				if energies
+					for (index, estimator) in enumerate(estimators_string)
+						push!(data["Energy:$(estimator)"], energy(path, potential, estimators[index]))
+					end
+				end
+
+				# Add positions for step to data for each particle
+				if positions
+					for particle in 1:path.n_particles
+						for dimension in 1:path.n_dimensions
+							push!(data["Position:p$(particle)d$(dimension)"], copy(path.beads[:, particle, dimension]))
+						end
+					end
 				end
 			end
 		end
 	end
 
-	return [adjuster_stats, output_observables, visual_positions]
+	return data
 end

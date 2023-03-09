@@ -7,15 +7,17 @@ using StaticArrays
 abstract type Regime end
 
 
-struct Simple_Regime <: Regime  # Simple form of calculating action
-    function Simple_Regime()
+# Simple form of calculating action
+struct SimpleRegime <: Regime  
+    function SimpleRegime()
         new()
     end
 end
 
 
-struct Primitive_Regime <: Regime # Calculating using the primitive approximation as per Ceperly paper
-    function Primitive_Regime()
+# Calculating using the primitive approximation as per Ceperly paper
+struct PrimitiveRegime <: Regime 
+    function PrimitiveRegime()
         new()
     end
 end
@@ -32,7 +34,6 @@ mutable struct Path
     n_dimensions :: Int64
 
 	beads :: SizedArray
-    adjusters :: Dict
 
 	τ :: Float64
     m :: Float64
@@ -40,17 +41,50 @@ mutable struct Path
 
 	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 1.0)
         
-        beads = @SArray randn(n_beads, n_particles, n_dimensions) 
+        beads = @SArray randn(n_beads, n_particles, n_dimensions)
         beads *= start_range
 
-        # Dictionary of Adjusters
-        adjusters = Dict()
-        adjusters["Single!"] = Single_Adjuster(λ, τ)
-        adjusters["Displace!"] = Displace_Adjuster(λ, τ)
-        adjusters["Bisect!"] = Bisect_Adjuster(λ, τ)
-
-		new(n_beads, n_particles, n_dimensions, beads, adjusters, τ, m, λ)
+		new(n_beads, n_particles, n_dimensions, beads, τ, m, λ)
 	end
+end
+
+
+abstract type Mover end
+
+
+mutable struct SingleMover <: Mover
+
+    adjusters :: SizedArray
+
+    function SingleMover(path::Path)
+        particles = [SingleAdjuster(path.λ, path.τ) for i in 1:path.n_particles]
+        adjusters = SVector(Tuple(particles))
+        new(adjusters)
+    end
+end
+
+
+mutable struct DisplaceMover <: Mover
+
+    adjusters :: SizedArray
+
+    function DisplaceMover(path::Path)
+        particles = [DisplaceAdjuster(path.λ, path.τ) for i in 1:path.n_particles]
+        adjusters = SVector(Tuple(particles))
+        new(adjusters)
+    end
+end
+
+
+mutable struct BisectMover <: Mover
+
+    adjusters :: SizedArray
+
+    function BisectMover(path::Path)
+        particles = [BisectAdjuster(path.λ, path.τ) for i in 1:path.n_particles]
+        adjusters = SVector(Tuple(particles))
+        new(adjusters)
+    end
 end
 
 
@@ -59,7 +93,7 @@ abstract type Adjuster end
 
 
 # Adjuster for the Single! move algorithm
-mutable struct Single_Adjuster <: Adjuster
+mutable struct SingleAdjuster <: Adjuster
 
     """
     Adjuster for the Single! move algorithm
@@ -69,7 +103,7 @@ mutable struct Single_Adjuster <: Adjuster
     success_counter :: Int
     value :: Float64
     acceptance_rate :: Float64
-    function Single_Adjuster(λ::Float64, τ::Float64)
+    function SingleAdjuster(λ::Float64, τ::Float64)
         value = sqrt(4 * λ * τ) * 0.5
         new(0, 0, value, 0)
     end
@@ -77,7 +111,7 @@ end
 
 
 #Adjuster for the Displace! move algorithm
-mutable struct Displace_Adjuster <: Adjuster
+mutable struct DisplaceAdjuster <: Adjuster
 
     """
     Adjuster for the Displace! move algorithm
@@ -87,7 +121,7 @@ mutable struct Displace_Adjuster <: Adjuster
     success_counter :: Int
     value :: Float64
     acceptance_rate :: Float64
-    function Displace_Adjuster(λ::Float64, τ::Float64)
+    function DisplaceAdjuster(λ::Float64, τ::Float64)
         value = 1
         new(0, 0, value, 0)
     end
@@ -95,61 +129,19 @@ end
 
 
 #Adjuster for the Bisect! move algorithm
-mutable struct Bisect_Adjuster <: Adjuster
+mutable struct BisectAdjuster <: Adjuster
 
     attempt_counter :: Int
     success_counter :: Int
     value :: Float64
     acceptance_rate :: Float64
 
-    function Bisect_Adjuster(λ::Float64, τ::Float64)
+    function BisectAdjuster(λ::Float64, τ::Float64)
         value = sqrt(τ * λ)
         new(0, 0, value, 0)
     end
 end
 
-
-#=
-#Adjuster for the Bisect! move algorithm
-mutable struct Bisect_Adjuster <: Adjuster
-
-    attempt_counter :: Int
-    success_counter :: Int
-    #shift_width :: Float64
-    max_level :: Int
-    acceptance_rate :: Float64
-
-    function Bisect_Adjuster(λ::Float64, τ::Float64)
-        #shift_width = sqrt(τ * λ)
-        new(0, 0, 3, 0)
-    end
-end
-
-
-#Adjuster for the Bisect! move alogrithm
-mutable struct Bisect_Adjuster <: Adjuster end
-
-    adjust_counter_array :: Dict
-    shift_width_array :: Dict
-    max_level :: Int
-
-
-    function Bisect_Adjuster(λ,τ)
-        adjust_counter_array = Dict()
-        shift_width_array = Dict()
-        
-        #max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
-        max_level = 4
-
-        for level in 0:max_level
-            shift_width_array[string(level)] = sqrt(2^(level) * λ * τ )
-            adjust_counter_array[string(level)] = 0
-        end
-        
-        new(adjust_counter_array,shift_width_array, max_le vel)
-    end
-end 
-=#
 
 # Most abstract Potential type.
 abstract type Potential end
@@ -229,3 +221,16 @@ struct CoulombPotential <: TwoBodyPotential
         new(κ)
     end
 end
+
+#types of estimators
+abstract type Estimator end
+
+#Energy estimators
+
+struct SimpleEstimator <: Estimator end #Estimator using basic sum of kinetic and potential total_energy
+
+struct SimpleVirialEstimator <: Estimator end #Estimator using virial theorem for potential term
+
+struct ThermodynamicEstimator <: Estimator end #Estimator using thermodynamic theory
+
+struct VirialEstimator <: Estimator end #Estimator derived using virial theorem

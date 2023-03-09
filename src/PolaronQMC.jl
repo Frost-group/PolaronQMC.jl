@@ -11,34 +11,34 @@ using JLD
 #temporary
 
 # Export types
-export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, Simple_Regime, Primitive_Regime
-
-# Export potentials
-export one_body_potential, one_body_potential_convert, two_body_potential
-
-# Export observables
-export potential_energy, kinetic_energy, Energy, Correlation, Position, Mean_Position
-
-# Export estimators
-export Estimator, Thermodynamic_Estimator, Virial_Estimator, Simple_Estimator, Simple_Virial_Estimator, Virial_EstimatorX
+export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, SimpleRegime, PrimitiveRegime, Mover, SingleMover
 
 # Export adjusters for automatically changing shift width
-export Adjuster, Single_Adjuster, Displace_Adjuster, Bisect_Adjuster
+export Adjuster, SingleAdjuster, DisplaceAdjuster, BisectAdjuster
+
+# Export estimators
+export Estimator, ThermodynamicEstimator, VirialEstimator, SimpleEstimator, SimpleVirialEstimator
+
+# Export potentials
+export oneBodyPotential, twoBodyPotential
+
+# Export observables
+export potentialEnergy, kineticEnergy, energy, correlation, position
 
 # Export function used in the optimisation of the running of the simulation
-export update_shift_width!, thermalised_start!
+export updateAdjuster, thermalised_start!
 
 # Export PIMC move algorithms
-export Single!, Displace!, Bisect!, Stage!
+export moveBead
 
 # Export actions
-export potential_action, kinetic_action
+export totalAction, potentialAction, kineticAction
 
 # Export simulation run code (PIMC)
-export PIMC, PIMCX
+export PIMC
 
 # Export methods for comparison
-export analytic_energy_harmonic, selective_mean
+export analyticEnergyHarmonic, selectiveMean
 
 # Export error analysis
 export jackknife
