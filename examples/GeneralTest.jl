@@ -44,8 +44,7 @@ using CSV
     estimator = "Virial"
     
     # Choose Observables
-    energies = true
-    positions = true
+    observables = ["Energy", "Position", "Correlation"]
     
     # Choose Estimators
     energy_estimators = []
@@ -122,7 +121,7 @@ using CSV
     """
 
     # thermalised_start!(path, potential, n_steps = 100000)
-    data = PIMC(n_steps, equilibrium_skip, observables_skip, path, mover, estimators, potential, regime, energies, positions, adjust=true)
+    data = PIMC(n_steps, equilibrium_skip, observables_skip, path, mover, estimators, potential, regime, observables, adjust=true)
     
     # Store outputs
     energies = data["Energy:$(estimator)"]

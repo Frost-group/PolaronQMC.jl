@@ -5,27 +5,34 @@ using PyCall
 
 
 # PIMC function with multi-threading support
-function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover::Mover, estimators::Array, potential::Potential, regime::Regime, energies::Bool, positions::Bool; adjust::Bool = true, threads::Bool = false)
+function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover::Mover, estimators::Array, potential::Potential, regime::Regime, observables::Array; adjust::Bool = true, threads::Bool = false)
 
 	# Conversion of estimators to subscripable string
 	estimators_string = [split(string(Symbol(estimator)), "Estimator()")[1] for estimator in estimators]
+	observables_set = Set(observables)
 
 	# Dictionary to store all PIMC data
 	data = Dict()
 
 	# Create data structures for energies
-	if energies
+	if "Energy" in observables_set
 		for estimator in estimators_string
 			data["Energy:$(estimator)"] = []
 		end
 	end
 
 	# Create data structures for positions
-	if positions
+	if "Position" in observables_set
 		for particle in 1:path.n_particles
 			for dimension in 1:path.n_dimensions
 				data["Position:p$(particle)d$(dimension)"] = []
 			end
+		end
+	end
+
+	if "Correlation" in observables_set
+		for estimator in estimators_string
+			data["Correlation:$(estimator)"] = []
 		end
 	end
 
@@ -94,18 +101,25 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 			if mod(step, observable_skip) == 0 && step > equilibrium_skip
 
 				# Add energy of system for step to data
-				if energies
+				if "Energy" in observables_set
 					for (index, estimator) in enumerate(estimators_string)
 						push!(data["Energy:$(estimator)"], energy(path, potential, estimators[index]))
 					end
 				end
 
 				# Add positions for step to data for each particle
-				if positions
+				if "Position" in observables_set
 					for particle in 1:path.n_particles
 						for dimension in 1:path.n_dimensions
 							push!(data["Position:p$(particle)d$(dimension)"], copy(path.beads[:, particle, dimension]))
 						end
+					end
+				end
+
+				# Add correlation to data fro each estimator
+				if "Correlation" in observables_set
+					for (estimator, estimator_string) in zip(estimators, estimators_string)
+						data["Correlation:$(estimator_string)"] = correlation(path, potential, estimator)
 					end
 				end
 			end
