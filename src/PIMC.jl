@@ -14,6 +14,18 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 	# Dictionary to store all PIMC data
 	data = Dict()
 
+	# If we consider Frohlich as bounded, we need to consider the initial bead and final bead differently
+	if typeof(regime) == BoundRegime
+		n_sweep = path.n_beads+1
+	else
+		n_sweep = path.n_beads
+	end
+
+	# If we are using Bisect function, then we can reduce the sweep. The power of 2 can be changed, but also need to change the moves.jl
+	if typeof(mover) == BisectMover
+		n_sweep = Int(floor(path.n_beads/2^5))
+	end
+
 	# Create data structures for energies
 	if "Energy" in observables_set
 		for estimator in estimators_string
@@ -82,10 +94,11 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 		end
 	else
 		for step in 1:n_steps
+			println("step is: ", step)
 
 			# Updating n_accepted, moving beads, and changing shift width if necessary
 			for particle in rand(1:path.n_particles, path.n_particles)
-				for sweep in 1:path.n_beads
+				for sweep in 1:n_sweep
 					moveBead(mover, path, particle, potential, regime)
 				end
 			
@@ -119,7 +132,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 				# Add correlation to data fro each estimator
 				if "Correlation" in observables_set
 					for (estimator, estimator_string) in zip(estimators, estimators_string)
-						data["Correlation:$(estimator_string)"] = correlation(path, potential, estimator)
+						push!(data["Correlation:$(estimator_string)"], correlation(path, potential, estimator))
 					end
 				end
 			end
