@@ -36,8 +36,8 @@ using JLD
     pot = potential
 
     # Choose Monte-Carlo Mover from "Single", "Displace", "Bisect"
-    #mover = "Single"
-    mover = "Bisect"
+    mover = "Single"
+    #mover = "Bisect"
 
     # Choose path regime from "Simple", "Primitive"
     #regime = "BoundRegime"
