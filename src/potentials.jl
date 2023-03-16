@@ -19,6 +19,7 @@ function oneBodyPotential(potential::HarmonicPotential, path::Path, bead::Int, p
 end
 
 # Returns the Frohlich potential for a single particle
+
 function oneBodyPotential(potential::FrohlichPotential, path::Path, bead::Int, particle::Int)
     β = path.τ * path.n_beads
     m = path.m
@@ -29,21 +30,11 @@ function oneBodyPotential(potential::FrohlichPotential, path::Path, bead::Int, p
     inner_integral = 0.0
     for other_bead in 1:path.n_beads
         if other_bead != bead
-            #g_factor = -potential.α/2 * sqrt(potential.ħ/(2*path.m*potential.ω)) * cosh(β *(abs(bead-other_bead)/path.n_beads - 0.5)) * csch(β/2)
-            #g_factor = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(2*path.m) * cosh(potential.ω*β * (abs(bead-other_bead)/path.n_beads - 0.5 * potential.ħ)) * csch(potential.ħ * potential.ω * β / 2)
-            #g_factor = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 / pi * sqrt(2/path.m) * cosh(potential.ω * β * potential.ħ * (abs(bead-other_bead)/path.n_beads - 0.5))* csch(potential.ħ * potential.ω * β / 2)
-            #g_factor = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(1/2/path.m) * cosh(potential.ω * β * potential.ħ * (abs(bead-other_bead)/path.n_beads - 0.5))* csch(potential.ħ * potential.ω * β / 2)
-            #inner_integral += g_factor / norm(path.beads[bead, particle, :] - path.beads[other_bead, particle, :])
-            #g_factor = -0.5 * α * (ħω)^(3/2) * sqrt(1/2/m) * cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5))* csch(ħω * β / 2)
-            #g_factor = cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5))
-            
             inner_integral += cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5)) / norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :])
-            #inner_integral += g_factor / norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :])
         end
     end
     return path.τ * inner_integral * term_factor # Note that this path.τ multiplication refer to dτ'
 end
-
 
 # Mexican Hat -r^2+r^4 in N-dimensions
 function oneBodyPotential(potential::MexicanHatPotential, path::Path, bead::Int, particle::Int)
