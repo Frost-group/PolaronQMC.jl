@@ -2,21 +2,22 @@
 
 
 function updateAdjuster(adjuster::Union{SingleAdjuster, DisplaceAdjuster}, potential::Potential)
+    if (adjuster.attempt_counter != 0)
+        adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
 
-    adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
+        if adjuster.acceptance_rate < 0.01
+            adjuster.value *= 0.99
 
-    if adjuster.acceptance_rate < 0.01
-        adjuster.value *= 0.99
+        elseif adjuster.acceptance_rate > 0.99
+            adjuster.value *=  1.01
 
-    elseif adjuster.acceptance_rate > 0.99
-        adjuster.value *=  1.01
+        else
+            adjuster.value *= (adjuster.acceptance_rate / 0.4) #originally it's 0.5
+        end
 
-    else
-        adjuster.value *= (adjuster.acceptance_rate / 0.4) #originally it's 0.5
+        adjuster.attempt_counter = 0
+        adjuster.success_counter = 0
     end
-
-    adjuster.attempt_counter = 0
-    adjuster.success_counter = 0
 end
 
 
