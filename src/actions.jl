@@ -18,6 +18,10 @@ function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, 
     return kinetic_action
 end
 
+function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::Regime)
+    kinetic_action = 0.5 * path.m * norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / path.τ
+    return kinetic_action
+end
 
 #Primitive method (based off Ceperly paper)
 function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::PrimitiveRegime)
@@ -38,11 +42,11 @@ function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, 
 
     # Contribution from per degree of freedom per particle for distinguishable particles.
     # Comes from the normalisation term of the density matrix. Can be ignored but is included for completeness.
-    kinetic_action = path.n_dimensions * path.n_particles / 2.0 * log(4π * path.λ * path.τ)
+    #kinetic_action = path.n_dimensions * path.n_particles / 2.0 * log(4π * path.λ * path.τ)
 
     # Contribution from the link connecting the two beads.
-	kinetic_action += norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / (4 * path.λ * path.τ)
-
+	#kinetic_action += norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / (4 * path.λ * path.τ)
+    kinetic_action = norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / (4 * path.λ * path.τ)
 	return kinetic_action
 end
 
@@ -75,6 +79,77 @@ function potentialAction(path::Path, bead::Int, particle::Int, potential::Consta
     return path.τ * potential.V
 end
 
+function potentialAction(path::Path, bead::Int, particle::Int, potential::FrohlichPotential, regime::LBRegime)
+    β = path.τ * path.n_beads
+    t2_prefactor = path.τ^3 / (24 * path.m)
+    V2_prefactor = (0.5 * potential.α * (potential.ħ * potential.ω)^(3/2) * sqrt(1/2/path.m) * csch(potential.ħ * potential.ω * β / 2))^2
+    ħω = potential.ω * potential.ħ
+    # F = -dV/dr ∝ r/(r(τ)-r(τ'))^3
+    
+    inner_integral = 0.0
+    
+    #if bead != other_bead
+    for other_bead in 1:path.n_beads+1
+        if mod1(bead, path.n_beads) != mod1(other_bead, path.n_beads)
+            g_factor = (cosh(ħω * β * (abs(bead-other_bead)/(path.n_beads) - 0.5)))^2
+            inner_integral += g_factor / norm(path.beads[mod1(bead, path.n_beads),particle,:] - path.beads[mod1(other_bead, path.n_beads),particle,:])^4
+        end
+    end
+    return 2 * path.τ * oneBodyPotential(potential, path, bead, particle) + 2 * inner_integral * path.τ^2 * t2_prefactor * V2_prefactor
+end
+
+
+function potentialAction(path::Path, bead::Int, particle::Int, potential::FrohlichPotential, regime::BoundRegime)
+    n_beads = path.n_beads
+    β = path.τ * path.n_beads
+    m = path.m
+    ħω = potential.ħ * potential.ω
+    α = potential.α
+    term_factor = -0.5 * α * (ħω)^(3/2) * sqrt(1/2/m) * csch(ħω * β / 2)
+    
+    inner_integral = 0.0
+    special_integral = 0.0
+    if mod1(bead, n_beads) == 1
+        for other_bead in 2:n_beads
+            special_integral += cosh(ħω * β * (abs(1-other_bead)/n_beads - 0.5)) / norm(path.beads[mod1(bead, n_beads), particle, :] - path.beads[mod1(other_bead, n_beads), particle, :])
+            special_integral += cosh(ħω * β * (abs(n_beads+1-other_bead)/n_beads - 0.5)) / norm(path.beads[mod1(bead, n_beads), particle, :] - path.beads[mod1(other_bead, n_beads), particle, :])
+        end
+    else
+        for other_bead in 1:n_beads+1
+            if mod1(other_bead, n_beads) == 1
+                special_integral += cosh(ħω * β * (abs(bead-other_bead)/n_beads - 0.5)) / norm(path.beads[mod1(bead, n_beads), particle, :] - path.beads[mod1(other_bead, n_beads), particle, :])
+            else
+                if mod1(other_bead, n_beads) != mod1(bead, n_beads)
+                    inner_integral += cosh(ħω * β * (abs(bead-other_bead)/n_beads - 0.5)) / norm(path.beads[mod1(bead, n_beads), particle, :] - path.beads[mod1(other_bead, n_beads), particle, :])
+                    #inner_integral += g_factor / norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :])
+                end
+            end
+        end
+    end
+    return (2 * inner_integral + special_integral) * term_factor * path.τ^2 # Note that this path.τ multiplication refer to dτ'
+end
+
+function bisectPotentialAction(path::Path, bead::Int, beadrange::Union{Vector{Int64}, StepRange{Int64, Int64}, UnitRange{Int64}}, particle::Int, potential::FrohlichPotential, regime::PrimitiveRegime)
+    β = path.τ * path.n_beads
+    m = path.m
+    ħω = potential.ħ * potential.ω
+    α = potential.α
+    term_factor = -0.5 * α * (ħω)^(3/2) * sqrt(1/2/m) * csch(ħω * β / 2)
+    n_beads = path.n_beads
+    bead = mod1(bead, n_beads)
+    inner_integral = 0.0
+
+    for other_bead in 1:path.n_beads
+        if other_bead != bead
+            if other_bead in beadrange
+                inner_integral += 0.5 * cosh(ħω * β * (abs(bead-other_bead)/n_beads - 0.5)) / norm(path.beads[mod1(bead, n_beads), particle, :] - path.beads[mod1(other_bead, n_beads), particle, :])
+            else
+                inner_integral += cosh(ħω * β * (abs(bead-other_bead)/n_beads - 0.5)) / norm(path.beads[mod1(bead, n_beads), particle, :] - path.beads[mod1(other_bead, n_beads), particle, :])
+            end
+        end
+    end
+    return 2 * (path.τ)^2 * inner_integral * term_factor # Note that this path.τ multiplication refer to dτ'
+end
 
 function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::PrimitiveRegime)
 
