@@ -11,7 +11,7 @@ using JLD
 #temporary
 
 # Export types
-export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, SimpleRegime, PrimitiveRegime, Mover, SingleMover
+export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, SimpleRegime, PrimitiveRegime, BoundRegime, LBRegime, Mover, SingleMover, BisectMover, DisplaceMover
 
 # Export adjusters for automatically changing shift width
 export Adjuster, SingleAdjuster, DisplaceAdjuster, BisectAdjuster
@@ -32,7 +32,7 @@ export updateAdjuster, thermalised_start!
 export moveBead
 
 # Export actions
-export totalAction, potentialAction, kineticAction
+export totalAction, potentialAction, kineticAction, bisectPotentialAction
 
 # Export simulation run code (PIMC)
 export PIMC
@@ -41,7 +41,7 @@ export PIMC
 export analyticEnergyHarmonic, selectiveMean
 
 # Export error analysis
-export jackknife
+export jackknife, autoCorrelation, autoCorrelationTime
 
 # Export visualisation (temp)
 export draw_beads_3d, draw_beads_2d, animate_PIMC
