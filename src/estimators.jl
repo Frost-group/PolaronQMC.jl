@@ -35,11 +35,11 @@ function kineticEnergy(path::Path, potential::HarmonicPotential, estimator::Viri
      t2_prefactor = (path.m * potential.ω^2) / (2 * path.n_beads)
      term_two = 0.0
      for particle in 1:path.n_particles
-         centroid_pos = [ThreadsX.sum(path.beads[bead,particle,dimension] for bead in 1:path.n_beads) for dimension in 1:path.n_dimensions]
+         centroid_pos = [ThreadsX.sum(path.beads[mod1(bead, path.beads),particle,dimension] for bead in 1:path.n_beads) for dimension in 1:path.n_dimensions]
          centroid_pos /= path.n_beads
  
 
-        term_two = ThreadsX.sum(dot(path.beads[bead, particle, :] - centroid_pos, path.beads[bead, particle, :]) for bead in 1:path.n_beads)
+        term_two = ThreadsX.sum(dot(path.beads[mod1(bead, path.n_beads), particle, :] - centroid_pos, path.beads[mod1(bead, path.n_beads), particle, :]) for bead in 1:path.n_beads)
      end
  
      return term_one + t2_prefactor * term_two
@@ -49,9 +49,6 @@ end
 
 function kineticEnergy(path::Path, potential::FrohlichPotential, estimator::VirialEstimator)
     β = path.τ * path.n_beads
-
-    #term prefactor
-    #term_one = 0.0 #Not sure why is 0
     term_one = (path.n_dimensions * path.n_particles) / (2 * path.τ * path.n_beads) # same as harmonic
     t2_prefactor = path.τ / (2 * path.n_beads) * 0.5 * potential.α * (potential.ħ * potential.ω)^(3/2) * sqrt(1/2/path.m) * csch(potential.ħ * potential.ω * β / 2)
     ħω = potential.ω * potential.ħ
@@ -59,9 +56,6 @@ function kineticEnergy(path::Path, potential::FrohlichPotential, estimator::Viri
     
     function getTermTwo(particle, bead, other_bead, centroid_pos)
         if bead != other_bead
-            #g_factor = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(2*path.m) * cosh(potential.ω*β * (abs(bead-other_bead)/path.n_beads - 0.5 * potential.ħ)) * csch(potential.ħ * potential.ω * β / 2)
-            #g_factor = 0.5 * potential.α * (potential.ħ * potential.ω)^3/2 / pi * sqrt(1/2/path.m) * cosh(potential.ω * β * potential.ħ * (abs(bead-other_bead)/path.n_beads - 0.5))* csch(potential.ħ * potential.ω * β / 2)
-            #g_factor = 0.5 * potential.α * (potential.ħ * potential.ω)^(3/2) * sqrt(1/2/path.m) * cosh(potential.ω * β * potential.ħ * (abs(bead-other_bead)/path.n_beads - 0.5)) * csch(potential.ħ * potential.ω * β / 2)
             g_factor = cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5))
             return g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
         else 
@@ -71,24 +65,19 @@ function kineticEnergy(path::Path, potential::FrohlichPotential, estimator::Viri
 
     term_two = 0.0
     for particle in 1:path.n_particles
-        centroid_pos = [ThreadsX.sum(path.beads[bead,particle,dimension] for bead in 1:path.n_beads) for dimension in 1:path.n_dimensions]
+        centroid_pos = [sum(path.beads[bead,particle,dimension] for bead in 1:path.n_beads) for dimension in 1:path.n_dimensions]
         centroid_pos /= path.n_beads
-        term_two += ThreadsX.sum(getTermTwo(particle, bead, other_bead, centroid_pos) for bead in 1:path.n_beads, other_bead in 1:path.n_beads)
+        term_two += sum(getTermTwo(particle, bead, other_bead, centroid_pos) for bead in 1:path.n_beads, other_bead in 1:path.n_beads)
     end
 
-    #return term_one - (t2_prefactor * term_two) #original one from George
     return term_one + (t2_prefactor * term_two) # -1 (from eqn) * -1 (frm dV/dr) * -1 (force formula) * (-1) from potential [updated]
-    #return term_one - (t2_prefactor * term_two) + (1.5 * potential.ħ * potential.ω * coth(potential.ω * potential.ħ * β)) #Phonon Kinetic Energy
 end
-
-
-
 
 #Potential energy estimators -------------------------------------------
 
-
 function potentialEnergy(path::Path, potential::OneBodyPotential, estimator::Estimator)
-    return ThreadsX.sum(oneBodyPotential(potential, path, bead, particle)/path.n_beads for bead in 1:path.n_beads, particle in 1:path.n_particles)
+    #return ThreadsX.sum(oneBodyPotential(potential, path, bead, particle)/path.n_beads for bead in 1:path.n_beads, particle in 1:path.n_particles)
+    return sum(oneBodyPotential(potential, path, bead, particle)/(path.n_beads) for bead in 1:path.n_beads, particle in 1:path.n_particles)
 end
 
 
@@ -112,26 +101,71 @@ end
 
 
 function energy(path::Path, potential::Potential, estimator::Estimator)
-    return kineticEnergy(path, potential, estimator) + potentialEnergy(path, potential, estimator)
+    #return kineticEnergy(path, potential, estimator) + potentialEnergy(path, potential, estimator)
+    KE = kineticEnergy(path, potential, estimator)
+    PE = potentialEnergy(path, potential, estimator)
+    println("kinetic is:", KE)
+    println("Potential is:", PE)
+    return KE + PE
 end
 
 
 # Correlation ---------------------------------------------------------------------
 
-function correlation(path::Path, potential::Potential, estimator::Estimator)
-    correlation = Vector{Float64}(undef, path.n_beads-1)
+function correlation(path::Path, potential::HarmonicPotential, estimator::Estimator)
+    correlation = zeros(path.n_beads-1)
 
+    #for Δτ in 1:(path.n_beads-1)
     for Δτ in 1:(path.n_beads-1)
-        
+        #println("Δτ is", Δτ)    
         for bead_one in 1:path.n_beads
             bead_two = bead_one + Δτ
-            if bead_two <= path.n_beads
-                correlation[Δτ] += dot(path.beads[bead_one, :, :], path.beads[bead_two, :, :])
+            if bead_two > path.n_beads
+                break
             end
+
+            correlation[Δτ] += dot(path.beads[bead_one, :, :], path.beads[bead_two, :, :])
         end
+        
         correlation[Δτ] /= (path.n_beads - Δτ)
+        #correlation[Δτ] /= (path.n_beads)
     end				
-    return [correlation]
+    return correlation
+end
+
+
+function correlation(path::Path, potential::Potential, estimator::Estimator)
+    correlation = zeros(path.n_beads-1)
+
+    #for Δτ in 1:(path.n_beads-1)
+    for Δτ in 1:(path.n_beads-1)
+        #println("Δτ is", Δτ)    
+        avg_i = 0.0
+        avg_iτ = 0.0
+        for bead_one in 1:path.n_beads
+            bead_two = bead_one + Δτ
+            if bead_two > path.n_beads
+                break
+            end
+
+            if avg_i == 0.0
+                #println("here first")
+                avg_i = path.beads[bead_one, :, :]
+                avg_iτ = path.beads[bead_two, :, :]
+            else
+                avg_i += path.beads[bead_one, :, :]
+                avg_iτ += path.beads[bead_two, :, :]
+            end
+            correlation[Δτ] += dot(path.beads[bead_one, :, :], path.beads[bead_two, :, :])
+        end
+        
+        correlation[Δτ] /= (path.n_beads - Δτ)
+        #correlation[Δτ] /= (path.n_beads)
+        correlation[Δτ] -= dot(avg_i, avg_iτ) / ((path.n_beads - Δτ)^2)
+
+        #correlation[Δτ] /= (path.n_beads)
+    end				
+    return correlation
 end
 
 
