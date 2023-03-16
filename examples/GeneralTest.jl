@@ -17,19 +17,19 @@ using CSV
     version = Int(floor(rand()*1000))
 
     # Set Parameters
-    T = 0.1
+    T = 0.7
     m = 1.0
     ω = 1.0
     α = 1.0
     ħ = 1.0
 
-    n_particles = 2
+    n_particles = 1
     n_dimensions = 3
     start_range = 1.0
     β = 1 / T
 
     # Number of Monte-Carlo-Steps
-    n_steps = 500
+    n_steps = 50000
 
     # Choose potential from "Harmonic", "Frohlich", "MexicanHat", "Constant"
     potential = "Harmonic"
@@ -50,22 +50,23 @@ using CSV
     energy_estimators = []
 
     # Pick True for fixed beads or False for fixed τ
-    fixed_beads = true
+    fixed_beads = false
     if fixed_beads
-        n_beads = 1500
+        n_beads = 500
         τ = 1.0 / (T * n_beads)
     else
         # For fixed τ
-        τ = 0.1
-        n_beads = Int(floor(1/(fixed_τ*T)))
+        τ = 0.05
+        n_beads = Int(floor(1/(τ*T)))
     end
 
     # Fixed observable skip or step dependant
-    if true
+    quick_steps = false
+    if quick_steps
         equilibrium_skip = 1 
         observables_skip = 1
     else
-        equilibrium_skip = 0.5 * n_steps
+        equilibrium_skip = 0.5 * n_steps #try to put as 0.5, for 0.2 for quicker testing process
         observables_skip = 0.001 * n_steps
     end
 
@@ -77,6 +78,10 @@ using CSV
         regime = PrimitiveRegime()
     elseif regime == "Simple"
         regime = SimpleRegime()
+    elseif regime == "LBRegime"
+        regime = LBRegime()
+    elseif regime == "BoundRegime"
+        regime = BoundRegime()
     else
         println("Invalid Regime: ", regime)
     end
@@ -126,13 +131,14 @@ using CSV
     # Store outputs
     energies = data["Energy:$(estimator)"]
     positions = data["Position:p1d1"]
+    correlation = data["Correlation:$(estimator)"]
 
     # Flatten position matrix to Array
-    positions = collect(Iterators.flatten(positions))
+    positions_flatten = collect(Iterators.flatten(positions))
 
     # Comparison energy
     if typeof(potential) == HarmonicPotential
-        comparison_energy = analyticEnergyHarmonic(pot,β,ħ,n_dimensions)
+        comparison_energy = analyticEnergyHarmonic(potential,β,ħ,n_dimensions)
     elseif typeof(potential) == FrohlichPotential
         comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
         comparison_energy = comparison_polaron.F
@@ -142,20 +148,47 @@ using CSV
     variances = jackknife(energies)
     jacknife_errors = sqrt(variances[2])
     mean_energy = mean(energies)
+    corr_mean = mean(correlation)
+    corr_std = std(correlation)
+    #last_acceptance_rate = last(acceptance_rates)
+    #mean_acceptance_rate = mean(acceptance_rates)
+    #std_acceptance_rate = std(acceptance_rates)
 
     # Output measurements and statistics
     println("Number of Beads: ", n_beads)
+    println("Number of steps: ", n_steps)
+    println("Temperature: ", T)
     println("α: ", α)
     println("Mean Energy: ", mean_energy)
     println("Comparison Energy: ", comparison_energy)
     println("jackknife errors: ", jacknife_errors)
+    #println("Final Acceptance Rate: ", last_acceptance_rate)
+    #println("Mean Acceptance Rate: ", mean_acceptance_rate, " +/- ", std_acceptance_rate)
 
+    # Define plot parameters
+    default(fontfamily="Computer Modern",
+        titlefont = (16, "Computer Modern"),
+        guidefont = (18, "Computer Modern"),
+        tickfont = (12, "Computer Modern"),
+        legendfontsize = 12,
+        linewidth=2, framestyle=:box, label=nothing, grid=true)
 
     # Plots
     energy_plot = plot(energies, ylabel="Energy", xlab = "Sweeps / $observables_skip\$ n\$")
-    posplot = histogram(positions)
+    hline!([comparison_energy], linestyle=:dash)
+    energy_hist = histogram(energies, ylab="Frequencies", xlab="Energy")
+    posplot = histogram(positions_flatten, xlab = "Position")
+    
+    n = n_beads-1
+    corr_plot = plot(1:n, corr_mean[1:n], yerror = corr_std, ylabel="G(Δτ)", xlabel = "Δτ")
+
+    #acceptance_rate_plot = plot(acceptance_rates[Int(length(acceptance_rates)*0.9):end], xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
+    #shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
+    
+    display(energy_hist)
     display(energy_plot)
     display(posplot)
+    display(corr_plot)
 
     if n_particles == 2
         positions1 = positions
@@ -183,6 +216,14 @@ using CSV
     #anim = animate_PIMC(pimc, n_particles, n_dimensions, "3D Harmonic Potential", "Single 1.0 Mover", "0.1")
     #gif(anim, "saved_plots/anim_output.gif", fps = 60) 
 
+end
+
+begin
+    autoCorrelation1 = autoCorrelation(energies, observables_skip)
+    l = length(energies)-1
+    auto_plot = plot(1:l, autoCorrelation1[1:l], ylabel=L"C_{k}", xlab = "k / $observables_skip\$ n\$")
+    display(auto_plot)
+    println("correlation time is:", autoCorrelationTime(autoCorrelation1))
 end
 
 
