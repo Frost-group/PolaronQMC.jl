@@ -22,6 +22,18 @@ struct PrimitiveRegime <: Regime
     end
 end
 
+struct BoundRegime <: Regime # Calculating using the Li-Broughton approximation
+    function BoundRegime()
+        new()
+    end
+end
+
+struct LBRegime <: Regime
+    function LBRegime()
+        new()
+    end
+end
+
 
 mutable struct Path
 
