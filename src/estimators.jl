@@ -35,11 +35,11 @@ function kineticEnergy(path::Path, potential::HarmonicPotential, estimator::Viri
      t2_prefactor = (path.m * potential.ω^2) / (2 * path.n_beads)
      term_two = 0.0
      for particle in 1:path.n_particles
-         centroid_pos = [ThreadsX.sum(path.beads[mod1(bead, path.beads),particle,dimension] for bead in 1:path.n_beads) for dimension in 1:path.n_dimensions]
-         centroid_pos /= path.n_beads
+        centroid_pos = [ThreadsX.sum(path.beads[mod1(bead, path.n_beads),particle,dimension] for bead in 1:path.n_beads) for dimension in 1:path.n_dimensions]
+        centroid_pos /= path.n_beads
  
 
-        term_two = ThreadsX.sum(dot(path.beads[mod1(bead, path.n_beads), particle, :] - centroid_pos, path.beads[mod1(bead, path.n_beads), particle, :]) for bead in 1:path.n_beads)
+        term_two += ThreadsX.sum(dot(path.beads[mod1(bead, path.n_beads), particle, :] - centroid_pos, path.beads[mod1(bead, path.n_beads), particle, :]) for bead in 1:path.n_beads)
      end
  
      return term_one + t2_prefactor * term_two
