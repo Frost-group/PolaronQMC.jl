@@ -11,7 +11,7 @@ using JLD
 #temporary
 
 # Export types
-export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, SimpleRegime, PrimitiveRegime, BoundRegime, LBRegime, Mover, SingleMover, BisectMover, DisplaceMover
+export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, SimpleRegime, PrimitiveRegime, BoundRegime, LBRegime, Mover, SingleMover, BisectMover, DisplaceMover, HarmonicInteractionPotential, FrohlichInteractionPotential
 
 # Export adjusters for automatically changing shift width
 export Adjuster, SingleAdjuster, DisplaceAdjuster, BisectAdjuster

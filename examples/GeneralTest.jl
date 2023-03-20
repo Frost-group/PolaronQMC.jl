@@ -88,9 +88,9 @@ using CSV
    
     # Set Potential
     if potential == "Frohlich"
-        potential = FrohlichPotential(α,ω,ħ)
+        potential = FrohlichInteractionPotential(α,ω,ħ, 1.0)
     elseif potential == "Harmonic"
-        potential = HarmonicPotential(ω)
+        potential = HarmonicInteractionPotential(ω, 1.0)
     elseif potential == "MexicanHat"
         potential = MexicanHatPotential(80.0)
     elseif potential == "Contsant"
@@ -131,14 +131,14 @@ using CSV
     # Store outputs
     energies = data["Energy:$(estimator)"]
     positions = data["Position:p1d1"]
-    correlation = data["Correlation:$(estimator)"]
+    correlations = data["Correlation:$(estimator)"]
 
     # Flatten position matrix to Array
     positions_flatten = collect(Iterators.flatten(positions))
 
     # Comparison energy
-    if typeof(potential) == HarmonicPotential
-        comparison_energy = analyticEnergyHarmonic(potential,β,ħ,n_dimensions)
+    if typeof(potential) == HarmonicPotential || typeof(potential) == HarmonicInteractionPotential
+        comparison_energy = analyticEnergyHarmonic(ω, β, ħ, n_dimensions)
     elseif typeof(potential) == FrohlichPotential
         comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
         comparison_energy = comparison_polaron.F
@@ -148,8 +148,8 @@ using CSV
     variances = jackknife(energies)
     jacknife_errors = sqrt(variances[2])
     mean_energy = mean(energies)
-    corr_mean = mean(correlation)
-    corr_std = std(correlation)
+    corr_mean = mean(correlations)
+    corr_std = std(correlations)
     #last_acceptance_rate = last(acceptance_rates)
     #mean_acceptance_rate = mean(acceptance_rates)
     #std_acceptance_rate = std(acceptance_rates)

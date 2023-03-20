@@ -209,6 +209,38 @@ struct FrohlichPotential <: OneBodyPotential
 end
 
 
+struct HarmonicInteractionPotential <: OneBodyPotential
+
+    """
+    A Harmonic potential for a single body.
+    """
+
+    ω :: Float64
+    κ :: Float64
+
+    function HarmonicInteractionPotential(ω::Float64, κ :: Float64)
+        new(ω, κ)
+    end
+end
+
+
+struct FrohlichInteractionPotential <: OneBodyPotential
+
+    """
+    Potential for Frohlich Polaron
+    """
+
+    α :: Float64
+    ω :: Float64
+    ħ :: Float64
+    κ :: Float64
+
+    function FrohlichInteractionPotential(α::Float64, ω::Float64, ħ::Float64, κ :: Float64)
+        new(α, ω, ħ, κ)
+    end
+end
+
+
 struct MexicanHatPotential <: OneBodyPotential
 
     """

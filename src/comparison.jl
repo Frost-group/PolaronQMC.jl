@@ -4,8 +4,8 @@
 #Real values of observables to compare against
 
 
-function analyticEnergyHarmonic(potential::HarmonicPotential, β::Float64, ħ::Float64, n_dimensions::Int)
-    return n_dimensions/2*ħ*potential.ω * (1 .+ exp.(-ħ*potential.ω*β))./(1 .- exp.(-ħ*potential.ω*β))
+function analyticEnergyHarmonic(ω::Float64, β::Float64, ħ::Float64, n_dimensions::Int)
+    return n_dimensions/2*ħ*ω * (1 .+ exp.(-ħ*ω*β))./(1 .- exp.(-ħ*ω*β))
 end
 
 
