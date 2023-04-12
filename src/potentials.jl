@@ -31,17 +31,20 @@ function oneBodyPotential(potential::HarmonicInteractionPotential, path::Path, b
 end
 
 # Returns the Frohlich potential for a single particle
-
 function oneBodyPotential(potential::FrohlichPotential, path::Path, bead::Int, particle::Int)
+    # Refer to the Lecture notes on Frohlich Polaron by Devreese
+
+    # Defining the constants to avoid repeated attributes call
     β = path.τ * path.n_beads
     m = path.m
     ħω = potential.ħ * potential.ω
     α = potential.α
     term_factor = -0.5 * α * (ħω)^(3/2) * sqrt(1/2/m) * csch(ħω * β / 2)
     
+    # Calculates the double integral component
     inner_integral = 0.0
     for other_bead in 1:path.n_beads
-        if other_bead != bead
+        if other_bead != bead # Discounting self-contributions
             inner_integral += cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5)) / norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :])
         end
     end
