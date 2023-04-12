@@ -22,12 +22,6 @@ struct PrimitiveRegime <: Regime
     end
 end
 
-struct BoundRegime <: Regime # Calculating using the Li-Broughton approximation
-    function BoundRegime()
-        new()
-    end
-end
-
 struct LBRegime <: Regime
     function LBRegime()
         new()
@@ -39,6 +33,18 @@ mutable struct Path
 
     """
     Generic path mutable type 
+
+    Attributes
+        n_beads::Int: Number of beads from T and τ
+        n_particles::Int: Number of particles
+        n_dimensions::Int: Number of dimensions (1D, 2D, 3D)
+
+        beads: Sized array that are used to store all beads positions 
+
+        τ::Float64: size of each imaginary time slice
+        m::Union{Float64, Vector{Float64}}: mass of the particles, can be a vector if we have multiparticles with different mass
+        λ::Float64: simplify factor of ħ^2/2m
+
     """
 
 	n_beads :: Int64
@@ -48,24 +54,27 @@ mutable struct Path
 	beads :: SizedArray
 
 	τ :: Float64
-    m :: Float64
+    m :: Union{Float64, Vector{Float64}} 
 	λ :: Float64
 
 	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 1.0)
         
+        # Randomised initial bead position around 0. Use static array since we won't be modifying the number of beads in the simulation
         beads = @SArray randn(n_beads, n_particles, n_dimensions)
-        beads *= start_range
+        beads *= start_range # If we want the beads to be more widespread
 
 		new(n_beads, n_particles, n_dimensions, beads, τ, m, λ)
 	end
 end
 
-
+# abstract type for how to move the beads in the simulation
 abstract type Mover end
 
 
 mutable struct SingleMover <: Mover
-
+    """
+    Displace one bead at a time
+    """
     adjusters :: SizedArray
 
     function SingleMover(path::Path)
@@ -77,7 +86,9 @@ end
 
 
 mutable struct DisplaceMover <: Mover
-
+    """
+    Displace the whole chain at a time
+    """
     adjusters :: SizedArray
 
     function DisplaceMover(path::Path)
@@ -89,6 +100,9 @@ end
 
 
 mutable struct BisectMover <: Mover
+    """
+    Displace according to mid-point strategies, layer by layer until whole segment moved
+    """
 
     adjusters :: SizedArray
 
@@ -142,6 +156,10 @@ end
 
 #Adjuster for the Bisect! move algorithm
 mutable struct BisectAdjuster <: Adjuster
+    
+    """
+    Adjuster for the Bisect! move algorithm
+    """
 
     attempt_counter :: Int
     success_counter :: Int
