@@ -13,10 +13,10 @@ using JLD
     Initialise System Variables
     """
 
-    # Randomly select a version number
+    # Randomly select a version number for saving purposes
     version = Int(floor(rand()*1000))
 
-    # Set Parameters
+    # Set Parameters, all use atomic units where m = ħ = ω = 1.0
     T = 0.1
     m = 1.0
     ω = 1.0
@@ -29,7 +29,7 @@ using JLD
     β = 1 / T
 
     # Number of Monte-Carlo-Steps
-    n_steps = 10000
+    n_steps = 1000
 
     # Choose potential from "Harmonic", "Frohlich", "MexicanHat", "Constant"
     potential = "Frohlich"
@@ -40,7 +40,6 @@ using JLD
     #mover = "Bisect"
 
     # Choose path regime from "Simple", "Primitive"
-    #regime = "BoundRegime"
     regime = "Primitive"
     
     # Choose energy estimator from "Simple", "Virial", "Thermodynamic"
@@ -55,22 +54,22 @@ using JLD
     # Pick True for fixed beads or False for fixed τ
     fixed_beads = false
     if fixed_beads
-        n_beads = 500
+        n_beads = 250
         τ = 1.0 / (T * n_beads)
     else
         # For fixed τ
-        τ = 0.01
+        τ = 0.005
         n_beads = Int(floor(1/(τ*T)))
     end
 
     # Fixed observable skip or step dependant
-    quick_steps = true
+    quick_steps = false
     if quick_steps
-        equilibrium_skip = 1
+        equilibrium_skip = 50
         observables_skip = 50
     else
-        equilibrium_skip = 0.1 * n_steps #try to put as 0.5, for 0.2 for quicker testing process
-        observables_skip = 0.002 * n_steps
+        equilibrium_skip = 0.5 * n_steps #try to put as 0.5, for 0.2 for quicker testing process
+        observables_skip = 0.001 * n_steps
     end
 
     # Initate path
@@ -83,8 +82,6 @@ using JLD
         regime = SimpleRegime()
     elseif regime == "LBRegime"
         regime = LBRegime()
-    elseif regime == "BoundRegime"
-        regime = BoundRegime()
     else
         println("Invalid Regime: ", regime)
     end
@@ -134,21 +131,8 @@ using JLD
     
     # Store outputs
     energies = data["Energy:$(estimator)"]
-    positions = data["Position:p1d1"]
+    positions = data["Position:p1d1"] # Select a particular particle and dimension
     correlations = data["Correlation:$(estimator)"]
-
-    #= 
-    old versions
-    # Store outputs
-    adjuster_stats = pimc[1]
-    output_observables = pimc[2]
-
-    energies = output_observables["Energy"][string(Symbol(estimators[1]))]
-    acceptance_rates = adjuster_stats[mover]["Acceptance Rate"]
-    shift_widths = adjuster_stats[mover]["Shift Width"]
-    position1 = output_observables["Position"][string(Symbol(estimators[1]))]
-    correlation1 = output_observables["Correlation"][string(Symbol(estimators[1]))]
-    =#
 
     # Flatten position matrix to Array
     positions_flatten = collect(Iterators.flatten(positions))
@@ -171,15 +155,10 @@ using JLD
     #mean_acceptance_rate = mean(acceptance_rates)
     #std_acceptance_rate = std(acceptance_rates)
 
-    if pot == "Harmonic"
-        save("data_arr/Harmonic/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_mover$(mover)_beads$(n_beads).jld", "position", position1, "energies", energies,
-                    "jacknife_errors", jacknife_errors, "comparison_energy", comparison_energy)
+    # Saving data in a big jld file (dictionary)
+    save("data_arr/$(pot)/$(string(typeof(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data, "energies", energies, "comparison_energy", comparison_energy, "correlations", correlations, "jacknife_errors", jacknife_errors, 
+                "equilibrium_skip", equilibrium_skip, "observables_skip", observables_skip)
     
-    elseif pot == "Frohlich"
-        save("data_arr/Frohlich/$(string(Symbol(potential)))_α$(α)_T$(T)_nsteps$(n_steps)_v$(version)_mover$(mover)_beads$(n_beads).jld", "data", data, "energies", energies,
-                    "jacknife_errors", jacknife_errors, "comparison_energy", comparison_energy)
-    
-    end
 
     # Output measurements and statistics
     println("Number of Beads: ", n_beads)
@@ -206,12 +185,15 @@ using JLD
     hline!([comparison_energy], linestyle=:dash)
     energy_hist = histogram(energies, ylab="Frequencies", xlab="Energy")
     posplot = histogram(positions_flatten, xlab = "Position")
+
+    # Correlation cut-off set by n
     n = n_beads-1
     corr_plot = plot(1:n, corr_mean[1:n], yerror = corr_std, ylabel="G(Δτ)", xlabel = "Δτ")
 
     #acceptance_rate_plot = plot(acceptance_rates[Int(length(acceptance_rates)*0.9):end], xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
     #shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
     
+    # Displaying plot command
     display(energy_hist)
     display(energy_plot)
     display(posplot)
@@ -246,11 +228,19 @@ using JLD
 end
 
 begin
-    autoCorrelation1 = autoCorrelation(energies, observables_skip)
-    l = length(energies)-1
-    auto_plot = plot(1:l, autoCorrelation1[1:l], ylabel=L"C_{k}", xlab = "k / $observables_skip\$ n\$")
+    energies1 = []
+    for i in 1:length(energies)
+        if mod(i, 100) == 0
+            push!(energies1, energies[i])
+        end
+    end
+    autoCorrelation1 = autoCorrelation(energies1, observables_skip)
+    
+    l = length(energies1)-1
+    auto_plot = plot(1:l, autoCorrelation1[1:l], ylabel=L"C_{k}", xlab = "k", title="Autocorrelation time (α=2, T=0.1)", background_color = :transparent, foreground_color=:black)
     display(auto_plot)
     println("correlation time is:", autoCorrelationTime(autoCorrelation1))
+    #savefig("image/autocorrelation_100.png")
 end
 
 
