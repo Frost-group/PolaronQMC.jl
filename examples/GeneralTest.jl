@@ -1,3 +1,5 @@
+# GeneralTest.jl -> Test for Harmonic Oscillator
+
 using Revise
 using PolaronQMC
 using Statistics
@@ -5,7 +7,7 @@ using Plots
 using Dates
 using PolaronMobility
 using LaTeXStrings
-using CSV
+using JLD
 
 @time begin
     
@@ -14,25 +16,26 @@ using CSV
     """
 
     # Randomly select a version number
-    version = Int(floor(rand()*1000))
+    version = Int(floor(rand()*10000))
 
     # Set Parameters
-    T = 0.7
+    T = 0.1
     m = 1.0
     ω = 1.0
     α = 1.0
     ħ = 1.0
 
     n_particles = 1
-    n_dimensions = 3
+    n_dimensions = 1
     start_range = 1.0
     β = 1 / T
 
     # Number of Monte-Carlo-Steps
-    n_steps = 50000
+    n_steps = 500000
 
     # Choose potential from "Harmonic", "Frohlich", "MexicanHat", "Constant"
     potential = "Harmonic"
+    pot = potential
 
     # Choose Monte-Carlo Mover from "Single", "Displace", "Bisect"
     mover = "Single"
@@ -56,17 +59,17 @@ using CSV
         τ = 1.0 / (T * n_beads)
     else
         # For fixed τ
-        τ = 0.05
+        τ = 2.0
         n_beads = Int(floor(1/(τ*T)))
     end
 
     # Fixed observable skip or step dependant
     quick_steps = false
     if quick_steps
-        equilibrium_skip = 1 
-        observables_skip = 1
+        equilibrium_skip = 1000
+        observables_skip = 1000
     else
-        equilibrium_skip = 0.5 * n_steps #try to put as 0.5, for 0.2 for quicker testing process
+        equilibrium_skip = 0.2 * n_steps #try to put as 0.5, 0.2 is for quicker testing process. Convergence has to be checked.
         observables_skip = 0.001 * n_steps
     end
 
@@ -80,17 +83,15 @@ using CSV
         regime = SimpleRegime()
     elseif regime == "LBRegime"
         regime = LBRegime()
-    elseif regime == "BoundRegime"
-        regime = BoundRegime()
     else
         println("Invalid Regime: ", regime)
     end
    
     # Set Potential
     if potential == "Frohlich"
-        potential = FrohlichInteractionPotential(α,ω,ħ, 1.0)
+        potential = FrohlichPotential(α,ω,ħ)
     elseif potential == "Harmonic"
-        potential = HarmonicInteractionPotential(ω, 1.0)
+        potential = HarmonicPotential(ω)
     elseif potential == "MexicanHat"
         potential = MexicanHatPotential(80.0)
     elseif potential == "Contsant"
@@ -130,17 +131,17 @@ using CSV
     
     # Store outputs
     energies = data["Energy:$(estimator)"]
-    positions = data["Position:p1d1"]
+    positions = data["Position:p1d1"] # Select a particular particle and dimension
     correlations = data["Correlation:$(estimator)"]
-
+    
     # Flatten position matrix to Array
     positions_flatten = collect(Iterators.flatten(positions))
 
     # Comparison energy
-    if typeof(potential) == HarmonicPotential || typeof(potential) == HarmonicInteractionPotential
-        comparison_energy = analyticEnergyHarmonic(ω, β, ħ, n_dimensions)
+    if typeof(potential) == HarmonicPotential
+        comparison_energy = analyticEnergyHarmonic(potential,β,ħ,n_dimensions) * n_particles
     elseif typeof(potential) == FrohlichPotential
-        comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
+        comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true) * n_particles
         comparison_energy = comparison_polaron.F
     end
 
@@ -150,13 +151,18 @@ using CSV
     mean_energy = mean(energies)
     corr_mean = mean(correlations)
     corr_std = std(correlations)
+
     #last_acceptance_rate = last(acceptance_rates)
     #mean_acceptance_rate = mean(acceptance_rates)
     #std_acceptance_rate = std(acceptance_rates)
 
+    save("data_arr/Harmonic/$(string(typeof(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data, "energies", energies, "comparison_energy", comparison_energy, "correlations", correlations, "jacknife_errors", jacknife_errors, 
+            "equilibrium_skip", equilibrium_skip, "observables_skip", observables_skip)
+
     # Output measurements and statistics
     println("Number of Beads: ", n_beads)
     println("Number of steps: ", n_steps)
+    println("τ is: ", τ)
     println("Temperature: ", T)
     println("α: ", α)
     println("Mean Energy: ", mean_energy)
@@ -173,14 +179,14 @@ using CSV
         legendfontsize = 12,
         linewidth=2, framestyle=:box, label=nothing, grid=true)
 
-    # Plots
+    # Plots (e.g. Energy, position, Correlation)
     energy_plot = plot(energies, ylabel="Energy", xlab = "Sweeps / $observables_skip\$ n\$")
     hline!([comparison_energy], linestyle=:dash)
     energy_hist = histogram(energies, ylab="Frequencies", xlab="Energy")
     posplot = histogram(positions_flatten, xlab = "Position")
-    
-    n = n_beads-1
-    corr_plot = plot(1:n, corr_mean[1:n], yerror = corr_std, ylabel="G(Δτ)", xlabel = "Δτ")
+
+    n = Int(floor(n_beads-1))
+    corr_plot = plot(1:n, corr_mean[1:n], yerror = corr_std[1:n], ylabel="G(Δτ)", xlabel = "Δτ")
 
     #acceptance_rate_plot = plot(acceptance_rates[Int(length(acceptance_rates)*0.9):end], xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
     #shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
@@ -219,11 +225,10 @@ using CSV
 end
 
 begin
+    # Plot out autocorrelation graph and autocorrelation time
     autoCorrelation1 = autoCorrelation(energies, observables_skip)
     l = length(energies)-1
     auto_plot = plot(1:l, autoCorrelation1[1:l], ylabel=L"C_{k}", xlab = "k / $observables_skip\$ n\$")
     display(auto_plot)
     println("correlation time is:", autoCorrelationTime(autoCorrelation1))
 end
-
-
