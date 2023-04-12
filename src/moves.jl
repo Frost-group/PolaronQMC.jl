@@ -104,7 +104,7 @@ function moveBead(mover::DisplaceMover, particle::Int, potential::Potential, reg
 	end
 end
 
-function moveBead(mover::BisectMover, path::Path, particle::Int, potential::FrohlichPotential, regime::Regimm, maxlevel::Int64)
+function moveBead(mover::BisectMover, path::Path, particle::Int, potential::FrohlichPotential, regime::Regime, maxlevel::Int64)
 	"""
 	As Frohlich potential contains problem with double counting contributions when calculating potential changes, 
 	hence introduced another function specific for this problem
