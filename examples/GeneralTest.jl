@@ -156,7 +156,7 @@ using JLD
     #mean_acceptance_rate = mean(acceptance_rates)
     #std_acceptance_rate = std(acceptance_rates)
 
-    save("data_arr/Harmonic/$(string(typeof(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data, "energies", energies, "comparison_energy", comparison_energy, "correlations", correlations, "jacknife_errors", jacknife_errors, 
+    save("data_arr/Harmonic/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data, "energies", energies, "comparison_energy", comparison_energy, "correlations", correlations, "jacknife_errors", jacknife_errors, 
             "equilibrium_skip", equilibrium_skip, "observables_skip", observables_skip)
 
     # Output measurements and statistics
