@@ -25,13 +25,8 @@ using JLD
     α = 1.0
     ħ = 1.0
 
-<<<<<<< Updated upstream
-    n_particles = 1
-    n_dimensions = 1
-=======
     n_particles = 3
     n_dimensions = 3
->>>>>>> Stashed changes
     start_range = 1.0
     β = 1 / T
 
@@ -97,11 +92,8 @@ using JLD
         potential = FrohlichPotential(α,ω,ħ)
     elseif potential == "Harmonic"
         potential = HarmonicPotential(ω)
-<<<<<<< Updated upstream
-=======
     elseif potential == "Harmonic Interacting"
         potential = HarmonicInteractionPotential(ω, 1.0)
->>>>>>> Stashed changes
     elseif potential == "MexicanHat"
         potential = MexicanHatPotential(80.0)
     elseif potential == "Contsant"
@@ -144,13 +136,9 @@ using JLD
     energies = data["Energy:$(estimator)"]
     positions = data["Position:p1d1"] # Select a particular particle and dimension
     correlations = data["Correlation:$(estimator)"]
-<<<<<<< Updated upstream
-    
-=======
     acceptance_rates = data["Acceptance Rate:p1"]
     shift_widths = data["Adjuster Value:p1"]
 
->>>>>>> Stashed changes
     # Flatten position matrix to Array
     positions_flatten = collect(Iterators.flatten(positions))
 
@@ -168,14 +156,7 @@ using JLD
     mean_energy = mean(energies)
     corr_mean = mean(correlations)
     corr_std = std(correlations)
-<<<<<<< Updated upstream
-
-    #last_acceptance_rate = last(acceptance_rates)
-    #mean_acceptance_rate = mean(acceptance_rates)
-    #std_acceptance_rate = std(acceptance_rates)
-=======
     last_acceptance_rate = last(acceptance_rates)
->>>>>>> Stashed changes
 
     save("data_arr/Harmonic/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data, "energies", energies, "comparison_energy", comparison_energy, "correlations", correlations, "jacknife_errors", jacknife_errors, 
             "equilibrium_skip", equilibrium_skip, "observables_skip", observables_skip)
@@ -239,13 +220,6 @@ using JLD
     #anim = animate_PIMC(pimc, n_particles, n_dimensions, "3D Harmonic Potential", "Single 1.0 Mover", "0.1")
     #gif(anim, "saved_plots/anim_output.gif", fps = 60) 
 
-<<<<<<< Updated upstream
-end
-
-begin
-    # Plot out autocorrelation graph and autocorrelation time
-=======
->>>>>>> Stashed changes
     autoCorrelation1 = autoCorrelation(energies, observables_skip)
     l = length(energies)-1
     auto_plot = plot(1:l, autoCorrelation1[1:l], ylabel=L"C_{k}", xlab = "k / $observables_skip\$ n\$")
