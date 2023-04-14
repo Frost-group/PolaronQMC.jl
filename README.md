@@ -2,6 +2,8 @@
 
 Initially a Path Integral Monte-Carlo code for Polarons in the Julia programming language. A work in progress!
 
+To initialise model use: examples/GeneralTest.jl
+
 ## References
 
 Textbook: "Interacting Electrons: Theory and Computational Approaches" 

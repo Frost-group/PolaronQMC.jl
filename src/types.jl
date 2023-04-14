@@ -284,10 +284,10 @@ struct CoulombPotential <: TwoBodyPotential
     end
 end
 
-#types of estimators
+# Types of estimators
 abstract type Estimator end
 
-#Energy estimators
+# Energy estimators
 
 struct SimpleEstimator <: Estimator end #Estimator using basic sum of kinetic and potential total_energy
 

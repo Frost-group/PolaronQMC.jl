@@ -30,7 +30,14 @@ function oneBodyPotential(potential::HarmonicInteractionPotential, path::Path, b
     return harmonic_pot + coloumb_int
 end
 
+<<<<<<< Updated upstream
 # Returns the Frohlich potential for a single particle
+=======
+"""
+Frohlich potential
+"""
+
+>>>>>>> Stashed changes
 function oneBodyPotential(potential::FrohlichPotential, path::Path, bead::Int, particle::Int)
     # Refer to the Lecture notes on Frohlich Polaron by Devreese
 

@@ -1,8 +1,11 @@
 # actions.jl
 # Ways of calculating action
 
+<<<<<<< Updated upstream
 
 # usually the total action is not used because we calcalate changes instead of the full action. The formula is put here for completeness
+=======
+>>>>>>> Stashed changes
 function totalAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, potential::OneBodyPotential, regime::Regime)
     return kinecticAction(path, bead_one, bead_two, particle, regime) + potential_action(path, bead_one, particle, potential, regime)
 end
@@ -10,7 +13,26 @@ end
 """
     Calculate Kinetic Actions; same across all regime, just slightly different formulism
 
+<<<<<<< Updated upstream
     KineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int)
+=======
+
+function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::SimpleRegime)
+    kinetic_action = 0.5 * path.m * norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / path.τ
+    return kinetic_action
+end
+
+function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::Regime)
+    kinetic_action = 0.5 * path.m * norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / path.τ
+    return kinetic_action
+end
+
+# Primitive method (based off Ceperly paper)
+function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::PrimitiveRegime)
+
+    """
+    kinetic_action(path::Path, bead_one::Int, bead_two::Int, particle::Int)
+>>>>>>> Stashed changes
 
     Kinetic action for a link between two beads `bead_one` and `bead_two` for a particle indexed by an integer `particle`. Usually, these are neighbouring beads.
 
@@ -87,6 +109,78 @@ function potentialAction(path::Path, bead::Int, particle::Int, potential::Consta
     return path.τ * potential.V
 end
 
+<<<<<<< Updated upstream
+=======
+function potentialAction(path::Path, bead::Int, particle::Int, potential::FrohlichPotential, regime::LBRegime)
+    β = path.τ * path.n_beads
+    t2_prefactor = path.τ^3 / (24 * path.m)
+    V2_prefactor = (0.5 * potential.α * (potential.ħ * potential.ω)^(3/2) * sqrt(1/2/path.m) * csch(potential.ħ * potential.ω * β / 2))^2
+    ħω = potential.ω * potential.ħ
+    
+    inner_integral = 0.0
+    
+    for other_bead in 1:path.n_beads+1
+        if mod1(bead, path.n_beads) != mod1(other_bead, path.n_beads)
+            g_factor = (cosh(ħω * β * (abs(bead-other_bead)/(path.n_beads) - 0.5)))^2
+            inner_integral += g_factor / norm(path.beads[mod1(bead, path.n_beads),particle,:] - path.beads[mod1(other_bead, path.n_beads),particle,:])^4
+        end
+    end
+    return 2 * path.τ * oneBodyPotential(potential, path, bead, particle) + 2 * inner_integral * path.τ^2 * t2_prefactor * V2_prefactor
+end
+
+
+function potentialAction(path::Path, bead::Int, particle::Int, potential::FrohlichPotential, regime::BoundRegime)
+    n_beads = path.n_beads
+    β = path.τ * path.n_beads
+    m = path.m
+    ħω = potential.ħ * potential.ω
+    α = potential.α
+    term_factor = -0.5 * α * (ħω)^(3/2) * sqrt(1/2/m) * csch(ħω * β / 2)
+    
+    inner_integral = 0.0
+    special_integral = 0.0
+    if mod1(bead, n_beads) == 1
+        for other_bead in 2:n_beads
+            special_integral += cosh(ħω * β * (abs(1-other_bead)/n_beads - 0.5)) / norm(path.beads[mod1(bead, n_beads), particle, :] - path.beads[mod1(other_bead, n_beads), particle, :])
+            special_integral += cosh(ħω * β * (abs(n_beads+1-other_bead)/n_beads - 0.5)) / norm(path.beads[mod1(bead, n_beads), particle, :] - path.beads[mod1(other_bead, n_beads), particle, :])
+        end
+    else
+        for other_bead in 1:n_beads+1
+            if mod1(other_bead, n_beads) == 1
+                special_integral += cosh(ħω * β * (abs(bead-other_bead)/n_beads - 0.5)) / norm(path.beads[mod1(bead, n_beads), particle, :] - path.beads[mod1(other_bead, n_beads), particle, :])
+            else
+                if mod1(other_bead, n_beads) != mod1(bead, n_beads)
+                    inner_integral += cosh(ħω * β * (abs(bead-other_bead)/n_beads - 0.5)) / norm(path.beads[mod1(bead, n_beads), particle, :] - path.beads[mod1(other_bead, n_beads), particle, :])
+                end
+            end
+        end
+    end
+    return (2 * inner_integral + special_integral) * term_factor * path.τ^2 # Note that this path.τ multiplication refer to dτ'
+end
+
+function bisectPotentialAction(path::Path, bead::Int, beadrange::Union{Vector{Int64}, StepRange{Int64, Int64}, UnitRange{Int64}}, particle::Int, potential::FrohlichPotential, regime::PrimitiveRegime)
+    β = path.τ * path.n_beads
+    m = path.m
+    ħω = potential.ħ * potential.ω
+    α = potential.α
+    term_factor = -0.5 * α * (ħω)^(3/2) * sqrt(1/2/m) * csch(ħω * β / 2)
+    n_beads = path.n_beads
+    bead = mod1(bead, n_beads)
+    inner_integral = 0.0
+
+    for other_bead in 1:path.n_beads
+        if other_bead != bead
+            if other_bead in beadrange
+                inner_integral += 0.5 * cosh(ħω * β * (abs(bead-other_bead)/n_beads - 0.5)) / norm(path.beads[mod1(bead, n_beads), particle, :] - path.beads[mod1(other_bead, n_beads), particle, :])
+            else
+                inner_integral += cosh(ħω * β * (abs(bead-other_bead)/n_beads - 0.5)) / norm(path.beads[mod1(bead, n_beads), particle, :] - path.beads[mod1(other_bead, n_beads), particle, :])
+            end
+        end
+    end
+    return 2 * (path.τ)^2 * inner_integral * term_factor # Note that this path.τ multiplication refer to dτ'
+end
+
+>>>>>>> Stashed changes
 function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::PrimitiveRegime)
 
     """

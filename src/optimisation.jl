@@ -12,7 +12,7 @@ function updateAdjuster(adjuster::Union{SingleAdjuster, DisplaceAdjuster}, poten
             adjuster.value *=  1.01
 
         else
-            adjuster.value *= (adjuster.acceptance_rate / 0.4) #originally it's 0.5
+            adjuster.value *= (adjuster.acceptance_rate / 0.5) #originally it's 0.5
         end
 
         adjuster.attempt_counter = 0

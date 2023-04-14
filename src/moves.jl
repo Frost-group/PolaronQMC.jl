@@ -1,7 +1,58 @@
 # moves.jl
 using Distributions
 
+<<<<<<< Updated upstream
 function moveBead(mover::SingleMover, path::Path, particle::Int, potential::Potential, regime::Regime, maxlevel::Int64)
+=======
+function moveBead(mover::SingleMover, path::Path, particle::Int, potential::FrohlichPotential, regime::BoundRegime)
+	
+	"""
+	Single!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
+
+	Move a single imaginary-time timeslice (bead) on a single particle, or subset of particles, per Monte-Carlo iteration.
+
+	Arguments
+	- `path::Path`: collection of all particle imaginary-time paths.
+	- `particle::Union{Int, Vector{Int}}`: select a specific particle indexed by this integer, or a subset of particles indexed by integers in this vector.
+	- `potentials::Union{Potential, Array{Potential}}`: list of potentials active in the system. Can just be a single potential.
+
+	See also [`Path`](@ref).
+	"""
+
+    bead = rand(1:path.n_beads+1)	
+	width = mover.adjusters[particle].value
+	shift = rand(path.n_dimensions) * width .* rand([-1,1],path.n_dimensions)			# Linear random displacement of bead.
+	
+	# Attempt one Single move
+	mover.adjusters[particle].attempt_counter += 1
+	
+	# Calcuate old/ new action to see the change in action
+	old_action = 
+		kineticAction(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
+		kineticAction(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
+		potentialAction(path, bead, particle, potential, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+
+	path.beads[mod1(bead, path.n_beads), particle, :] += shift
+
+	new_action =
+		kineticAction(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
+		kineticAction(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
+		potentialAction(path, bead, particle, potential, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+	
+	# Metropolis algorithm.
+	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
+		# Updating counter for adjustment of shift width
+		mover.adjusters[particle].success_counter += 1 
+		return true
+	else
+		path.beads[mod1(bead, path.n_beads), particle, :] -= shift
+		return false
+	end
+end
+
+
+function moveBead(mover::SingleMover, path::Path, particle::Int, potential::Potential, regime::Regime)
+>>>>>>> Stashed changes
 	
 	"""
 	Single!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
@@ -39,8 +90,11 @@ function moveBead(mover::SingleMover, path::Path, particle::Int, potential::Pote
 
 	
 	# Metropolis algorithm. 
+<<<<<<< Updated upstream
 	# Accept if bead displacement decreases the action, otherwise accept with probability exp(-ΔAction).
 	
+=======
+>>>>>>> Stashed changes
 	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
 		
 		# Updating counter for adjustment of shift width
@@ -156,7 +210,10 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Froh
 			# Find beads of which to find midpoint
 			r0, r1 = bead - level_fac, bead + level_fac
 
+<<<<<<< Updated upstream
 			# Shifting the beads based on 1/2*[r0+r1] + sqrt(level * τλ) * normal_distribution(0, 1) [Ref TESI paper]
+=======
+>>>>>>> Stashed changes
 			path.beads[mod1(bead, n_beads), particle, :] = 0.5 * (path.beads[mod1(r0, n_beads), particle, :] + path.beads[mod1(r1, n_beads), particle, :]) + sqrt(level_fac * τλ) .* rand(Distributions.Normal(0, 1), n_dim)
 		end
 	end
@@ -171,7 +228,10 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Froh
 	if total_new_action - total_old_action <= 0.0 || rand() <= exp(-(total_new_action - total_old_action))
 		mover.adjusters[particle].success_counter += 1
 		return true
+<<<<<<< Updated upstream
 		
+=======
+>>>>>>> Stashed changes
 	else
 		path.beads[:, particle, :] = old_beads
 		return false
@@ -212,10 +272,8 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Pote
 
 			# Find bead of interest
 			if k == 1
-				#bead = Int(start_bead + (2^(level-1) * k))
 				bead = Int(start_bead + (level_fac * k))
 			else
-				#bead = Int(start_bead + (2^(level-1) + (2^(level) * (k-1))))
 				bead = Int(start_bead + (level_fac + (2^(level) * (k-1))))
 			end
 

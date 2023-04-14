@@ -2,8 +2,9 @@
 using Statistics
 using ThreadsX
 
-
-#Kinectic energy estimators ---------------------------------
+"""
+Kinectic Energy Estimators 
+"""
 
 function kineticEnergy(path::Path, potential::Potential, estimator::Union{SimpleEstimator, SimpleVirialEstimator}) #thermal dynamic estimator from ceperly paper
 	kinetic_energy = 0.0
@@ -15,7 +16,6 @@ function kineticEnergy(path::Path, potential::Potential, estimator::Union{Simple
 
 	return kinetic_energy / path.n_beads
 end
-
 
 
 function kineticEnergy(path::Path, potential::Potential, estimator::ThermodynamicEstimator) #thermal dynamic estimator from ceperly paper
@@ -34,6 +34,7 @@ end
 
 
 function kineticEnergy(path::Path, potential::Union{HarmonicPotential, HarmonicInteractionPotential}, estimator::VirialEstimator)
+<<<<<<< Updated upstream
     """
     Virial estimator from Ceperly's book Interactiong Electrons
     For Harmonic Oscillator
@@ -41,6 +42,9 @@ function kineticEnergy(path::Path, potential::Union{HarmonicPotential, HarmonicI
     Relate the average kinetic energy with potential energy -> Hence used centroid position for EACH PARTICLE
     """
     term_one = (path.n_dimensions * path.n_particles) / (2 * path.τ * path.n_beads) # Classical energy term (constant)
+=======
+    term_one = (path.n_dimensions * path.n_particles) / (2 * path.τ * path.n_beads) 
+>>>>>>> Stashed changes
  
     #term_2 prefactor
     t2_prefactor = (path.m * potential.ω^2) / (2 * path.n_beads)
@@ -69,7 +73,10 @@ function kineticEnergy(path::Path, potential::FrohlichPotential, estimator::Viri
     term_one = (path.n_dimensions * path.n_particles) / (2 * path.τ * path.n_beads) # same as harmonic
     t2_prefactor = path.τ / (2 * path.n_beads) * 0.5 * potential.α * (potential.ħ * potential.ω)^(3/2) * sqrt(1/2/path.m) * csch(potential.ħ * potential.ω * β / 2)
     ħω = potential.ω * potential.ħ
+<<<<<<< Updated upstream
     # F = -dV/dr ∝ r/(r(τ)-r(τ'))^3 (Classical force formula from the pseudo-potential)
+=======
+>>>>>>> Stashed changes
     
     function getTermTwo(particle, bead, other_bead, centroid_pos)
         if bead != other_bead
@@ -90,7 +97,9 @@ function kineticEnergy(path::Path, potential::FrohlichPotential, estimator::Viri
     return term_one + (t2_prefactor * term_two) # -1 (from eqn) * -1 (frm dV/dr) * -1 (force formula) * (-1) from potential [updated]
 end
 
-#Potential energy estimators -------------------------------------------
+"""
+Potential energy estimators
+"""
 
 function potentialEnergy(path::Path, potential::OneBodyPotential, estimator::Estimator)
     return sum(oneBodyPotential(potential, path, bead, particle)/(path.n_beads) for bead in 1:path.n_beads, particle in 1:path.n_particles)
@@ -112,11 +121,12 @@ function potentialEnergy(path::Path, potential::TwoBodyPotential, estimator::The
     return potential_energy / path.n_beads
 end
 
-
-# Energy ---------------------------------------------------------
-
+"""
+Energy
+"""
 
 function energy(path::Path, potential::Potential, estimator::Estimator)
+<<<<<<< Updated upstream
     #return kineticEnergy(path, potential, estimator) + potentialEnergy(path, potential, estimator)
     #Printing out energy for quick inspection -> Sometimes the values diverges to -Inf and can stop at early stage
     KE = kineticEnergy(path, potential, estimator)
@@ -124,10 +134,14 @@ function energy(path::Path, potential::Potential, estimator::Estimator)
     println("kinetic is:", KE)
     println("Potential is:", PE)
     return KE + PE
+=======
+    return kineticEnergy(path, potential, estimator) + potentialEnergy(path, potential, estimator)
+>>>>>>> Stashed changes
 end
 
-
-# Correlation ---------------------------------------------------------------------
+"""
+Correlation
+""" 
 
 function correlation(path::Path, potential::HarmonicPotential, estimator::Estimator)
     """
@@ -143,7 +157,11 @@ function correlation(path::Path, potential::HarmonicPotential, estimator::Estima
     
     correlation = zeros(path.n_beads-1)
 
+<<<<<<< Updated upstream
     for Δτ in 1:(path.n_beads-1)
+=======
+    for Δτ in 1:(path.n_beads-1) 
+>>>>>>> Stashed changes
         for bead_one in 1:path.n_beads
             bead_two = bead_one + Δτ
             if bead_two > path.n_beads
@@ -170,6 +188,10 @@ function correlation(path::Path, potential::Potential, estimator::Estimator)
     """
     #Initialise correlation array
     correlation = zeros(path.n_beads-1)
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
     for Δτ in 1:(path.n_beads-1)
         avg_i = 0.0
         avg_iτ = 0.0
@@ -194,6 +216,9 @@ function correlation(path::Path, potential::Potential, estimator::Estimator)
     return correlation
 end
 
+"""
+Position
+"""
 
 function position(path::Path, potential::Potential, estimator::Estimator)
     return path.beads

@@ -50,13 +50,7 @@ function autoCorrelation(observable_arr, observable_skip)
     """
     autoCorrelation = zeros(length(observable_arr)-1)
     O_avg = mean(observable_arr)
-    #=
-    Var = 0.0
-    for j in eachindex(observable_arr)
-        Var += (observable_arr[j] - O_avg)^2
-    end
-    Var /= length(observable_arr)
-    =#
+
     Var = var(observable_arr) * (len-1)
 
     for i in 1:length(observable_arr)-1
@@ -70,8 +64,6 @@ function autoCorrelation(observable_arr, observable_skip)
             E2 = observable_arr[k2]
             autoCorrelation[i] += (E1-O_avg) * (E2 - O_avg)
         end
-        #println("normalised:", length(observable_arr) - i)
-        #autoCorrelation[i] /= (length(observable_arr) - i)
         autoCorrelation[i] /= Var
     end
     return autoCorrelation

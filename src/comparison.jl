@@ -1,7 +1,9 @@
 #comparison.jl
 
 
-#Real values of observables to compare against
+"""
+Real values of observables to compare against
+"""
 
 
 function analyticEnergyHarmonic(ω::Float64, β::Float64, ħ::Float64, n_dimensions::Int)

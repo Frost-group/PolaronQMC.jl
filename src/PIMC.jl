@@ -92,6 +92,11 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 				data["Adjuster Value:p$(particle)"][step] = mover.adjusters[particle].value
 			end
 		end
+<<<<<<< Updated upstream
+=======
+	else
+		for step in 1:n_steps
+>>>>>>> Stashed changes
 
 		# Generates observable for each cycle of "observable_skip"
 		if mod(step, observable_skip) == 0 && step > equilibrium_skip

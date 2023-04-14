@@ -25,8 +25,13 @@ using JLD
     α = 1.0
     ħ = 1.0
 
+<<<<<<< Updated upstream
     n_particles = 1
     n_dimensions = 1
+=======
+    n_particles = 3
+    n_dimensions = 3
+>>>>>>> Stashed changes
     start_range = 1.0
     β = 1 / T
 
@@ -92,6 +97,11 @@ using JLD
         potential = FrohlichPotential(α,ω,ħ)
     elseif potential == "Harmonic"
         potential = HarmonicPotential(ω)
+<<<<<<< Updated upstream
+=======
+    elseif potential == "Harmonic Interacting"
+        potential = HarmonicInteractionPotential(ω, 1.0)
+>>>>>>> Stashed changes
     elseif potential == "MexicanHat"
         potential = MexicanHatPotential(80.0)
     elseif potential == "Contsant"
@@ -122,18 +132,25 @@ using JLD
         println("Invalid Estimator: ", estimator)
     end
 
+    potential = HarmonicPotential(ω)
+
     """
     Run Simulation
     """
 
-    # thermalised_start!(path, potential, n_steps = 100000)
     data = PIMC(n_steps, equilibrium_skip, observables_skip, path, mover, estimators, potential, regime, observables, adjust=true)
     
     # Store outputs
     energies = data["Energy:$(estimator)"]
     positions = data["Position:p1d1"] # Select a particular particle and dimension
     correlations = data["Correlation:$(estimator)"]
+<<<<<<< Updated upstream
     
+=======
+    acceptance_rates = data["Acceptance Rate:p1"]
+    shift_widths = data["Adjuster Value:p1"]
+
+>>>>>>> Stashed changes
     # Flatten position matrix to Array
     positions_flatten = collect(Iterators.flatten(positions))
 
@@ -151,10 +168,14 @@ using JLD
     mean_energy = mean(energies)
     corr_mean = mean(correlations)
     corr_std = std(correlations)
+<<<<<<< Updated upstream
 
     #last_acceptance_rate = last(acceptance_rates)
     #mean_acceptance_rate = mean(acceptance_rates)
     #std_acceptance_rate = std(acceptance_rates)
+=======
+    last_acceptance_rate = last(acceptance_rates)
+>>>>>>> Stashed changes
 
     save("data_arr/Harmonic/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data, "energies", energies, "comparison_energy", comparison_energy, "correlations", correlations, "jacknife_errors", jacknife_errors, 
             "equilibrium_skip", equilibrium_skip, "observables_skip", observables_skip)
@@ -168,7 +189,7 @@ using JLD
     println("Mean Energy: ", mean_energy)
     println("Comparison Energy: ", comparison_energy)
     println("jackknife errors: ", jacknife_errors)
-    #println("Final Acceptance Rate: ", last_acceptance_rate)
+    println("Final Acceptance Rate: ", last_acceptance_rate)
     #println("Mean Acceptance Rate: ", mean_acceptance_rate, " +/- ", std_acceptance_rate)
 
     # Define plot parameters
@@ -188,13 +209,15 @@ using JLD
     n = Int(floor(n_beads-1))
     corr_plot = plot(1:n, corr_mean[1:n], yerror = corr_std[1:n], ylabel="G(Δτ)", xlabel = "Δτ")
 
-    #acceptance_rate_plot = plot(acceptance_rates[Int(length(acceptance_rates)*0.9):end], xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
-    #shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
+    acceptance_rate_plot = plot(acceptance_rates[Int(length(acceptance_rates)*0.9):end], xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
+    shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
     
     display(energy_hist)
     display(energy_plot)
     display(posplot)
     display(corr_plot)
+    display(acceptance_rate_plot)
+    display(shift_width_plot)
 
     if n_particles == 2
         positions1 = positions
@@ -211,21 +234,18 @@ using JLD
     #savefig(shift_width_hist, "saved_plots/shift_width_hist_02_12.png")
     #savefig(acceptance_rate_hist, "saved_plots/acceptance_rate_shift_02_12.png")
 
-    #=
-    acceptanceshiftplot = scatter(adjuster_stats["Single!"]["Acceptance Rate"],
-                            adjuster_stats["Single!"]["Shift Width"],
-                            xlabel= "Acceptance Rate",
-                            ylabel= "Shift Width")
-    display(acceptanceshiftplot) =#
 
     # Visualise 
     #anim = animate_PIMC(pimc, n_particles, n_dimensions, "3D Harmonic Potential", "Single 1.0 Mover", "0.1")
     #gif(anim, "saved_plots/anim_output.gif", fps = 60) 
 
+<<<<<<< Updated upstream
 end
 
 begin
     # Plot out autocorrelation graph and autocorrelation time
+=======
+>>>>>>> Stashed changes
     autoCorrelation1 = autoCorrelation(energies, observables_skip)
     l = length(energies)-1
     auto_plot = plot(1:l, autoCorrelation1[1:l], ylabel=L"C_{k}", xlab = "k / $observables_skip\$ n\$")
