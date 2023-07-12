@@ -12,7 +12,7 @@ function updateAdjuster(adjuster::Union{SingleAdjuster, DisplaceAdjuster}, poten
             adjuster.value *=  1.01
 
         else
-            adjuster.value *= (adjuster.acceptance_rate / 0.4) #originally it's 0.5
+            adjuster.value *= (adjuster.acceptance_rate / 0.5) #originally it's 0.5
         end
 
         adjuster.attempt_counter = 0
@@ -49,7 +49,7 @@ function updateAdjuster(adjuster::Union{BisectAdjuster}, potential::FrohlichPote
 end
 
 
-
+#=
 function thermalised_start!(path::Path, potential::Potential; n_steps::Int = 2000, movers::Array = [[Bisect!],[1.0]], threads::Bool = true, verbose::Bool = true)
     st_regime = Primitive_Regime()
     st_observables = []
@@ -57,6 +57,14 @@ function thermalised_start!(path::Path, potential::Potential; n_steps::Int = 200
     PIMC(n_steps, n_steps * 2 , n_steps * 2, path, movers, st_observables, st_estimators, potential, st_regime, adjust=true, threads=threads)
     if verbose
         println("Thermalisation complete")
+    end
+end
+=#
+
+function thermalised_start!(path::Path, potential::Potential, A::Union{SizedArray, Array}; verbose::Bool = true)
+    path.beads[:, :, :] = A[:, :, :]
+    if verbose
+        println("Copying last path complete")
     end
 end
 
