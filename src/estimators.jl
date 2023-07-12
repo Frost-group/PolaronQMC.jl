@@ -27,7 +27,7 @@ function kineticEnergy(path::Path, potential::Potential, estimator::Thermodynami
 	
     prefactor = 1.0 / (4.0 * path.λ * path.τ^2)
 	for bead in 1:path.n_beads, particle in 1:path.n_particles
-		kinetic_energy += norm(path.beads[bead, particle, :] - path.beads[bead-1, particle, :])^2
+		kinetic_energy += norm(path.beads[bead, particle, :] - path.beads[mod1(bead-1, path.n_beads), particle, :])^2
 	end
     return term_one - (kinetic_energy * prefactor / path.n_beads)
 end
@@ -74,7 +74,11 @@ function kineticEnergy(path::Path, potential::FrohlichPotential, estimator::Viri
     function getTermTwo(particle, bead, other_bead, centroid_pos)
         if bead != other_bead
             g_factor = cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5))
+            #A = 1/(norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3)
+            #if A != Inf
             return g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
+                #return g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) * A
+            #end
         else 
             return 0.0
         end
@@ -121,8 +125,8 @@ function energy(path::Path, potential::Potential, estimator::Estimator)
     #Printing out energy for quick inspection -> Sometimes the values diverges to -Inf and can stop at early stage
     KE = kineticEnergy(path, potential, estimator)
     PE = potentialEnergy(path, potential, estimator)
-    println("kinetic is:", KE)
-    println("Potential is:", PE)
+    println("kinetic is:", KE, " ", "Potential is:", PE)
+    #println("Potential is:", PE)
     return KE + PE
 end
 
