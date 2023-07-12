@@ -45,7 +45,11 @@ function oneBodyPotential(potential::FrohlichPotential, path::Path, bead::Int, p
     inner_integral = 0.0
     for other_bead in 1:path.n_beads
         if other_bead != bead # Discounting self-contributions
-            inner_integral += cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5)) / norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :])
+            A = 1/(norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :]))
+            if A != Inf
+                #inner_integral += cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5)) / norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :])
+                inner_integral += cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5)) * A
+            end
         end
     end
     return path.τ * inner_integral * term_factor # Note that this path.τ multiplication refer to dτ'
