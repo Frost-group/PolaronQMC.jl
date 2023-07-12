@@ -57,22 +57,22 @@ function autoCorrelation(observable_arr, observable_skip)
     end
     Var /= length(observable_arr)
     =#
-    Var = var(observable_arr) * (len-1)
+    Var = var(observable_arr) #* (len-1)
 
-    for i in 1:length(observable_arr)-1
+    for k in 1:length(observable_arr)-1
 
-        for k in 1:length(observable_arr)
-            k2 = i + k
+        for i in 1:length(observable_arr)
+            k2 = k + i
             if k2 > length(observable_arr)
                 break
             end
-            E1 = observable_arr[k]
+            E1 = observable_arr[i]
             E2 = observable_arr[k2]
-            autoCorrelation[i] += (E1-O_avg) * (E2 - O_avg)
+            autoCorrelation[k] += (E1 - O_avg) * (E2 - O_avg) / (len-k)
         end
         #println("normalised:", length(observable_arr) - i)
         #autoCorrelation[i] /= (length(observable_arr) - i)
-        autoCorrelation[i] /= Var
+        autoCorrelation[k] /= Var 
     end
     return autoCorrelation
 end
