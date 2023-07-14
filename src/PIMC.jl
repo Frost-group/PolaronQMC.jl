@@ -75,7 +75,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 	for step in 1:n_steps
 
 		# Feedback for the progress of the PIMC simulation
-		if mod(step, 200) == 0
+		if mod(step, 2000) == 0
 			println("step is: ", step)
 		end
 
