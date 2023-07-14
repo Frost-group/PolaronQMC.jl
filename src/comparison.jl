@@ -5,6 +5,9 @@
 
 
 function analyticEnergyHarmonic(ω::Float64, β::Float64, ħ::Float64, n_dimensions::Int)
+    """
+        Analytic average energy <E> for a harmonic oscillator
+    """
     return n_dimensions/2*ħ*ω * (1 .+ exp.(-ħ*ω*β))./(1 .- exp.(-ħ*ω*β))
 end
 
