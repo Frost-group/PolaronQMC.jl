@@ -1,10 +1,12 @@
-using Revise
-using PolaronQMC
-using Statistics
-using Plots
-using PolaronMobility
-using LaTeXStrings
-include("GeneralPIMC.jl")
+begin
+    using Revise
+    using PolaronQMC
+    using Statistics
+    using Plots
+    using PolaronMobility
+    using LaTeXStrings
+    include("GeneralPIMC.jl")
+end
 
 @time begin
     n_steps = 10000;
