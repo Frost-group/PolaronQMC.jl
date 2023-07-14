@@ -164,10 +164,13 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_bead
     println("jackknife errors: ", jacknife_errors)
     
     # return energy, variances, mean_acceptance_rate, comparison_energy
-    return mean_energy, jacknife_errors, comparison_energy, energies, positions, correlations, acceptance_rates, adjuster_values, equilibrium_skip, observables_skip, version, potential
+    return mean_energy, jacknife_errors, comparison_energy, energies, positions, correlations, acceptance_rates, adjuster_values, equilibrium_skip, observables_skip, version, potential, n_beads, data
 
 end
 
+function SaveJLDData(T, potential, version, n_beads, n_steps, data)
+    save("data_arr/$(potential)/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data)
+end
 #=
 
 =#
