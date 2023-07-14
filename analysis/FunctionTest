@@ -6,9 +6,9 @@ using PolaronMobility
 using LaTeXStrings
 include("GeneralPIMC.jl")
 
-begin
-    
-    mean_energy, jacknife_errors, comparison_energy, energies, positions, correlations, acceptance_rates, adjuster_values, equilibrium_skip, observables_skip, version, potential = generalPIMC(
+@time begin
+    n_steps = 10000;
+    mean_energy, jacknife_errors, comparison_energy, energies, positions, correlations, acceptance_rates, adjuster_values, equilibrium_skip, observables_skip, version, potential, n_beads, data = generalPIMC(
                 0.1, #Temperature
                 1.0, # mass
                 1.0, # ω (has to be float)
@@ -16,10 +16,10 @@ begin
                 1, # no of particles
                 3, # number of n_dimensions
                 "Primitive", # regime type
-                false, # fixing beads or not
+                true, # fixing beads or not
                 0.1, # fixed_τ
-                500, # n_beads (if τ is not fixed)
-                30000, # No. of steps
+                400, # n_beads (if τ is not fixed)
+                n_steps, # No. of steps
                 0, # number of thermalisation
                 "Single", # movers
                 "Frohlich", # potential type
@@ -29,7 +29,7 @@ begin
                 1.0, # Start Range
                 1,
                 1, 
-                0.005, # observable skips
+                0.01, # observable skips
                 0.5, # equilibrium skips
                 1
                 );
@@ -65,9 +65,7 @@ begin
     display(posplot)
     #display(auto_plot)
 
-    save("data_arr/$(potential)/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data, "energies", energies, "comparison_energy", comparison_energy, 
-        "correlations", correlations, "jacknife_errors", jacknife_errors, 
-        "equilibrium_skip", equilibrium_skip, "observables_skip", observables_skip)
+    SaveJLDData(0.1, potential, version, n_beads, n_steps, data)
 end
 
 
