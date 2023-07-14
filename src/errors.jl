@@ -4,10 +4,15 @@ using Statistics
 
 
 function jackknife(observables_array)
+    """
+    Jackknife error analysis based on "User's Guide to Monte Carlo Methods for evaluating path integrals"
+    (Dividing data into blocks of bins)
+    """
 
     # Block binwidth
     bin_width = Int(floor(0.1*length(observables_array))) 
     jk_binwidth = length(observables_array)-bin_width 
+
     # Jack knife binwidth, for complementary bins
     n_bins = cld(length(observables_array),bin_width)
 
@@ -22,7 +27,7 @@ function jackknife(observables_array)
     end
     variance_bins /= 1/(n_bins*(n_bins-1))
 
-    # Getting jack knife estimators
+    # Getting jackknife estimators
     jk_estimators = []
 
     observables_sum = sum(observables_array)
@@ -33,7 +38,7 @@ function jackknife(observables_array)
         append!(jk_estimators,jk_estimator)
     end
 
-    # Getting jack knife variance
+    # Getting jackknife variance
     variance_jk = 0.0
     for k in 1:n_bins
         variance_jk += (jk_estimators[k] - mean(observables_array))^2
@@ -43,22 +48,23 @@ function jackknife(observables_array)
     return [variance_bins,variance_jk]
 end
 
-function autoCorrelation(observable_arr, observable_skip)
-    len = length(observable_arr)
+function autoCorrelation(observable_arr)
     """
-    observable_arr: Usually energy array
+    Autocorrelation function to determine if the data are taken in time intervals beyond the autocorrelation time 
+    
+    Parameter:
+        observable_arr
     """
-    autoCorrelation = zeros(length(observable_arr)-1)
-    O_avg = mean(observable_arr)
-    #=
-    Var = 0.0
-    for j in eachindex(observable_arr)
-        Var += (observable_arr[j] - O_avg)^2
-    end
-    Var /= length(observable_arr)
-    =#
-    Var = var(observable_arr) #* (len-1)
 
+    # Length of autocorrelation is equal to the total number of observables entries minus 1
+    autoCorrelation = zeros(length(observable_arr)-1)
+
+    # Expected value and variance
+    O_avg = mean(observable_arr)
+    len = length(observable_arr)
+    Var = var(observable_arr)
+
+    # Calculating autocorrelation coefficients
     for k in 1:length(observable_arr)-1
 
         for i in 1:length(observable_arr)
@@ -70,14 +76,19 @@ function autoCorrelation(observable_arr, observable_skip)
             E2 = observable_arr[k2]
             autoCorrelation[k] += (E1 - O_avg) * (E2 - O_avg) / (len-k)
         end
-        #println("normalised:", length(observable_arr) - i)
-        #autoCorrelation[i] /= (length(observable_arr) - i)
         autoCorrelation[k] /= Var 
     end
+
+    # Return an array of autocorrelation coefficients
+    # The faster the decay, the quicker the de-correlation process
     return autoCorrelation
 end
 
 function autoCorrelationTime(Ck)
+    """
+    return the autocorrelation time based on autocorrelation coefficients
+    Method based on Ceperly "interacting electrons"
+    """
     return 1 + 2*sum(Ck)
 end
 
