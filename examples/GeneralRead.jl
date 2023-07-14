@@ -1,52 +1,53 @@
 using DelimitedFiles
 using JLD
 
-begin
-    #Setting up folder naming
-    particle_index = 1
-    dimension_index = 1
-    estimator = "Virial"
+function ReadingSavedJLDFiles(file_path, particleIndex, dimensionIndex, estimator, verbose)
+    """
+    Required info:
+    1. file_path (in string)
+    2. particleIndex (int; for plotting position)
+    3. dimensionIndex (int; for plotting position)
+    4. estimator: {"Virial", "Thermodynamic", "Simple"}
+    5. verbose (bool; whether to print out)
+    """
 
-    file = "data_arr/Frohlich/FrohlichPotential(5.0, 1.0, 1.0)_α5.0_T0.08_nsteps150000_v413_beads2500_τ0.005.jld"
+    # Getting the full data dictionary
     full_data = load(file)
-    data = load(file)["data"] # Extracting the full data dictionary
-    position1 = data["Position:p$(particle_index)d$(dimension_index)"]
+    data = load(file)["data"] # Extracting the full data dictionary, but printing the data can view all entries/keys
+
+    # Getting positions and flattened to array
+    position1 = data["Position:p$(particleIndex)d$(dimensionIndex)"]
     positions_flatten = collect(Iterators.flatten(position1))
+
+    # Getting energies and uncertainties
     energies = data["Energy:$(estimator)"]
-    #acceptance_rates = load(file)["acceptance_rates"]
-    #shift_widths = load(file)["shift_widths"]
     jacknife_errors = full_data["jacknife_errors"]
     comparison_energy = full_data["comparison_energy"]
 
-    # Plots
+    # Plotting (to uncomment)
+    #=
     energy_plot = plot(energies, ylabel="Energy", xlab = "Sweeps")
     hline!([comparison_energy], linestyle=:dash)
     energy_hist = histogram(energies, ylab="Frequencies", xlab="Energy")
     posplot = histogram(positions_flatten, xlab = "Position")
 
-    #=
-    acceptance_rate_plot = plot(acceptance_rates[Int(length(acceptance_rates)*0.9):end], xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
-    shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
-    acceptance_shift_plot = scatter(acceptance_rates, shift_widths, xlab=L"\mathrm{Acceptance\, Rate\, /\, } r", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
-    acceptance_rate_hist = histogram(acceptance_rates, ylab="Frequency", xlab=L"\mathrm{Acceptance\, Rate\, /\, } r")
-    shift_width_hist = histogram(shift_widths, ylab="Frequency", xlab=L"\mathrm{Shift\, Width\, /\, } \Delta x")
-    =#
-
     # Command in VSCode to display graphs
     display(energy_hist)
     display(energy_plot)
     display(posplot)
-    #display(acceptance_rate_plot)
-    #display(shift_width_plot)
-    #display(acceptance_shift_plot)
-    #display(shift_width_hist)
-    #display(acceptance_rate_hist)
+    =#
+
+    if verbose
+        println("Mean Energy: ", mean(energies))
+        println("Comparison Energy: ", comparison_energy)
+        println("jackknife errors: ", jacknife_errors)
+    end
+
+    return energies, jacknife_errors, comparison_energy
+end
 
 
-    println("Mean Energy: ", mean(energies))
-    println("Comparison Energy: ", comparison_energy)
-    println("jackknife errors: ", jacknife_errors)
-    #println("Final Acceptance Rate: ", last_acceptance_rate)
-    #println("Mean Acceptance Rate: ", mean_acceptance_rate, " +/- ", std_acceptance_rate)
-
+begin    
+    file = "data_arr/Harmonic/HarmonicPotential(1.0)_T0.1_nsteps100000_v9912_beads5.jld"
+    E, j, C = ReadingSavedJLDFiles(file, 1, 1, "Virial", true)
 end
