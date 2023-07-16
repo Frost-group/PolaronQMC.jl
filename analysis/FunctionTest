@@ -9,17 +9,17 @@ begin
 end
 
 @time begin
-    n_steps = 10000;
+    n_steps = 100000;
     mean_energy, jacknife_errors, comparison_energy, energies, positions, correlations, acceptance_rates, adjuster_values, equilibrium_skip, observables_skip, version, potential, n_beads, data = generalPIMC(
-                0.1, #Temperature
+                0.08, #Temperature
                 1.0, # mass
                 1.0, # ω (has to be float)
-                3.0, # α (has to be float)
+                4.0, # α (has to be float)
                 1, # no of particles
                 3, # number of n_dimensions
                 "Primitive", # regime type
-                true, # fixing beads or not
-                0.1, # fixed_τ
+                false, # fixing beads or not
+                0.02, # fixed_τ
                 400, # n_beads (if τ is not fixed)
                 n_steps, # No. of steps
                 0, # number of thermalisation
@@ -31,8 +31,8 @@ end
                 1.0, # Start Range
                 1,
                 1, 
-                0.01, # observable skips
-                0.5, # equilibrium skips
+                0.005, # observable skips
+                0.1, # equilibrium skips
                 1
                 );
 end
