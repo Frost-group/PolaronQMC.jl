@@ -2,7 +2,7 @@
 
 using StaticArrays
 
-
+# -----------------------Regime---------------------
 # Regime for the simuation to run in
 abstract type Regime end
 
@@ -22,13 +22,14 @@ struct PrimitiveRegime <: Regime
     end
 end
 
+# Calculating using the Li-Broughton Approximation
 struct LBRegime <: Regime
     function LBRegime()
         new()
     end
 end
 
-
+#-------------------------Path (Indep. of Potential)-------------------
 mutable struct Path
 
     """
@@ -57,7 +58,7 @@ mutable struct Path
     m :: Union{Float64, Vector{Float64}} 
 	λ :: Float64
 
-	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 1.0)
+	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 0.0)
         
         # Randomised initial bead position around 0. Use static array since we won't be modifying the number of beads in the simulation
         beads = @SArray randn(n_beads, n_particles, n_dimensions)
@@ -67,6 +68,8 @@ mutable struct Path
 	end
 end
 
+
+#-------------------------Mover----------------------------
 # abstract type for how to move the beads in the simulation
 abstract type Mover end
 
@@ -113,7 +116,7 @@ mutable struct BisectMover <: Mover
     end
 end
 
-
+#---------------------------Adjuster---------------------------------
 # Adjuster type to container information about shift width and allow for its auto adjustment
 abstract type Adjuster end
 
@@ -159,24 +162,25 @@ mutable struct BisectAdjuster <: Adjuster
     
     """
     Adjuster for the Bisect! move algorithm
+    Bisect changes the maximum segment length instead of the shift width
     """
 
     attempt_counter :: Int
     success_counter :: Int
-    value :: Float64
+    value :: Int # Different compare to single and displace
     acceptance_rate :: Float64
 
     function BisectAdjuster(λ::Float64, τ::Float64)
-        value = sqrt(τ * λ)
+        value = 2
         new(0, 0, value, 0)
     end
 end
 
-
+#---------------------------Potential---------------------------
 # Most abstract Potential type.
 abstract type Potential end
 
-# A potential that is independent on bodies.
+# A potential that is independent on bodies (e.g. Constant potential).
 abstract type NoBodyPotential <: Potential end
 
 # For potentials that depend on one body.
@@ -189,7 +193,7 @@ abstract type TwoBodyPotential <: Potential end
 struct ConstantPotential <: NoBodyPotential
 
     """
-    A constant potential
+    A constant potential for a single particle.
     """
 
     V :: Float64
@@ -215,7 +219,7 @@ end
 struct FrohlichPotential <: OneBodyPotential
 
     """
-    Potential for Frohlich Polaron
+    Potential for Frohlich Polaron.
     """
 
     α :: Float64
@@ -230,13 +234,13 @@ end
 struct HarmonicInteractionPotential <: OneBodyPotential
 
     """
-    A Harmonic potential for a single body.
+    Two-body Coulomb interaction in a harmonic potential well.
     """
 
     ω :: Float64
     κ :: Float64
 
-    function HarmonicInteractionPotential(ω::Float64, κ :: Float64)
+    function HarmonicInteractionPotential(ω::Float64, κ::Float64)
         new(ω, κ)
     end
 end
@@ -245,7 +249,7 @@ end
 struct FrohlichInteractionPotential <: OneBodyPotential
 
     """
-    Potential for Frohlich Polaron
+    Potential for Frohlich Polaron with Coulombic Interaction.
     """
 
     α :: Float64
@@ -284,15 +288,15 @@ struct CoulombPotential <: TwoBodyPotential
     end
 end
 
+#-------------------Estimator (Energy)----------------------------
 #types of estimators
 abstract type Estimator end
 
 #Energy estimators
+struct SimpleEstimator <: Estimator end # Estimator using basic sum of kinetic and potential total_energy
 
-struct SimpleEstimator <: Estimator end #Estimator using basic sum of kinetic and potential total_energy
+struct SimpleVirialEstimator <: Estimator end # Estimator using virial theorem for potential term
 
-struct SimpleVirialEstimator <: Estimator end #Estimator using virial theorem for potential term
+struct ThermodynamicEstimator <: Estimator end # Estimator using thermodynamic theory
 
-struct ThermodynamicEstimator <: Estimator end #Estimator using thermodynamic theory
-
-struct VirialEstimator <: Estimator end #Estimator derived using virial theorem
+struct VirialEstimator <: Estimator end # Estimator derived using virial theorem
