@@ -26,7 +26,7 @@ export oneBodyPotential, twoBodyPotential
 export potentialEnergy, kineticEnergy, energy, correlation, position
 
 # Export function used in the optimisation of the running of the simulation
-export updateAdjuster, thermalised_start!
+export updateAdjuster, copyLastPath!
 
 # Export PIMC move algorithms
 export moveBead
@@ -62,7 +62,7 @@ include("optimisation.jl") # Adjusters to shift width used in moves.
 include("estimators.jl") # Estimators to sample.
 include("PIMC.jl") # Path integrals Monte Carlo algorithm.
 include("errors.jl") # Methods for analysing errors.
-include("quickruns.jl") #Functions for obtaining results using default parameters.
+include("quickruns.jl") # Functions for obtaining results using default parameters.
 
 
 #temporary
