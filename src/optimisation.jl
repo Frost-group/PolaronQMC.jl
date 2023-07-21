@@ -1,5 +1,4 @@
 # optimisation.jl
-using PIMC
 """
 Algorithm for speeding up the simulation
 1. Adjusting the shift width of beads by calculating the acceptance ratio
