@@ -9,7 +9,7 @@ using JLD
 
 function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_beads, fixed_τ, n_beads, n_steps, 
     n_thermalised, mover, potential, estimator, quick_steps=false, threads::Bool = false, start_range = 1.0, particleIndex = 1, dimensionIndex = 1,
-    observable_skip_factor=0.005, equilibrium_skip_factor=0.5, version = 1)
+    observable_skip_factor=0.005, equilibrium_skip_factor=0.5, version = 1, verbose::Bool = true)
     
     """
     Initialise System Variables:
@@ -46,6 +46,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_bead
 
     #Initialsing path
     path = Path(n_beads, n_particles, n_dimensions, τ, m=m)
+    println(path.beads[1, 1, :])
 
     if threads
         plot_on = false
@@ -120,7 +121,13 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_bead
     println("α is: ", α)
     println("n_step is: ", n_steps)
 
-    #thermalised_start!(path, potential, n_steps = n_thermalised)
+    # Thermalisation
+    PIMC(n_thermalised, n_thermalised, n_thermalised, path, mover, estimators, HarmonicPotential(1.0), regime, observables, adjust=true)
+    if verbose
+        println("Thermalisation complete")
+    end
+    println(path.beads[1, 1, :])
+
     #data = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=false)
     data = PIMC(n_steps, equilibrium_skip, observables_skip, path, mover, estimators, potential, regime, observables, adjust=true)
     
