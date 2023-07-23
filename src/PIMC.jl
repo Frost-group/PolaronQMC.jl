@@ -35,7 +35,8 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 	# Steps to set the number of sweep per step. If single, then on average per step we will move each bead once to avoid possible bias
 	# If we are using Bisect function, then we can reduce the sweep. The power of 2 can be changed, but also need to change "moves.jl"
 	if typeof(mover) == BisectMover
-		n_sweep = Int(floor(path.n_beads/(2^max_level-1)))
+		#n_sweep = Int(floor(path.n_beads/(2^mover.adjuster[0].value-1)))
+		n_sweep = Int(floor(path.n_beads/4))
 	else
 		n_sweep = path.n_beads
 	end
@@ -82,12 +83,12 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 		# Updating n_accepted, moving beads, and changing shift width if necessary
 		for particle in rand(1:path.n_particles, path.n_particles)
 			for sweep in 1:n_sweep
-				moveBead(mover, path, particle, potential, regime, max_level) # Moving beads a total of n_sweep times
+				moveBead(mover, path, particle, potential, regime, maxlevel = max_level) # Moving beads a total of n_sweep times
 			end
 		
 			# Changing shift width automatically and save results
 			if adjust
-				updateAdjuster(mover.adjusters[particle], potential)
+				updateAdjuster(mover.adjusters[particle], path)
 				data["Acceptance Rate:p$(particle)"][step] = mover.adjusters[particle].acceptance_rate
 				data["Adjuster Value:p$(particle)"][step] = mover.adjusters[particle].value
 			end
