@@ -46,7 +46,6 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_bead
 
     #Initialsing path
     path = Path(n_beads, n_particles, n_dimensions, τ, m=m)
-    println(path.beads[1, 1, :])
 
     if threads
         plot_on = false
@@ -121,12 +120,11 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_bead
     println("α is: ", α)
     println("n_step is: ", n_steps)
 
-    # Thermalisation
+    # Thermalisation Process (With simple Potential like Harmonic)
     PIMC(n_thermalised, n_thermalised, n_thermalised, path, mover, estimators, HarmonicPotential(1.0), regime, observables, adjust=true)
     if verbose
         println("Thermalisation complete")
     end
-    println(path.beads[1, 1, :])
 
     #data = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=false)
     data = PIMC(n_steps, equilibrium_skip, observables_skip, path, mover, estimators, potential, regime, observables, adjust=true)
