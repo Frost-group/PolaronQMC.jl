@@ -67,8 +67,10 @@ mutable struct Path
         beads = @SArray randn(n_beads, n_particles, n_dimensions)
         beads *= start_range # If we want the beads to be more widespread
 
+        # Used to save old_beads configuration in bisection algorithm to save copying time
         old_beads = @SArray randn(n_beads, n_particles, n_dimensions)
         old_beads *= start_range
+
 		new(n_beads, n_particles, n_dimensions, beads, τ, m, λ, false, old_beads)
 	end
 end
