@@ -7,7 +7,7 @@ Algorithm for speeding up the simulation
 """
 
 
-function updateAdjuster(adjuster::Union{SingleAdjuster, DisplaceAdjuster}, potential::Potential)
+function updateAdjuster(adjuster::Union{SingleAdjuster, DisplaceAdjuster}, path::Path)
     """
     Update shift width by keeping track the acceptance ratio = successful shift/total shift
         (total shift = number of moves in one sweep) -> reset the ratio when a new sweep initiated
@@ -32,7 +32,7 @@ function updateAdjuster(adjuster::Union{SingleAdjuster, DisplaceAdjuster}, poten
 end
 
 
-function updateAdjuster(adjuster::Union{BisectAdjuster}, potential::Potential)
+function updateAdjuster(adjuster::Union{BisectAdjuster}, path::Path)
     """
     Update the bisect segment length based on acceptance rate
         if acceptance rate too low -> Decrease the number of bisecting level
@@ -41,13 +41,17 @@ function updateAdjuster(adjuster::Union{BisectAdjuster}, potential::Potential)
     adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
 
     if adjuster.acceptance_rate < 0.5
-        adjuster.value -= 1
+        if adjuster.value > 0
+            adjuster.value -= 1
+        end
 
     else
-        adjuster.value += 1
+        if 2^(adjuster.value+1) + 1 < path.n_beads 
+            adjuster.value += 1
+        end
 
     end
-
+    
     # Resetting the count for next sweep
     adjuster.attempt_counter = 0
     adjuster.success_counter = 0
