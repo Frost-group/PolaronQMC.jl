@@ -34,7 +34,6 @@ function moveBead(mover::SingleMover, path::Path, particle::Int, potential::Pote
 	# Infinite potential well (Can put a artifically large well_size if not required)
 	if any(abs.(path.beads[bead, particle, :]) .> well_size)
 		path.beads[mod1(bead, path.n_beads), particle, :] -= shift
-		mover.adjusters[particle].success_counter -= 1 
 		return false
 	end
 
@@ -112,7 +111,7 @@ function moveBead(mover::DisplaceMover, path::Path, particle::Int, potential::Po
 	end
 end
 
-function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Potential, regime::Regime; maxlevel::Int64 = 1, well_size::Float64 = 2.0)
+function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Potential, regime::Regime; maxlevel::Int64 = 1, well_size::Float64 = 5.0)
 	
 	"""
 	Move a segment of imaginary-time timeslice (bead) on a single particle, or subset of particles, per Monte-Carlo iteration.
@@ -140,7 +139,10 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Pote
 
 	# Make a copy of the old configurations in case of a rejection
 	start_bead = rand(1:path.n_beads)
-	old_beads = deepcopy(path.beads[:,particle, :])
+	#old_beads = deepcopy(path.beads[:,particle, :])
+	if path.caching == false
+		path.old_beads = path.beads[:, particle, :]
+	end
 
 	# Call parameters once
 	τλ = path.τ * path.λ
@@ -180,6 +182,12 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Pote
 
 			# Calculate the midpoint & perform move
 			path.beads[mod1(bead, n_beads), particle, :] = 0.5 * (path.beads[mod1(r0, n_beads), particle, :] + path.beads[mod1(r1, n_beads), particle, :]) + shift
+			
+			if any(abs.(path.beads[mod1(bead, n_beads), particle, :]) .> well_size)
+				path.beads[:, particle, :] = path.old_beads
+				path.caching = true
+				return false
+			end
 		end
 	end
 
@@ -192,15 +200,17 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Pote
 	# Determine whether to accept the full move
 	if total_new_action - total_old_action <= 0.0 || rand() <= exp(-(total_new_action - total_old_action))
 		mover.adjusters[particle].success_counter += 1
+		path.caching = false
 		return true
 	
 	else
-		path.beads[:, particle, :] = old_beads
+		path.beads[:, particle, :] = path.old_beads
+		path.caching = true
 		return false
 	end
 end
 
-function moveBead(mover::BisectMover, path::Path, particle::Int, potential::FrohlichPotential, regime::Regime; maxlevel::Int64 = 1, well_size::Float64 = 2.0)
+function moveBead(mover::BisectMover, path::Path, particle::Int, potential::FrohlichPotential, regime::Regime; maxlevel::Int64 = 1, well_size::Float64 = 6.0)
 	"""
 	Special Version of Bisection algorithm for Frohlich Potential
 	as Frohlich potential contains problem with double counting contributions when calculating potential changes
@@ -259,6 +269,12 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Froh
 
 			# Shifting the beads based on 1/2*[r0+r1] + sqrt(level * τλ) * normal_distribution(0, 1) [Ref TESI paper]
 			path.beads[mod1(bead, n_beads), particle, :] = 0.5 * (path.beads[mod1(r0, n_beads), particle, :] + path.beads[mod1(r1, n_beads), particle, :]) + sqrt(level_fac * τλ) .* rand(Distributions.Normal(0, 1), n_dim)
+			# Infinite potential well (Can put a artifically large well_size if not required)
+			if any(abs.(path.beads[mod1(bead, n_beads), particle, :]) .> well_size)
+				path.beads[:, particle, :] = path.old_beads
+				path.caching = true
+				return false
+			end
 		end
 	end
 	
@@ -273,14 +289,14 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Froh
 		mover.adjusters[particle].success_counter += 1
 
 		# Turning off the caching so we need to save old_beads when we start next bisect
-		path.caching = false;
+		path.caching = false
 		return true
 		
 	else
 		path.beads[:, particle, :] = path.old_beads
 
 		# Since this bisect move is rejected, we returned to original position so we don't have to copy old_beads again
-		path.caching = true;
+		path.caching = true
 		return false
 	end
 end
