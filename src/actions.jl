@@ -8,7 +8,7 @@ function totalAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, po
 end
 
 """
-    Calculate Kinetic Actions; same across all regime, just slightly different formulism
+    Calculate Kinetic Actions; same across all regime, just slightly different formalism
 
     KineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int)
 
@@ -23,28 +23,24 @@ end
     See also [`Path`](@ref). 
 """
 
-function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::SimpleRegime)
-    kinetic_action = 0.5 * path.m[particle] * norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / path.τ
-    return kinetic_action
-end
-
 function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::Regime)
+    """
+    Allow multiple particles with different mass
+    """
     kinetic_action = 0.5 * path.m[particle] * norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / path.τ
     return kinetic_action
 end
 
 #Primitive method (based off Ceperly paper)
 function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::PrimitiveRegime)
-
-    # Contribution from per degree of freedom per particle for distinguishable particles, comes from the normalisation term of the density matrix. Can be ignored but is included for completeness.
-    # kinetic_action = path.n_dimensions * path.n_particles / 2.0 * log(4π * path.λ * path.τ)
-    
-    # Contribution from the link connecting the two beads.
-    # kinetic_action += norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / (4 * path.λ * path.τ)
-
-    kinetic_action = norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / (4 * path.λ * path.τ)
+    """
+    Allow multiple particles with different mass/λ
+    """
+    kinetic_action = norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / (4 * path.λ[particle] * path.τ)
 	return kinetic_action
 end
+
+
 
 """
 Calculate Potential Action
@@ -52,7 +48,7 @@ Calculate Potential Action
 
 function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::SimpleRegime)
     """
-    Calculate potential action
+    Calculate potential action {For One-Body Potential, Simple Regime}
 
     potentialAction(path::Path, bead_one::Int, bead_two::Int, particle::Int)
 
@@ -67,9 +63,38 @@ function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBod
     return oneBodyPotential(potential, path, bead, particle) * path.τ
 end
 
-function potentialAction(path::Path, bead::Int, particle::Int, potential::ConstantPotential, regime::PrimitiveRegime)
+function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::PrimitiveRegime)
 
     """
+    Calculate potential action {For One-body Potential, Primitive Regime}
+
+    potential_action(path::Path, bead::Int, particle::Int, potential::OneBodyPotential)
+
+    Potential action for a bead indexed by an integer `bead` and a particle indexed by an integer `particle`.
+    This is the potential action for an external one-body potential.
+
+    Arguments
+    - `path::Path`: collection of all particle imaginary-time paths.
+    - `bead::Int`: select a specific bead indexed by an integer.
+    - `particle::Int`: select a specific particle indexed by this integer.
+    - `potentials::OneBodyPotential`: a one-body potential type. Acts like an external potential on the system.
+
+    See also [`Path`](@ref), [`OneBodyPotential`](@ref). 
+    """
+    
+    if typeof(potential) == FrohlichPotential
+        # Extra factor of 2
+        return 2 * path.τ * oneBodyPotential(potential, path, bead, particle)
+    end
+
+    return path.τ * oneBodyPotential(potential, path, bead, particle)
+end
+
+function potentialAction(path::Path, bead::Int, particle::Int, potential::ConstantPotential, regime::Regime)
+
+    """
+    Calculate potential action {For Constant Potential, Any Regime}
+
     potential_action(path::Path, bead::Int, particle::Int, potential::ConstantPotential)
 
     Potential action for a bead indexed by an integer `bead` and a particle indexed by an integer `particle`.
@@ -87,28 +112,27 @@ function potentialAction(path::Path, bead::Int, particle::Int, potential::Consta
     return path.τ * potential.V
 end
 
-function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::PrimitiveRegime)
+function potentialAction(path::Path, bead::Int, particle::Int, potential::TwoBodyPotential, regime::Regime)
 
     """
-    potential_action(path::Path, bead::Int, particle::Int, potential::OneBodyPotential)
+    Calculate potential action {For Two-body Potential, Any Regime}
+
+    potentialAction(path::Path, bead::Int, particle::Int, potential::TwoBodyPotential)
 
     Potential action for a bead indexed by an integer `bead` and a particle indexed by an integer `particle`.
-    This is the potential action for an external one-body potential.
+    This is the potential action for an internal two-body potential between the specified bead on the specified particle and the same bead on all other particles. 
 
     Arguments
     - `path::Path`: collection of all particle imaginary-time paths.
     - `bead::Int`: select a specific bead indexed by an integer.
     - `particle::Int`: select a specific particle indexed by this integer.
-    - `potentials::OneBodyPotential`: a one-body potential type. Acts like an external potential on the system.
+    - `potentials::TwoBodyPotential`: a two-body potential type. Acts like interactions between pairs of particles in the system.
 
-    See also [`Path`](@ref), [`OneBodyPotential`](@ref). 
+    See also [`Path`](@ref), [`TwoBodyPotential`](@ref). 
     """
-    
-    if typeof(potential) == FrohlichPotential
-        return 2 * path.τ * oneBodyPotential(potential, path, bead, particle) #+ 0.5 * path.m * 0.5^2 * norm(path.beads[mod1(bead, path.n_beads), particle,:])^2 * path.τ
-    end
 
-    return path.τ * oneBodyPotential(potential, path, bead, particle)
+    potential_action = sum(twoBodyPotential(potential, path, bead, particle, other_particle) for other_particle in 1:path.n_particles if particle != other_particle)
+    return path.τ * potential_action 
 end
 
 function potentialAction(path::Path, bead::Int, particle::Int, potential::FrohlichPotential, regime::LBRegime)
@@ -140,32 +164,12 @@ function potentialAction(path::Path, bead::Int, particle::Int, potential::Frohli
     return 2 * path.τ * oneBodyPotential(potential, path, bead, particle) + 2 * inner_integral * path.τ^2 * t2_prefactor * V2_prefactor
 end
 
-function potentialAction(path::Path, bead::Int, particle::Int, potential::TwoBodyPotential, regime::Regime)
-
+function PotentialAction(path::Path, bead::Int, beadrange::Union{Vector{Int64}, StepRange{Int64, Int64}, UnitRange{Int64}}, particle::Int, potential::FrohlichPotential, regime::PrimitiveRegime)
     """
-    potentialAction(path::Path, bead::Int, particle::Int, potential::TwoBodyPotential)
-
-    Potential action for a bead indexed by an integer `bead` and a particle indexed by an integer `particle`.
-    This is the potential action for an internal two-body potential between the specified bead on the specified particle and the same bead on all other particles. 
-
-    Arguments
-    - `path::Path`: collection of all particle imaginary-time paths.
-    - `bead::Int`: select a specific bead indexed by an integer.
-    - `particle::Int`: select a specific particle indexed by this integer.
-    - `potentials::TwoBodyPotential`: a two-body potential type. Acts like interactions between pairs of particles in the system.
-
-    See also [`Path`](@ref), [`TwoBodyPotential`](@ref). 
-    """
-
-    potential_action = sum(twoBodyPotential(potential, path, bead, particle, other_particle) for other_particle in 1:path.n_particles if particle != other_particle)
-    return path.τ * potential_action 
-end
-
-function bisectPotentialAction(path::Path, bead::Int, beadrange::Union{Vector{Int64}, StepRange{Int64, Int64}, UnitRange{Int64}}, particle::Int, potential::FrohlichPotential, regime::PrimitiveRegime)
-    """
-    bisectPotentialAction(path::Path, bead::Int, beadrange::Union{Vector{Int64}, StepRange{Int64, Int64}, UnitRange{Int64}}, particle::Int, potential::FrohlichPotential, regime::PrimitiveRegime)
     Specifically written for Frohlich in bisectMover due to the complexity induced by double time integrals
 
+    bisectPotentialAction(path::Path, bead::Int, beadrange::Union{Vector{Int64}, StepRange{Int64, Int64}, UnitRange{Int64}}, particle::Int, potential::FrohlichPotential, regime::PrimitiveRegime)
+    
     Arguments
     - `path::Path`: collection of all particle imaginary-time paths.
     - `bead::Int`: bead of interest.
@@ -175,16 +179,13 @@ function bisectPotentialAction(path::Path, bead::Int, beadrange::Union{Vector{In
 
     """
 
-    # Defining constants
-    β = path.τ * path.n_beads
-    m = path.m
-    ħω = potential.ħ * potential.ω
-    α = potential.α
-    term_factor = -0.5 * α * (ħω)^(3/2) * sqrt(1/2/m) * csch(ħω * β / 2)
+    # Defining constants (DON'T have to call path.variable iteratively)
+    β = path.τ * path.n_beads; m = path.m; ħω = potential.ħ * potential.ω; α = potential.α;
     n_beads = path.n_beads
+    term_factor = -0.5 * α * (ħω)^(3/2) * sqrt(1/2/m) * csch(ħω * β / 2)
     bead = mod1(bead, n_beads)
 
-
+    # Integrals contribution summation
     inner_integral = 0.0
     for other_bead in 1:n_beads
         if other_bead != bead
