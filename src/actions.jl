@@ -164,7 +164,7 @@ function potentialAction(path::Path, bead::Int, particle::Int, potential::Frohli
     return 2 * path.τ * oneBodyPotential(potential, path, bead, particle) + 2 * inner_integral * path.τ^2 * t2_prefactor * V2_prefactor
 end
 
-function PotentialAction(path::Path, bead::Int, beadrange::Union{Vector{Int64}, StepRange{Int64, Int64}, UnitRange{Int64}}, particle::Int, potential::FrohlichPotential, regime::PrimitiveRegime)
+function potentialAction(path::Path, bead::Int, beadrange::Union{Vector{Int64}, StepRange{Int64, Int64}, UnitRange{Int64}}, particle::Int, potential::FrohlichPotential, regime::PrimitiveRegime)
     """
     Specifically written for Frohlich in bisectMover due to the complexity induced by double time integrals
 
