@@ -139,10 +139,7 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Pote
 
 	# Make a copy of the old configurations in case of a rejection
 	start_bead = rand(1:path.n_beads)
-	#old_beads = deepcopy(path.beads[:,particle, :])
-	if path.caching == false
-		path.old_beads = path.beads[:, particle, :]
-	end
+	old_beads = deepcopy(path.beads[:,particle, :])
 
 	# Call parameters once
 	τλ = path.τ * path.λ
@@ -182,12 +179,6 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Pote
 
 			# Calculate the midpoint & perform move
 			path.beads[mod1(bead, n_beads), particle, :] = 0.5 * (path.beads[mod1(r0, n_beads), particle, :] + path.beads[mod1(r1, n_beads), particle, :]) + shift
-			
-			if any(abs.(path.beads[mod1(bead, n_beads), particle, :]) .> well_size)
-				path.beads[:, particle, :] = path.old_beads
-				path.caching = true
-				return false
-			end
 		end
 	end
 
@@ -200,33 +191,30 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Pote
 	# Determine whether to accept the full move
 	if total_new_action - total_old_action <= 0.0 || rand() <= exp(-(total_new_action - total_old_action))
 		mover.adjusters[particle].success_counter += 1
-		path.caching = false
+
 		return true
 	
 	else
-		path.beads[:, particle, :] = path.old_beads
-		path.caching = true
+		path.beads[:, particle, :] = old_beads
+
 		return false
 	end
 end
 
-function moveBead(mover::BisectMover, path::Path, particle::Int, potential::FrohlichPotential, regime::Regime; maxlevel::Int64 = 1, well_size::Float64 = 6.0)
+function moveBead(mover::BisectMover, path::Path, particle::Int, potential::FrohlichPotential, regime::Regime; maxlevel::Int64 = 1, well_size::Float64 = 10.0)
 	"""
 	Special Version of Bisection algorithm for Frohlich Potential
 	as Frohlich potential contains problem with double counting contributions when calculating potential changes
 
 	"""
 	# Segment length to perform Bisect
-	max_level = mover.adjusters[particle].value
+	#max_level = mover.adjusters[particle].value
+	max_level = 1
 	segment_length = Int((2^max_level))
 
 	# Randomly choose a starting bead
 	start_bead = rand(1:path.n_beads)
-
-	# Not to save bead position if already saved last time
-	if path.caching == false
-		path.old_beads = path.beads[:, particle, :]
-	end
+	old_beads = deepcopy(path.beads[:,particle, :])
 
 	# Call parameters once to save time when calling struct attributes
 	τλ = path.τ * path.λ
@@ -245,9 +233,13 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Froh
 	# Calculates the total old_action
 	total_old_action = 0.0
 	for bead in start_bead+1:start_bead+segment_length-1
-		total_old_action += PotentialAction(path, bead, beadrange, particle, potential, regime)
+		total_old_action += potentialAction(path, bead, beadrange, particle, potential, regime)
 	end
-
+	
+	for bead in start_bead:start_bead+segment_length-1
+		total_old_action += kineticAction(path, bead, bead+1, particle, regime)
+	end
+	
 	# Displace the beads level by level respectively. Only proceed to the next layer if the previous layer is accepted
 	for level in max_level:-1:1
 		level_fac = 2^(level-1)
@@ -269,10 +261,10 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Froh
 
 			# Shifting the beads based on 1/2*[r0+r1] + sqrt(level * τλ) * normal_distribution(0, 1) [Ref TESI paper]
 			path.beads[mod1(bead, n_beads), particle, :] = 0.5 * (path.beads[mod1(r0, n_beads), particle, :] + path.beads[mod1(r1, n_beads), particle, :]) + sqrt(level_fac * τλ) .* rand(Distributions.Normal(0, 1), n_dim)
+			
 			# Infinite potential well (Can put a artifically large well_size if not required)
 			if any(abs.(path.beads[mod1(bead, n_beads), particle, :]) .> well_size)
-				path.beads[:, particle, :] = path.old_beads
-				path.caching = true
+				path.beads[:, particle, :] = old_beads
 				return false
 			end
 		end
@@ -281,22 +273,23 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Froh
 	# Calculates new action
 	total_new_action = 0.0
 	for bead in start_bead+1:start_bead+segment_length-1
-		total_new_action += PotentialAction(path, bead, beadrange, particle, potential, regime)
+		total_new_action += potentialAction(path, bead, beadrange, particle, potential, regime)
 	end
+	
+	for bead in start_bead:start_bead+segment_length-1
+		total_new_action += kineticAction(path, bead, bead+1, particle, regime)
+	end
+	
 	
 	# Metropolis algorithm, decide accept or reject
 	if total_new_action - total_old_action <= 0.0 || rand() <= exp(-(total_new_action - total_old_action))
 		mover.adjusters[particle].success_counter += 1
 
-		# Turning off the caching so we need to save old_beads when we start next bisect
-		path.caching = false
 		return true
 		
 	else
-		path.beads[:, particle, :] = path.old_beads
+		path.beads[:, particle, :] = old_beads
 
-		# Since this bisect move is rejected, we returned to original position so we don't have to copy old_beads again
-		path.caching = true
 		return false
 	end
 end
