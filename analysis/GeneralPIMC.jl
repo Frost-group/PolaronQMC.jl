@@ -121,7 +121,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_bead
     println("n_step is: ", n_steps)
 
     # Thermalisation Process (With simple Potential like Harmonic)
-    PIMC(n_thermalised, n_thermalised, n_thermalised, path, mover, estimators, HarmonicPotential(1.0), regime, observables, adjust=true)
+    PIMC(n_thermalised, n_thermalised, n_thermalised, path, SingleMover(path), estimators, HarmonicPotential(1.0), regime, observables, adjust=true)
     if verbose
         println("Thermalisation complete")
     end
@@ -174,7 +174,7 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_bead
 end
 
 function SaveJLDData(T, potential, version, n_beads, n_steps, data)
-    save("data_arr/$(potential)/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data)
+    save("data_arr/$(string(typeof(potential)))/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data)
 end
 #=
 
