@@ -58,8 +58,6 @@ mutable struct Path
     m :: Union{Float64, Vector{Float64}} 
 	λ :: Union{Float64, Vector{Float64}}
 
-    caching :: Bool
-    old_beads :: SizedArray
 
 	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 0.0)
         
@@ -67,11 +65,7 @@ mutable struct Path
         beads = @SArray randn(n_beads, n_particles, n_dimensions)
         beads *= start_range # If we want the beads to be more widespread
 
-        # Used to save old_beads configuration in bisection algorithm to save copying time
-        old_beads = @SArray randn(n_beads, n_particles, n_dimensions)
-        old_beads *= start_range
-
-		new(n_beads, n_particles, n_dimensions, beads, τ, m, λ, false, old_beads)
+		new(n_beads, n_particles, n_dimensions, beads, τ, m, λ)
 	end
 end
 
