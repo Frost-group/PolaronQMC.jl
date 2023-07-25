@@ -6,10 +6,11 @@ using PolaronMobility
 using LaTeXStrings
 using DelimitedFiles
 using JLD
+using Base.Threads
 
 function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_beads, fixed_τ, n_beads, n_steps, 
     n_thermalised, mover, potential, estimator, quick_steps=false, threads::Bool = false, start_range = 1.0, particleIndex = 1, dimensionIndex = 1,
-    observable_skip_factor=0.005, equilibrium_skip_factor=0.5, version = 1, verbose::Bool = true)
+    observable_skip_factor=0.005, equilibrium_skip_factor=0.5, version = 1, verbose::Bool = true, thread_number = 16)
     
     """
     Initialise System Variables:
@@ -126,16 +127,6 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_bead
         println("Thermalisation complete")
     end
 
-    #data = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=false)
-    data = PIMC(n_steps, equilibrium_skip, observables_skip, path, mover, estimators, potential, regime, observables, adjust=true)
-    
-    # Storing all the different outputz
-    energies = data["Energy:$(estimator)"]
-    positions = data["Position:p$(particleIndex)d$(dimensionIndex)"] # Select a particular particle and dimension
-    correlations = data["Correlation:$(estimator)"]
-    acceptance_rates = data["Acceptance Rate:p$(particleIndex)"]
-    adjuster_values = data["Adjuster Value:p$(particleIndex)"]
-
     # Comparison energy
     if typeof(potential) == HarmonicPotential
         comparison_energy = analyticEnergyHarmonic(potential.ω,β,ħ,n_dimensions)
@@ -144,32 +135,88 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_bead
         comparison_energy = comparison_polaron.F
     end
 
-    # Post analysis
-    variances = jackknife(energies)
-    jacknife_errors = sqrt(variances[2])
-    mean_energy = mean(energies)
+    if !threads
+        
+        data = PIMC(n_steps, equilibrium_skip, observables_skip, path, mover, estimators, potential, regime, observables, adjust=true)
+        
+        # Storing all the different outputz
+        energies = data["Energy:$(estimator)"]
+        positions = data["Position:p$(particleIndex)d$(dimensionIndex)"] # Select a particular particle and dimension
+        correlations = data["Correlation:$(estimator)"]
+        acceptance_rates = data["Acceptance Rate:p$(particleIndex)"]
+        adjuster_values = data["Adjuster Value:p$(particleIndex)"]
 
-    #=
-    if n_particles == 2
-        positions1 = positions
-        positions2 = collect(Iterators.flatten(data["Position:p2d1"]))
-        posplot = histogram([positions1, positions2])
-        display(posplot)
-    end
-    =#
+        # Post analysis
+        variances = jackknife(energies)
+        jacknife_errors = sqrt(variances[2])
+        mean_energy = mean(energies)
 
-    # Output measurements and statistics
-    println("Number of Beads: ", n_beads)
-    println("Number of steps: ", n_steps)
-    println("τ is: ", τ)
-    println("Temperature: ", T)
-    println("α: ", α)
-    println("Mean Energy: ", mean_energy)
-    println("Comparison Energy: ", comparison_energy)
-    println("jackknife errors: ", jacknife_errors)
+        #=
+        if n_particles == 2
+            positions1 = positions
+            positions2 = collect(Iterators.flatten(data["Position:p2d1"]))
+            posplot = histogram([positions1, positions2])
+            display(posplot)
+        end
+        =#
+
+        # Output measurements and statistics
+        println("Number of Beads: ", n_beads)
+        println("Number of steps: ", n_steps)
+        println("τ is: ", τ)
+        println("Temperature: ", T)
+        println("α: ", α)
+        println("Mean Energy: ", mean_energy)
+        println("Comparison Energy: ", comparison_energy)
+        println("jackknife errors: ", jacknife_errors)
+        
+        # return energy, variances, mean_acceptance_rate, comparison_energy
+        return mean_energy, jacknife_errors, comparison_energy, energies, positions, correlations, acceptance_rates, adjuster_values, equilibrium_skip, observables_skip, version, potential, n_beads, data
     
-    # return energy, variances, mean_acceptance_rate, comparison_energy
-    return mean_energy, jacknife_errors, comparison_energy, energies, positions, correlations, acceptance_rates, adjuster_values, equilibrium_skip, observables_skip, version, potential, n_beads, data
+    else
+        println("multithreading")
+        aggregated_data = Dict() # Create an empty dictionary for storing data
+        Mean_energy_arr = [0.0 for j in 1:thread_number]
+        Error_arr = [0.0 for j in 1:thread_number]
+
+        @threads for i in 1:thread_number
+            println("i = $i on thread $(Threads.threadid())")
+
+            data = PIMC(n_steps, equilibrium_skip, observables_skip, path, mover, estimators, potential, regime, observables, adjust=true)
+        
+            # Storing all the different outputz
+            energies = data["Energy:$(estimator)"]
+            positions = data["Position:p$(particleIndex)d$(dimensionIndex)"] # Select a particular particle and dimension
+            correlations = data["Correlation:$(estimator)"]
+            acceptance_rates = data["Acceptance Rate:p$(particleIndex)"]
+            adjuster_values = data["Adjuster Value:p$(particleIndex)"]
+            data["Comparison Energy"] = comparison_energy
+
+            # Post analysis
+            variances = jackknife(energies)
+            jacknife_errors = sqrt(variances[2])
+            mean_energy = mean(energies)
+
+            # Output measurements and statistics
+            aggregated_data[i] = data
+            Mean_energy_arr[i] = mean_energy
+            Error_arr[i] = jacknife_errors
+        end
+
+        println("Number of Paths:", thread_number)
+        println("Number of Beads: ", n_beads)
+        println("Number of steps: ", n_steps)
+        println("τ is: ", τ)
+        println("Temperature: ", T)
+        println("α: ", α)
+        println("Mean Energy: ", mean(Mean_energy_arr))
+        println("Comparison Energy: ", comparison_energy)
+        println("jackknife errors: ", mean(Error_arr))
+
+        return aggregated_data, Mean_energy_arr, Error_arr;
+    end
+
+
 
 end
 
