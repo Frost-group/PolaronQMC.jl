@@ -201,15 +201,14 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Pote
 	end
 end
 
-function moveBead(mover::BisectMover, path::Path, particle::Int, potential::FrohlichPotential, regime::Regime; maxlevel::Int64 = 1, well_size::Float64 = 10.0)
+function moveBead(mover::BisectMover, path::Path, particle::Int, potential::FrohlichPotential, regime::Regime; maxlevel::Int64 = 1, well_size::Float64 = 15.0)
 	"""
 	Special Version of Bisection algorithm for Frohlich Potential
 	as Frohlich potential contains problem with double counting contributions when calculating potential changes
 
 	"""
 	# Segment length to perform Bisect
-	#max_level = mover.adjusters[particle].value
-	max_level = 1
+	max_level = mover.adjusters[particle].value
 	segment_length = Int((2^max_level))
 
 	# Randomly choose a starting bead
@@ -234,10 +233,6 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Froh
 	total_old_action = 0.0
 	for bead in start_bead+1:start_bead+segment_length-1
 		total_old_action += potentialAction(path, bead, beadrange, particle, potential, regime)
-	end
-	
-	for bead in start_bead:start_bead+segment_length-1
-		total_old_action += kineticAction(path, bead, bead+1, particle, regime)
 	end
 	
 	# Displace the beads level by level respectively. Only proceed to the next layer if the previous layer is accepted
@@ -274,10 +269,6 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Froh
 	total_new_action = 0.0
 	for bead in start_bead+1:start_bead+segment_length-1
 		total_new_action += potentialAction(path, bead, beadrange, particle, potential, regime)
-	end
-	
-	for bead in start_bead:start_bead+segment_length-1
-		total_new_action += kineticAction(path, bead, bead+1, particle, regime)
 	end
 	
 	
