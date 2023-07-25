@@ -1,7 +1,7 @@
 # moves.jl
 using Distributions
 
-function moveBead(mover::SingleMover, path::Path, particle::Int, potential::Potential, regime::Regime; maxlevel::Int64 = 1, well_size::Float64 = 2.0)
+function moveBead(mover::SingleMover, path::Path, particle::Int, potential::Potential, regime::Regime; well_size::Float64 = 2.0)
 	
 	"""
 	Move a single imaginary-time timeslice (bead) on a single particle, or subset of particles, per Monte-Carlo iteration.
@@ -61,7 +61,7 @@ function moveBead(mover::SingleMover, path::Path, particle::Int, potential::Pote
 	end
 end
 
-function moveBead(mover::DisplaceMover, path::Path, particle::Int, potential::Potential, regime::Regime; maxlevel::Int64 = 1, well_size::Float64 = 2.0)
+function moveBead(mover::DisplaceMover, path::Path, particle::Int, potential::Potential, regime::Regime; well_size::Float64 = 2.0)
 
 	"""
 	Move the entire imaginary-time timeslice (all the beads) on a single particle, or subset of particles, by the same vector per Monte-Carlo iteration.
@@ -111,7 +111,7 @@ function moveBead(mover::DisplaceMover, path::Path, particle::Int, potential::Po
 	end
 end
 
-function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Potential, regime::Regime; maxlevel::Int64 = 1, well_size::Float64 = 5.0)
+function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Potential, regime::Regime; well_size::Float64 = 5.0)
 	
 	"""
 	Move a segment of imaginary-time timeslice (bead) on a single particle, or subset of particles, per Monte-Carlo iteration.
@@ -201,7 +201,7 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Pote
 	end
 end
 
-function moveBead(mover::BisectMover, path::Path, particle::Int, potential::FrohlichPotential, regime::Regime; maxlevel::Int64 = 1, well_size::Float64 = 15.0)
+function moveBead(mover::BisectMover, path::Path, particle::Int, potential::FrohlichPotential, regime::Regime; well_size::Float64 = 15.0)
 	"""
 	Special Version of Bisection algorithm for Frohlich Potential
 	as Frohlich potential contains problem with double counting contributions when calculating potential changes
