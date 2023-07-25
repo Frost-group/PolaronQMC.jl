@@ -87,7 +87,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 		# Updating n_accepted, moving beads, and changing shift width if necessary
 		for particle in rand(1:path.n_particles, path.n_particles)
 			for sweep in 1:n_sweep
-				moveBead(mover, path, particle, potential, regime, maxlevel = max_level) # Moving beads a total of n_sweep times
+				moveBead(mover, path, particle, potential, regime, well_size = 4.0) # Moving beads a total of n_sweep times
 			end
 		
 			# Changing shift width automatically and save results
