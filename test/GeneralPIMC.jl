@@ -198,9 +198,9 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_bead
             mean_energy = mean(energies)
 
             # Output measurements and statistics
-            aggregated_data[i] = data
-            Mean_energy_arr[i] = mean_energy
-            Error_arr[i] = jacknife_errors
+            aggregated_data[i] = data;
+            Mean_energy_arr[i] = mean_energy;
+            Error_arr[i] = jacknife_errors;
         end
 
         println("Number of Paths:", thread_number)
@@ -215,8 +215,6 @@ function generalPIMC(T, m, ω, α, n_particles, n_dimensions, regime, fixed_bead
 
         return aggregated_data, Mean_energy_arr, Error_arr;
     end
-
-
 
 end
 
