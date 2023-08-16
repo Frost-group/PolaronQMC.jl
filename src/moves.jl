@@ -91,28 +91,35 @@ function Displace!(path::Path, particle::Int, potential::Potential, regime::Regi
 	end
 end
 
-
-
-
+	
 function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime, adjuster::Adjuster)
+
+	#max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
+	segment_length = 16 + 1 #temporary arbitary choice
+	max_level = Int(floor(log(segment_length)/log(2))) # = 4 in arbitary setting
 
 	start_bead = rand(1:path.n_beads)
 
 	old_beads = deepcopy(path.beads[:,particle, :])
 
 
-	total_old_action = sum(potential_action(path, bead, particle, potential, regime) for bead in start_bead:start_bead+adjuster.segment_length)
+	total_old_action = 0.0
+	for bead in start_bead:start_bead+segment_length
+		total_old_action += potential_action(path, bead, particle, potential, regime)
+	end
 
 
-	for level in adjuster.max_level:-1:1
+
+	for level in max_level:-1:1
 		segment_old_action = 0.0 # old action of the cut out segment
 		segment_new_action = 0.0 # new action of the cut out segment
 
 		
-		ratio = 2^(adjuster.max_level - level) #how many divisions of level makes up full segment
+		ratio = 2^(max_level - level) #how many divisions of level makes up full segment
 		
 		for k in 1:ratio
 			bead = Int(start_bead + (2^(level-1) * k))
+			#println("bead = ", bead)
 			segment_old_action += potential_action(path, bead, particle, potential, regime)
 			shift = rand([-1,1],path.n_dimensions) .* rand(path.n_dimensions) * sqrt( 2^(level-1) * path.τ * path.λ) 
 			path.beads[bead, particle, :] = 0.5 * (path.beads[bead - 2^(level-1), particle, :] + path.beads[bead + 2^(level-1), particle, :]) + shift
@@ -125,7 +132,10 @@ function Bisect!(path::Path, particle::Int, potential::Potential, regime::Regime
 
 	end
 
-	total_new_action = sum(potential_action(path, bead, particle, potential, regime) for bead in start_bead:start_bead+adjuster.segment_length)
+	total_new_action = 0.0
+	for bead in start_bead:start_bead+segment_length
+		total_new_action += potential_action(path, bead, particle, potential, regime)
+	end
 
 	if total_new_action - total_old_action < 0.0
 		return true
