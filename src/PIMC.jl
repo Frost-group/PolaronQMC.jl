@@ -3,6 +3,8 @@ using Base.Threads
 using StaticArrays
 using PyCall
 
+using TimerOutputs
+const tmr = TimerOutput();
 
 # PIMC function with multi-threading support
 function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover::Mover, estimators::Array, potential::Potential, regime::Regime, observables::Array; adjust::Bool = true, threads::Bool = false, max_level::Int = 1)
@@ -24,24 +26,13 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 		max_level (Int, default 1): Set the max bisecting level for the case of BisectMover (won't affect SingleMover and DisplaceMover)
 	
 	"""
-
+	#tmr = TimerOutput();
 	# Conversion of estimators to subscripable string
 	estimators_string = [split(string(Symbol(estimator)), "Estimator()")[1] for estimator in estimators]
 	observables_set = Set(observables)
 
 	# Dictionary to store all PIMC data; The data are store in format of data["String"] 
 	data = Dict()
-
-	# Steps to set the number of sweep per step. If single, then on average per step we will move each bead once to avoid possible bias
-	# If we are using Bisect function, then we can reduce the sweep. The power of 2 can be changed, but also need to change "moves.jl"
-	#=
-	if typeof(mover) == BisectMover
-		#n_sweep = Int(floor(path.n_beads/(2^mover.adjuster[0].value-1)))
-		n_sweep = Int(floor(path.n_beads/4))
-	else
-		n_sweep = path.n_beads
-	end
-	=#
 
 	n_sweep = path.n_beads
 
@@ -76,6 +67,23 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 		end
 	end
 
+	# Preallocation of memories
+	action_arr = [0.0, 0.0] #index 1: Old action; index 2: New Action
+	shift = zeros(path.n_dimensions) # Shifting sizes
+	store_diff = zeros(path.n_dimensions) # used to store the "temporary array" when subtracting two arrays
+	
+	# Preallocation cosh entries as it remains constant
+	coshfn = zeros(path.n_beads, path.n_beads, length(potential.ω))
+	if typeof(potential) == FrohlichPotential
+		for k in 1:length(potential.ω)
+			fac = potential.ħ * path.τ * path.n_beads * potential.ω[k]; 
+			for i in 1:path.n_beads, j in i+1:path.n_beads
+				coshfn[j, i, k] = cosh(fac * ((j-i)/path.n_beads-0.5))
+			end
+		end
+	end
+
+
 	# Processes that run per step (Only single threaded kept as multi-threading at this layer create problem)
 	for step in 1:n_steps
 
@@ -84,14 +92,23 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 			println("step is: ", step)
 		end
 
+		if mod(step, 100) == 0
+			if typeof(potential) == FrohlichPotential
+				# Want to shift it back such that it centres at origin
+				recentralise(path, verbose=false)
+			end
+		end
+
 		# Updating n_accepted, moving beads, and changing shift width if necessary
 		for particle in rand(1:path.n_particles, path.n_particles)
+			#@timeit tmr "Moving" 
 			for sweep in 1:n_sweep
-				moveBead(mover, path, particle, potential, regime, well_size = 4.0) # Moving beads a total of n_sweep times
+				moveBead!(mover, path, particle, potential, regime, action_arr, shift, store_diff, coshfn) # Moving beads a total of n_sweep times
 			end
 		
 			# Changing shift width automatically and save results
 			if adjust
+				#@timeit tmr "Adjusting" 
 				updateAdjuster(mover.adjusters[particle], path)
 				data["Acceptance Rate:p$(particle)"][step] = mover.adjusters[particle].acceptance_rate
 				data["Adjuster Value:p$(particle)"][step] = mover.adjusters[particle].value
@@ -102,13 +119,15 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 		if mod(step, observable_skip) == 0 && step > equilibrium_skip
 
 			# Add energy of system for step to data
+			#@timeit tmr "Cal Energy" 
 			if "Energy" in observables_set
 				for (index, estimator) in enumerate(estimators_string)
-					push!(data["Energy:$(estimator)"], energy(path, potential, estimators[index]))
+					push!(data["Energy:$(estimator)"], energy(path, potential, estimators[index], store_diff, coshfn))
 				end
 			end
 
 			# Add positions for step to data for each particle
+			#@timeit tmr "Cal Position" 
 			if "Position" in observables_set
 				for particle in 1:path.n_particles
 					for dimension in 1:path.n_dimensions
@@ -118,6 +137,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 			end
 
 			# Add correlation to data fro each estimator
+			#@timeit tmr "Cal Correlation" 
 			if "Correlation" in observables_set
 				for (estimator, estimator_string) in zip(estimators, estimators_string)
 					push!(data["Correlation:$(estimator_string)"], correlation(path, potential, estimator))
@@ -126,5 +146,7 @@ function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover
 		end
 	end
 	
+	#println(tmr)
+	reset_timer!(tmr::TimerOutput)
 	return data
 end
