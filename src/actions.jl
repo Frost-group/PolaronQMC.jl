@@ -13,13 +13,13 @@
     end
 
 
-    function potential_action(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, potentialcache::Cache, regime::Simple_Regime)
-        return one_body_potential(potential, potentialcache, path, bead, particle)
+    function potential_action(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::Simple_Regime)
+        return one_body_potential(potential, path, bead, particle)
     end
 
 
-    function total_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, potential::OneBodyPotential, potentialcache::Cache, regime::Simple_Regime)
-        return kinectic_action(path, bead_one, bead_two, particle, regime) + potential_action(path, bead_one, particle, potential, potentialcache, regime)
+    function total_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, potential::OneBodyPotential, regime::Simple_Regime)
+        return kinectic_action(path, bead_one, bead_two, particle, regime) + potential_action(path, bead_one, particle, potential, regime)
     end
 
 
@@ -85,8 +85,8 @@ This is the potential action for an external one-body potential.
 
 See also [`Path`](@ref), [`OneBodyPotential`](@ref). 
 """
-function potential_action(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, potentialcache::Cache, regime::Primitive_Regime)
-    return path.τ * one_body_potential(potential, potentialcache, path, bead, particle)
+function potential_action(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::Primitive_Regime)
+    return path.τ * one_body_potential(potential, path, bead, particle)
 end
 
 
@@ -110,6 +110,6 @@ function potential_action(path::Path, bead::Int, particle::Int, potential::TwoBo
 end
 
 
-function total_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, potential::Potential, potentialcache::Cache, regime::Primitive_Regime)
-        return kinetic_action(path, bead_one, bead_two, particle, regime) + potential_action(path, bead_two, particle, potential, potentialcache, regime)
+function total_action(path::Path, bead_one::Int, bead_two::Int, particle::Int, potential::Potential, regime::Primitive_Regime)
+        return kinetic_action(path, bead_one, bead_two, particle, regime) + potential_action(path, bead_two, particle, potential, regime)
 end
