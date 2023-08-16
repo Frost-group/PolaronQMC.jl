@@ -181,53 +181,29 @@ A cache of constant information used when evaluating the potential energy.
 - `potential::Potential`: the potential controlling the system.
 """
 struct PotentialCache <: Cache
-
-    potential_prefactor :: Union{Float64, CircularArray{}}
-    distance_matrix :: Array
-
-
-
-
-
+    prefactor_1 :: Float64
     function PotentialCache(path::Path, potential::FrohlichPotential)
-
-        #generating the g factors used in frohlich potential calculation, combination of constants and adjacency information 
-            β = path.n_beads * path.τ
-            g_prefactor = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(2*path.m) * csch(potential.ħ * potential.ω * β / 2)
-
-            function generate_g_factors(bead::Int, path::Path, potential::FrohlichPotential)
-                return g_prefactor .* [cosh(potential.ω*β * (abs(bead-other_bead)/path.n_beads - 0.5 * potential.ħ)) for other_bead in 1:path.n_beads if other_bead != bead]
-            end
-
-            g_factors_array = CircularArray([generate_g_factors(bead, path, potential) for bead in 1:path.n_beads])
-
-        #generating a matrix containing the distance between beads which will be updated after each successful move
-            function generate_distances(bead::Int, path::Path)
-                return [norm(path.beads[bead, particle, :] - path.beads[other_bead, particle, :]) for other_bead in 1:path.n_beads]
-            end
-
-            distance_matrix = hcat([generate_distances(bead, path) for bead in 1:path.n_beads])
-
-        new(g_factors_array, distance_matrix )
+        β = path.n_beads * path.τ
+        prefactor_1 = -0.5 * potential.α * (potential.ħ * potential.ω)^3/2 * sqrt(2*path.m) * csch(potential.ħ * potential.ω * β / 2)
+        new(prefactor_1)
     end
 
     function PotentialCache(path::Path, potential::HarmonicPotential)
-            prefactor_1 = 0.5 * path.m * potential.ω^2
-
-        #generating a matrix containing the distance between beads which will be updated after each successful move
-            function generate_distances(bead::Int, path::Path)
-                return [norm(path.beads[bead, particle, :] - path.beads[other_bead, particle, :]) for other_bead in 1:path.n_beads]
-            end
-
-            distance_matrix = hcat([generate_distances(bead, path) for bead in 1:path.n_beads])
-
-
-        new(prefactor_1, distance_matrix)
+        prefactor_1 = 0.5 * path.m * potential.ω^2
+        new(prefactor_1)
     end
 end
 
 
-
+#=
+struct HarmonicCache <: Cache
+    prefactor_1 :: Float64
+    function HarmonicCache(path::Path, potential::HarmonicPotential)
+        prefactor_1 = 0.5 * path.m * potential.ω^2
+        new(prefactor_1)
+    end
+end
+=#
 
 
 

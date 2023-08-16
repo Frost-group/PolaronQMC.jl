@@ -89,9 +89,6 @@ function potential_action(path::Path, bead::Int, particle::Int, potential::OneBo
     return path.τ * one_body_potential(potential, potentialcache, path, bead, particle)
 end
 
-function potential_actionL(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, potentialcache::Cache, regime::Primitive_Regime)
-    return path.τ * one_body_potentialL(potential, potentialcache, path, bead, particle)
-end
 
 """
     potential_action(path::Path, bead::Int, particle::Int, potential::TwoBodyPotential)
