@@ -25,21 +25,18 @@ println("Beads: $adjusted_beads ")
 
 particle = rand(1:path.n_particles)
 
-#potential = FrohlichPotential(α, 1.0, 1.0)
-potential = HarmonicPotential(1.0)
-
 # Could set histogram limits here etc. ; see
 # https://juliaci.github.io/BenchmarkTools.jl/stable/manual/#Visualizing-benchmark-results
 io=IOContext(stdout)
 
 println("Single!()")
-s_bm = @benchmark Single!(path, particle, potential, Primitive_Regime(), path.adjusters["Single!"])
+s_bm = @benchmark Single!(path, particle, FrohlichPotential(α, 1.0, 1.0), Primitive_Regime(), path.adjusters["Single!"])
 show(io,MIME("text/plain"), s_bm)
 
 println(" ")
 
 println("Bisect!()")
-b_bm = @benchmark Bisect!(path, particle, potential, Primitive_Regime(), path.adjusters["Bisect!"])
+b_bm = @benchmark Bisect!(path, particle, FrohlichPotential(α, 1.0, 1.0), Primitive_Regime(), path.adjusters["Bisect!"])
 show(io,MIME("text/plain"),b_bm)
 end
 
