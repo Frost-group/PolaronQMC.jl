@@ -30,7 +30,7 @@ struct LBRegime <: Regime
 end
 
 #-------------------------Path (Indep. of Potential)-------------------
-mutable struct Path
+struct Path
 
     """
     Generic path mutable type 
@@ -52,30 +52,42 @@ mutable struct Path
 	n_particles :: Int64
     n_dimensions :: Int64
 
-	beads :: SizedArray
+	#beads :: SizedArray
+    beads :: Array{Float64, 3}
 
 	τ :: Float64
     m :: Union{Float64, Vector{Float64}} 
 	λ :: Union{Float64, Vector{Float64}}
+    K_factor :: Float64
 
-
+    #=
+    distance :: Array{Float64, 2}
+    distance_temp :: Array{Float64, 2}
+    rewrite :: Vector{Bool}
+    =#
 	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 0.0)
         
         # Randomised initial bead position around 0. Use static array since we won't be modifying the number of beads in the simulation
-        beads = @SArray randn(n_beads, n_particles, n_dimensions)
+        beads = randn(n_beads, n_particles, n_dimensions)
         beads *= start_range # If we want the beads to be more widespread
 
-		new(n_beads, n_particles, n_dimensions, beads, τ, m, λ)
+        K_factor = 4 * λ * τ
+        #=
+        distance = zeros(n_beads, n_beads)
+        distance_temp = zeros(n_beads, n_beads)
+        rewrite = [false];
+        =#
+
+		new(n_beads, n_particles, n_dimensions, beads, τ, m, λ, K_factor)#, distance, distance_temp, rewrite)
 	end
 end
-
 
 #-------------------------Mover----------------------------
 # abstract type for how to move the beads in the simulation
 abstract type Mover end
 
 
-mutable struct SingleMover <: Mover
+struct SingleMover <: Mover
     """
     Displace one bead at a time
     """
@@ -89,7 +101,7 @@ mutable struct SingleMover <: Mover
 end
 
 
-mutable struct DisplaceMover <: Mover
+struct DisplaceMover <: Mover
     """
     Displace the whole chain at a time
     """
@@ -103,7 +115,7 @@ mutable struct DisplaceMover <: Mover
 end
 
 
-mutable struct BisectMover <: Mover
+struct BisectMover <: Mover
     """
     Displace according to mid-point strategies, layer by layer until whole segment moved
     """
@@ -221,12 +233,14 @@ struct FrohlichPotential <: OneBodyPotential
 
     """
     Potential for Frohlich Polaron.
+
+    Allow multi phonon mode with different frequencies (All assumed dispersionless).
     """
 
     α :: Float64
-    ω :: Float64
+    ω :: Union{Vector{Float64}, Float64}
     ħ :: Float64
-    function FrohlichPotential(α::Float64, ω::Float64, ħ::Float64)
+    function FrohlichPotential(α::Float64, ω::Union{Vector{Float64}, Float64}, ħ::Float64)
         new(α, ω, ħ)
     end
 end
@@ -276,6 +290,21 @@ struct MexicanHatPotential <: OneBodyPotential
     end
 end
 
+struct HolsteinPotential <: OneBodyPotential
+    """
+    Potential for Holstein Polaron (Small-polaron).
+    """
+
+    λ :: Float64 # Coupling
+    ω :: Float64 # Ohonon frequency
+    ħ :: Float64
+    J :: Float64 # Hopping Integral
+    N :: Int64
+
+    function HolsteinPotential(λ::Float64, ω::Float64, ħ::Float64, J::Float64, N::Int64)
+        new(λ, ω, ħ, J, N)
+    end
+end
 
 struct CoulombPotential <: TwoBodyPotential
 
