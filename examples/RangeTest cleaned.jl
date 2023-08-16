@@ -16,10 +16,9 @@ begin
     quickrun_results = quickrun_frohlich(T, alpha_range, fixed_τ, thermalisation_steps, steps_base, thermalised = true)
 
 end
+
 begin
 #Plotting and comparison
-
-
 comparison_polaron = make_polaron(alpha_range, [T], [0.0]; ω = 1.0, rtol = 1e-4, verbose = false, threads = true)
 comparison_range_L = comparison_polaron.F
 

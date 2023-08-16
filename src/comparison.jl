@@ -4,14 +4,15 @@
 #Real values of observables to compare against
 
 
-function analytic_energy_harmonic(potential::HarmonicPotential, β::Float64, ħ::Float64)
-    return potential.ω*ħ/2 + potential.ω*ħ/(exp(ħ*potential.ω*β)-1)
+function analyticEnergyHarmonic(ω::Float64, β::Float64, ħ::Float64, n_dimensions::Int)
+    """
+        Analytic average energy <E> for a harmonic oscillator
+    """
+    return n_dimensions/2*ħ*ω * (1 .+ exp.(-ħ*ω*β))./(1 .- exp.(-ħ*ω*β))
 end
 
 
-
-
-function selective_mean(observable_array::Array, limit::Union{Int,Float64})
+function selectiveMean(observable_array::Array, limit::Union{Int,Float64})
     """
     mean that filters out extreme values
     """

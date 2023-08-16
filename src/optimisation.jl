@@ -1,52 +1,66 @@
-
-
-
-
+# optimisation.jl
 """
-    update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster})
-
-Updates the "shift width" parameter used in Adjusters within Movers.
-
-# Arguments
-- `adjuster`: Type of adjuster specific for the type of move being attempted.
-
+Algorithm for speeding up the simulation
+1. Adjusting the shift width of beads by calculating the acceptance ratio
+2. Adjusting the maximum number of beads shifted in bisect mover algorithm
 
 """
 
-function update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster})
-    if adjuster.adjust_counter >= 5
-        #println("adjusted +") 
 
-        #weight average for new shift width
-        adjuster.shift_width = (adjuster.shift_width*6 + adjuster.shift_width+adjuster.adjust_unit*4) / 10
-        adjuster.adjust_counter = 0
-    elseif adjuster.adjust_counter <= -5
+function updateAdjuster(adjuster::Union{SingleAdjuster, DisplaceAdjuster}, path::Path)
+    """
+    Update shift width by keeping track the acceptance ratio = successful shift/total shift
+        (total shift = number of moves in one sweep) -> reset the ratio when a new sweep initiated
+    """
+    if (adjuster.attempt_counter != 0)
+        adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
 
-        adjuster.shift_width = (adjuster.shift_width*6 - adjuster.shift_width+adjuster.adjust_unit*4) / 10
-        adjuster.adjust_counter = 0
+        if adjuster.acceptance_rate < 0.01 # To quickly lower the shift width if the acceptance rate is too low
+            adjuster.value *= 0.99
+
+        elseif adjuster.acceptance_rate > 0.99 # To quickly increase the shift width if the acceptance rate is too low
+            adjuster.value *=  1.01
+
+        else
+            adjuster.value *= (adjuster.acceptance_rate / 0.5) # originally it's 0.5
+        end
+
+        # Resetting the count for next sweep
+        adjuster.attempt_counter = 0
+        adjuster.success_counter = 0
     end
 end
 
-function update_shift_width!(adjuster::Bisect_Adjuster)
+
+function updateAdjuster(adjuster::Union{BisectAdjuster}, path::Path)
+    """
+    Update the bisect segment length based on acceptance rate
+        if acceptance rate too low -> Decrease the number of bisecting level
+        if acceptance rate too high -> Increase the number of bisecting level so can displace more beads at once
+    """
+    adjuster.acceptance_rate = adjuster.success_counter / adjuster.attempt_counter
+
+    if adjuster.acceptance_rate < 0.5
+        if adjuster.value > 0
+            adjuster.value -= 1
+        end
+
+    else
+        if 2^(adjuster.value+1) + 1 < path.n_beads 
+            adjuster.value += 1
+        end
+
+    end
+    
+    # Resetting the count for next sweep
+    adjuster.attempt_counter = 0
+    adjuster.success_counter = 0
 end
 
-
-
-
-"""
-    thermalised_start!(path::Path, potential::Potential; n_steps::Int = 2000, movers::Array = [[Bisect!],[1.0]])
-
-Performs PIMC simulation on the path without producing observables, thermalising the system before sampling of observables.
-
-
-"""
-function thermalised_start!(path::Path, potential::Potential; n_steps::Int = 2000, movers::Array = [[Bisect!],[1.0]], threads::Bool = true, verbose::Bool = true)
-    st_regime = Primitive_Regime()
-    st_observables = []
-    st_estimators = []
-    PIMC(n_steps, n_steps * 2 , n_steps * 2, path, movers, st_observables, st_estimators, potential, st_regime, adjust=true, threads=threads)
+function copyLastPath!(path::Path, potential::Potential, A::Union{SizedArray, Array}; verbose::Bool = true)
+    path.beads[:, :, :] = A[:, :, :]
     if verbose
-        println("Thermalisation complete")
+        println("Copying last path complete")
     end
 end
 

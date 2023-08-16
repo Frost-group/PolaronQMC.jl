@@ -1,131 +1,187 @@
 # types.jl
 
-using CircularArrays
+using StaticArrays
 
-"""
-Regime for the simuation to run in
-"""
-
+# -----------------------Regime---------------------
+# Regime for the simuation to run in
 abstract type Regime end
 
 
-struct Simple_Regime <: Regime  #simple form of calculating action
-    function Simple_Regime()
+# Simple form of calculating action
+struct SimpleRegime <: Regime  
+    function SimpleRegime()
         new()
     end
 end
 
-struct Primitive_Regime <: Regime #Calculating using the primitive approximation as per Ceperly paper
-    function Primitive_Regime()
+
+# Calculating using the primitive approximation as per Ceperly paper
+struct PrimitiveRegime <: Regime 
+    function PrimitiveRegime()
         new()
     end
 end
 
-"""
-Adjuster type to container information about shift width and allow for its auto adjustment
+# Calculating using the Li-Broughton Approximation
+struct LBRegime <: Regime
+    function LBRegime()
+        new()
+    end
+end
 
-"""
+#-------------------------Path (Indep. of Potential)-------------------
+mutable struct Path
 
+    """
+    Generic path mutable type 
+
+    Attributes
+        n_beads::Int: Number of beads from T and τ
+        n_particles::Int: Number of particles
+        n_dimensions::Int: Number of dimensions (1D, 2D, 3D)
+
+        beads: Sized array that are used to store all beads positions 
+
+        τ::Float64: size of each imaginary time slice
+        m::Union{Float64, Vector{Float64}}: mass of the particles, can be a vector if we have multiparticles with different mass
+        λ::Float64: simplify factor of ħ^2/2m
+
+    """
+
+	n_beads :: Int64
+	n_particles :: Int64
+    n_dimensions :: Int64
+
+	beads :: SizedArray
+
+	τ :: Float64
+    m :: Union{Float64, Vector{Float64}} 
+	λ :: Union{Float64, Vector{Float64}}
+
+
+	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 0.0)
+        
+        # Randomised initial bead position around 0. Use static array since we won't be modifying the number of beads in the simulation
+        beads = @SArray randn(n_beads, n_particles, n_dimensions)
+        beads *= start_range # If we want the beads to be more widespread
+
+		new(n_beads, n_particles, n_dimensions, beads, τ, m, λ)
+	end
+end
+
+
+#-------------------------Mover----------------------------
+# abstract type for how to move the beads in the simulation
+abstract type Mover end
+
+
+mutable struct SingleMover <: Mover
+    """
+    Displace one bead at a time
+    """
+    adjusters :: SizedArray
+
+    function SingleMover(path::Path)
+        particles = [SingleAdjuster(path.λ, path.τ) for i in 1:path.n_particles]
+        adjusters = SVector(Tuple(particles))
+        new(adjusters)
+    end
+end
+
+
+mutable struct DisplaceMover <: Mover
+    """
+    Displace the whole chain at a time
+    """
+    adjusters :: SizedArray
+
+    function DisplaceMover(path::Path)
+        particles = [DisplaceAdjuster(path.λ, path.τ) for i in 1:path.n_particles]
+        adjusters = SVector(Tuple(particles))
+        new(adjusters)
+    end
+end
+
+
+mutable struct BisectMover <: Mover
+    """
+    Displace according to mid-point strategies, layer by layer until whole segment moved
+    """
+
+    adjusters :: SizedArray
+
+    function BisectMover(path::Path)
+        particles = [BisectAdjuster(path.λ, path.τ) for i in 1:path.n_particles]
+        adjusters = SVector(Tuple(particles))
+        new(adjusters)
+    end
+end
+
+#---------------------------Adjuster---------------------------------
+# Adjuster type to container information about shift width and allow for its auto adjustment
 abstract type Adjuster end
 
 
-#Adjuster for the Single! move algorithm
-mutable struct Single_Adjuster <: Adjuster
-    adjust_counter :: Int
-    shift_width :: Float64
-    adjust_unit :: Float64 #how much shift width is adjusted by each time
-    function Single_Adjuster(λ::Float64, τ::Float64)
-        shift_width = sqrt(4 * λ * τ) * 0.5
-        adjust_unit = shift_width
-        new(0,shift_width, adjust_unit)
+# Adjuster for the Single! move algorithm
+mutable struct SingleAdjuster <: Adjuster
+
+    """
+    Adjuster for the Single! move algorithm
+    """
+
+    attempt_counter :: Int
+    success_counter :: Int
+    value :: Float64
+    acceptance_rate :: Float64
+    function SingleAdjuster(λ::Float64, τ::Float64)
+        value = sqrt(4 * λ * τ) * 0.5
+        new(0, 0, value, 0)
     end
 end
 
 
 #Adjuster for the Displace! move algorithm
-mutable struct Displace_Adjuster <: Adjuster
-    adjust_counter :: Int
-    shift_width :: Float64 
-    adjust_unit :: Float64 #how much shift width is adjusted by each time
-    function Displace_Adjuster(λ::Float64, τ::Float64)
-        shift_width = sqrt(4 * λ * τ)
-        adjust_unit = shift_width
-        new(0,shift_width, adjust_unit)
+mutable struct DisplaceAdjuster <: Adjuster
+
+    """
+    Adjuster for the Displace! move algorithm
+    """
+
+    attempt_counter :: Int
+    success_counter :: Int
+    value :: Float64
+    acceptance_rate :: Float64
+    function DisplaceAdjuster(λ::Float64, τ::Float64)
+        value = 1
+        new(0, 0, value, 0)
     end
 end
 
 
+#Adjuster for the Bisect! move algorithm
+mutable struct BisectAdjuster <: Adjuster
+    
+    """
+    Adjuster for the Bisect! move algorithm
+    Bisect changes the maximum segment length instead of the shift width
+    """
 
+    attempt_counter :: Int
+    success_counter :: Int
+    value :: Int # Different compare to single and displace
+    acceptance_rate :: Float64
 
-#Adjuster for the Bisect! move alogrithm
-mutable struct Bisect_Adjuster <: Adjuster end
-
-
-#=
-    adjust_counter_array :: Dict
-    shift_width_array :: Dict
-    max_level :: Int
-
-
-    function Bisect_Adjuster(λ,τ)
-        adjust_counter_array = Dict()
-        shift_width_array = Dict()
-        
-        #max_level = Int(floor(log(rand(1:path.n_beads)) / log(2)))
-        max_level = 4
-
-        for level in 0:max_level
-            shift_width_array[string(level)] = sqrt(2^(level) * λ * τ )
-            adjust_counter_array[string(level)] = 0
-        end
-        
-        new(adjust_counter_array,shift_width_array, max_level)
+    function BisectAdjuster(λ::Float64, τ::Float64)
+        value = 2
+        new(0, 0, value, 0)
     end
 end
-=#
 
-
-
-"""
-Generic path mutable type 
-"""
-mutable struct Path
-	n_beads :: Int64
-	n_particles :: Int64
-    n_dimensions :: Int64
-
-	beads :: CircularArray{Float64, 3}
-    adjusters :: Dict
-
-	τ :: Float64
-    m :: Float64
-	λ :: Float64
-
-
-
-	function Path(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64; m = 1.0, λ = 0.5, start_range = 1.0)
-        beads = CircularArray(rand(n_beads, n_particles, n_dimensions) .* (rand([-1,1] * start_range, n_beads, n_particles, n_dimensions)))
-
-        #creating adjusters
-        adjusters = Dict()
-        adjusters["Single!"] = Single_Adjuster(λ,τ)
-        adjusters["Displace!"] = Displace_Adjuster(λ,τ)
-        adjusters["Bisect!"] = Bisect_Adjuster()
-
-
-
-		new(n_beads, n_particles, n_dimensions, beads, adjusters, τ, m, λ)
-	end
-end
-
-"""
-Defined Types for different potentials.
-"""
-
+#---------------------------Potential---------------------------
 # Most abstract Potential type.
 abstract type Potential end
 
-# A potential that is independent on bodies.
+# A potential that is independent on bodies (e.g. Constant potential).
 abstract type NoBodyPotential <: Potential end
 
 # For potentials that depend on one body.
@@ -134,23 +190,39 @@ abstract type OneBodyPotential <: Potential end
 # For potentials that depend on two bodies.
 abstract type TwoBodyPotential <: Potential end
 
-# A constant potential.
-struct ConstantPotential <: NoBodyPotential 
+
+struct ConstantPotential <: NoBodyPotential
+
+    """
+    A constant potential for a single particle.
+    """
+
     V :: Float64
     function ConstantPotential(V::Float64)
         new(V)
     end
 end
 
-# A Harmonic potential for a single body.
+
 struct HarmonicPotential <: OneBodyPotential
+
+    """
+    A Harmonic potential for a single body.
+    """
+
     ω :: Float64
     function HarmonicPotential(ω::Float64)
         new(ω)
     end
 end
 
+
 struct FrohlichPotential <: OneBodyPotential
+
+    """
+    Potential for Frohlich Polaron.
+    """
+
     α :: Float64
     ω :: Float64
     ħ :: Float64
@@ -159,25 +231,73 @@ struct FrohlichPotential <: OneBodyPotential
     end
 end
 
-# Mexican Hat potential for a single body.
+
+struct HarmonicInteractionPotential <: OneBodyPotential
+
+    """
+    Two-body Coulomb interaction in a harmonic potential well.
+    """
+
+    ω :: Float64
+    κ :: Float64
+
+    function HarmonicInteractionPotential(ω::Float64, κ::Float64)
+        new(ω, κ)
+    end
+end
+
+
+struct FrohlichInteractionPotential <: OneBodyPotential
+
+    """
+    Potential for Frohlich Polaron with Coulombic Interaction.
+    """
+
+    α :: Float64
+    ω :: Float64
+    ħ :: Float64
+    κ :: Float64
+
+    function FrohlichInteractionPotential(α::Float64, ω::Float64, ħ::Float64, κ :: Float64)
+        new(α, ω, ħ, κ)
+    end
+end
+
+
 struct MexicanHatPotential <: OneBodyPotential
+
+    """
+    Mexican Hat potential for a single body.
+    """
+
     ω :: Float64
     function MexicanHatPotential(ω::Float64)
         new(ω)
     end
 end
 
-# Coulomb interaction between two bodies.
+
 struct CoulombPotential <: TwoBodyPotential
+
+    """
+    Coulomb interaction between two bodies.
+    """
+
     κ :: Float64
     function CoulombPotential(κ::Float64)
         new(κ)
     end
 end
 
+#-------------------Estimator (Energy)----------------------------
+#types of estimators
+abstract type Estimator end
 
+#Energy estimators
+struct SimpleEstimator <: Estimator end # Estimator using basic sum of kinetic and potential total_energy
 
+struct SimpleVirialEstimator <: Estimator end # Estimator using virial theorem for potential term
 
+struct ThermodynamicEstimator <: Estimator end # Estimator using thermodynamic theory
 
-
-
+struct VirialEstimator <: Estimator end # Estimator derived using virial theorem
