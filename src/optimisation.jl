@@ -12,6 +12,7 @@ Updates the "shift width" parameter used in Adjusters within Movers.
 
 
 """
+
 function update_shift_width!(adjuster::Union{Single_Adjuster, Displace_Adjuster})
     if adjuster.adjust_counter >= 5
         #println("adjusted +") 
@@ -49,12 +50,7 @@ function thermalised_start!(path::Path, potential::Potential; n_steps::Int = 200
     end
 end
 
-"""
-    Generates the distances between beads.
-"""
-function generate_distances(bead::Int, particle::Int, path::Path)
-    return [norm(path.beads[bead, particle, :] - path.beads[other_bead, particle, :]) for other_bead in 1:path.n_beads]
-end
+
 
 
 
