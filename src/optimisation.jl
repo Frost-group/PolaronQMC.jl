@@ -22,7 +22,7 @@ function updateAdjuster(adjuster::Union{SingleAdjuster, DisplaceAdjuster}, path:
             adjuster.value *=  1.01
 
         else
-            adjuster.value *= (adjuster.acceptance_rate / 0.5) # originally it's 0.5
+            adjuster.value *= (adjuster.acceptance_rate / 0.3) # originally it's 0.5
         end
 
         # Resetting the count for next sweep
@@ -61,6 +61,22 @@ function copyLastPath!(path::Path, potential::Potential, A::Union{SizedArray, Ar
     path.beads[:, :, :] = A[:, :, :]
     if verbose
         println("Copying last path complete")
+    end
+end
+
+function recentralise(path::Path; verbose = true)
+    """
+    Shifting the bead of chain for each particle such that their average position is 0
+    To avoid polaron moving to infinities
+    """
+    for particle in 1:path.n_particles
+        centroid_pos = [sum(path.beads[bead,particle,dimension] for bead in 1:path.n_beads) for dimension in 1:path.n_dimensions] / path.n_beads
+        for bead in 1:path.n_beads
+            path.beads[bead,particle, :] -= centroid_pos
+        end
+    end
+    if verbose
+        println("Readjusted centre")
     end
 end
 
