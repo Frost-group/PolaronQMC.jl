@@ -3,7 +3,8 @@ using Revise
 using PolaronQMC
 using BenchmarkTools
 println("Using ", Threads.nthreads(), " threads")
-
+b = @benchmarkable sin(1) seconds=1 time_tolerance=0.01
+run(b)
 #variables used
 T = 3.0
 β = 1/T
