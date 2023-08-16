@@ -8,10 +8,11 @@ using LinearAlgebra
 using OnlineStats
 using Plots
 using JLD
+using TimerOutputs
 #temporary
 
 # Export types
-export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, SimpleRegime, PrimitiveRegime, BoundRegime, LBRegime, Mover, SingleMover, BisectMover, DisplaceMover, HarmonicInteractionPotential, FrohlichInteractionPotential
+export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, SimpleRegime, PrimitiveRegime, BoundRegime, LBRegime, Mover, SingleMover, BisectMover, DisplaceMover, HarmonicInteractionPotential, FrohlichInteractionPotential, HolsteinPotential
 
 # Export adjusters for automatically changing shift width
 export Adjuster, SingleAdjuster, DisplaceAdjuster, BisectAdjuster
@@ -29,7 +30,7 @@ export potentialEnergy, kineticEnergy, energy, correlation, position
 export updateAdjuster, copyLastPath!
 
 # Export PIMC move algorithms
-export moveBead
+export moveBead!
 
 # Export actions
 export totalAction, potentialAction, kineticAction, bisectPotentialAction
