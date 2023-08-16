@@ -14,10 +14,9 @@ function oneBodyPotential(potential::ConstantPotential, path::Path, bead::Int, p
 end
 
 # Return the harmonic potential for a single particle.
-function oneBodyPotential(potential::HarmonicPotential, path::Path, bead::Int, particle::Int)
+function oneBodyPotential(potential::HarmonicPotential, path::Path, bead::Int, particle::Int, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
     return 0.5 * path.m * potential.ω^2 * norm(path.beads[mod1(bead, path.n_beads), particle,:])^2
 end
-
 
 function oneBodyPotential(potential::HarmonicInteractionPotential, path::Path, bead::Int, particle::Int)
     harmonic_pot = 0.5 * path.m * potential.ω^2 * norm(path.beads[mod1(bead, path.n_beads), particle,:])^2
@@ -31,30 +30,33 @@ function oneBodyPotential(potential::HarmonicInteractionPotential, path::Path, b
 end
 
 # Returns the Frohlich potential for a single particle
-function oneBodyPotential(potential::FrohlichPotential, path::Path, bead::Int, particle::Int)
+function oneBodyPotential(potential::FrohlichPotential, path::Path, bead::Int, particle::Int, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
     # Refer to the Lecture notes on Frohlich Polaron by Devreese
+    # Allowing sum over multi-phonon modes
 
     # Defining the constants to avoid repeated attributes call
-    β = path.τ * path.n_beads
-    m = path.m
-    ħω = potential.ħ * potential.ω
-    α = potential.α
-    term_factor = -0.5 * α * (ħω)^(3/2) * sqrt(1/2/m) * csch(ħω * β / 2)
-    
-    # Calculates the double integral component
-    inner_integral = 0.0
-    for other_bead in 1:path.n_beads
+    n_beads, l = path.n_beads, length(potential.ω);
+    β, α = path.τ * n_beads, potential.α;
+    #term_factor = -0.5 * α * (ħω)^(3/2) * sqrt(1/2/path.m) * csch(ħω * β / 2);
+
+    # Calculates the double integral component with individual modes
+    final_integral = 0.0 # The final after summing all beads
+    for other_bead in 1:n_beads
         if other_bead != bead # Discounting self-contributions
-            A = 1/(norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :]))
-            if A != Inf
-                #inner_integral += cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5)) / norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :])
-                inner_integral += cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5)) * A
+            for i in 1:path.n_dimensions
+                store_diff[i] = path.beads[mod1(bead, n_beads), particle, i] - path.beads[mod1(other_bead, n_beads), particle, i]
             end
+
+            for i in 1:l
+                final_integral += -0.5 * α * (potential.ħ * potential.ω[i])^(3/2) / potential.ħ * sqrt(1/2/path.m) * csch(potential.ħ * potential.ω[i] * β / 2) * 
+                                prop_Matrix[max(bead, other_bead), min(bead, other_bead), i]/norm(store_diff)
+            end
+            #A = 1/(norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :]))
+            #inner_integral += prop_Matrix[max(bead, other_bead), min(bead, other_bead)]/norm(store_diff)
         end
     end
-    return path.τ * inner_integral * term_factor # Note that this path.τ multiplication refer to dτ'
+    return path.τ * final_integral #* term_factor # Note that this path.τ multiplication refer to dτ'
 end
-
 
 function oneBodyPotential(potential::FrohlichInteractionPotential, path::Path, bead::Int, particle::Int)
     β = path.τ * path.n_beads
@@ -79,12 +81,21 @@ function oneBodyPotential(potential::FrohlichInteractionPotential, path::Path, b
     return path.τ * inner_integral * term_factor + coloumb_int # Note that this path.τ multiplication refer to dτ'
 end
 
-
 # Mexican Hat -r^2+r^4 in N-dimensions
 function oneBodyPotential(potential::MexicanHatPotential, path::Path, bead::Int, particle::Int)
     r = norm(path.beads[mod1(bead, path.n_beads), particle,:])^2
     return 0.5 * potential.ω^2 * (-r^2+r^4)
 end
+
+function oneBodyPotential(potential::HolsteinPotential, path::Path, bead::Int, particle::Int, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
+    # Refer to the Holstein Small-polaron paper
+
+    # Defining the constants to avoid repeated attributes call
+    
+    
+    return path.τ * final_integral #* term_factor # Note that this path.τ multiplication refer to dτ'
+end
+
 
 
 # Just return value of potential for a constant potential independent of two particles.
