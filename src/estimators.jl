@@ -3,8 +3,7 @@ using Statistics
 using ThreadsX
 
 
-#Kinectic energy estimators ---------------------------------
-
+#-------------Kinetic energy estimators-----------------------
 function kineticEnergy(path::Path, potential::Potential, estimator::Union{SimpleEstimator, SimpleVirialEstimator}) #thermal dynamic estimator from ceperly paper
 	kinetic_energy = 0.0
 
@@ -16,9 +15,7 @@ function kineticEnergy(path::Path, potential::Potential, estimator::Union{Simple
 	return kinetic_energy / path.n_beads
 end
 
-
-
-function kineticEnergy(path::Path, potential::Potential, estimator::ThermodynamicEstimator) #thermal dynamic estimator from ceperly paper
+function kineticEnergy(path::Path, potential::Potential, estimator::ThermodynamicEstimator, store_diff::Vector{Float64}) #thermal dynamic estimator from ceperly paper
     """
     Thermodynamic estimator from Ceperly's book Interactiong Electrons
     """
@@ -33,7 +30,7 @@ function kineticEnergy(path::Path, potential::Potential, estimator::Thermodynami
 end
 
 
-function kineticEnergy(path::Path, potential::Union{HarmonicPotential, HarmonicInteractionPotential}, estimator::VirialEstimator)
+function kineticEnergy(path::Path, potential::Union{HarmonicPotential, HarmonicInteractionPotential}, estimator::VirialEstimator, store_diff::Vector{Float64})
     """
     Virial estimator from Ceperly's book Interactiong Electrons
     For Harmonic Oscillator
@@ -56,48 +53,57 @@ function kineticEnergy(path::Path, potential::Union{HarmonicPotential, HarmonicI
 end
 
 
-function kineticEnergy(path::Path, potential::FrohlichPotential, estimator::VirialEstimator)
+function kineticEnergy(path::Path, potential::FrohlichPotential, estimator::VirialEstimator, store_diff::Vector{Float64})
     """
     Virial estimator from Ceperly's book Interactiong Electrons
     For Frohlich Oscillator
 
     Relate the average kinetic energy with potential energy -> Hence used centroid position for EACH PARTICLE
     """
+    n_beads = path.n_beads;
+    β = path.τ * n_beads;
 
+    term_one = (path.n_dimensions * path.n_particles) / (2 * path.τ * n_beads) # same as harmonic
+    final_term_two = 0.0;
     #Defining constants
-    β = path.τ * path.n_beads
-    term_one = (path.n_dimensions * path.n_particles) / (2 * path.τ * path.n_beads) # same as harmonic
-    t2_prefactor = path.τ / (2 * path.n_beads) * 0.5 * potential.α * (potential.ħ * potential.ω)^(3/2) * sqrt(1/2/path.m) * csch(potential.ħ * potential.ω * β / 2)
-    ħω = potential.ω * potential.ħ
-    # F = -dV/dr ∝ r/(r(τ)-r(τ'))^3 (Classical force formula from the pseudo-potential)
-    
-    function getTermTwo(particle, bead, other_bead, centroid_pos)
+
+    function getTermTwo(particle, bead, other_bead, centroid_pos, ω)
         if bead != other_bead
-            g_factor = cosh(ħω * β * (abs(bead-other_bead)/path.n_beads - 0.5))
-            #A = 1/(norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3)
-            #if A != Inf
-            return g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
-                #return g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) * A
-            #end
+            g_factor = cosh(potential.ħ * ω * β * (abs(bead-other_bead)/n_beads - 0.5))
+            for i in 1:path.n_dimensions
+                store_diff[i] = path.beads[bead,particle,i] - path.beads[other_bead,particle,i]
+            end
+            #return g_factor * dot((path.beads[bead,particle,:] - centroid_pos),(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])) / norm(path.beads[bead,particle,:] - path.beads[other_bead,particle,:])^3
+            return g_factor * dot((@views path.beads[bead,particle,:] - centroid_pos), store_diff) / norm(store_diff)^3
         else 
             return 0.0
         end
     end
 
-    term_two = 0.0
-    for particle in 1:path.n_particles
-        centroid_pos = [sum(path.beads[bead,particle,dimension] for bead in 1:path.n_beads) for dimension in 1:path.n_dimensions]
-        centroid_pos /= path.n_beads
-        term_two += sum(getTermTwo(particle, bead, other_bead, centroid_pos) for bead in 1:path.n_beads, other_bead in 1:path.n_beads)
+    for ω in potential.ω
+        term_two = 0.0
+        #t2_prefactor = path.τ / (2 * (path.n_beads-1)) * 0.5 * potential.α * (potential.ħ * potential.ω)^(3/2) * sqrt(1/2/path.m) * csch(potential.ħ * potential.ω * β / 2)
+        t2_prefactor = path.τ/(2 * (n_beads)) * 0.5 * potential.α * (potential.ħ * ω)^(3/2) * sqrt(1/2/path.m) * csch(potential.ħ * ω * β / 2)
+    
+        # F = -dV/dr ∝ r/(r(τ)-r(τ'))^3 (Classical force formula from the pseudo-potential)
+
+        for particle in 1:path.n_particles
+            centroid_pos = [sum(path.beads[bead,particle,dimension] for bead in 1:n_beads) for dimension in 1:path.n_dimensions] / n_beads
+            #centroid_pos /= path.n_beads
+            term_two += sum(getTermTwo(particle, bead, other_bead, centroid_pos, ω) for bead in 1:n_beads, other_bead in 1:n_beads)
+        end
+
+        final_term_two += term_two * t2_prefactor;
     end
 
-    return term_one + (t2_prefactor * term_two) # -1 (from eqn) * -1 (frm dV/dr) * -1 (force formula) * (-1) from potential [updated]
+    return term_one + final_term_two
+    #return term_one + (t2_prefactor * term_two) # -1 (from eqn) * -1 (frm dV/dr) * -1 (force formula) * (-1) from potential [updated]
+    #return (t2_prefactor * term_two) # -1 (from eqn) * -1 (frm dV/dr) * -1 (force formula) * (-1) from potential [updated]
 end
 
-#Potential energy estimators -------------------------------------------
-
-function potentialEnergy(path::Path, potential::OneBodyPotential, estimator::Estimator)
-    return sum(oneBodyPotential(potential, path, bead, particle)/(path.n_beads) for bead in 1:path.n_beads, particle in 1:path.n_particles)
+#-------------Potential energy estimators---------------------
+function potentialEnergy(path::Path, potential::OneBodyPotential, estimator::Estimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
+    return sum(oneBodyPotential(potential, path, bead, particle, store_diff, prop_Matrix)/path.n_beads for bead in 1:path.n_beads, particle in 1:path.n_particles)
 end
 
 
@@ -120,14 +126,19 @@ end
 # Energy ---------------------------------------------------------
 
 
-function energy(path::Path, potential::Potential, estimator::Estimator)
-    #return kineticEnergy(path, potential, estimator) + potentialEnergy(path, potential, estimator)
+function energy(path::Path, potential::Potential, estimator::Estimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
+    """
+    return kineticEnergy(path, potential, estimator) + potentialEnergy(path, potential, estimator)
+    """
     #Printing out energy for quick inspection -> Sometimes the values diverges to -Inf and can stop at early stage
-    KE = kineticEnergy(path, potential, estimator)
-    PE = potentialEnergy(path, potential, estimator)
-    println("kinetic is:", KE, " ", "Potential is:", PE)
-    #println("Potential is:", PE)
-    return KE + PE
+    KE::Float64 = kineticEnergy(path, potential, estimator, store_diff)
+    PE::Float64 = potentialEnergy(path, potential, estimator, store_diff, prop_Matrix)
+    #println("KE:", trunc(KE, digits=2), " ", "PE:", trunc(PE, digits=2))
+    if typeof(potential) == FrohlichPotential
+        return KE + PE - 1.5 * 1/(exp(path.τ * path.n_beads) - 1)
+    else
+        return KE + PE
+    end
 end
 
 
