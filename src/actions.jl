@@ -23,21 +23,32 @@ end
     See also [`Path`](@ref). 
 """
 
-function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::Regime)
+function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::Regime, potential::Potential, store_diff::Vector{Float64})
     """
     Allow multiple particles with different mass
     """
-    kinetic_action = 0.5 * path.m[particle] * norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / path.τ
+    kinetic_action::Float64 = 0.5 * path.m[particle] * norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / path.τ
     return kinetic_action
 end
 
 #Primitive method (based off Ceperly paper)
-function kineticAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, regime::PrimitiveRegime)
+function kineticAction(path::Path, bead_one::Int64, bead_two::Int64, particle::Int64, regime::PrimitiveRegime, potential::Potential, store_diff::Vector{Float64})
     """
     Allow multiple particles with different mass/λ
     """
-    kinetic_action = norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / (4 * path.λ[particle] * path.τ)
-	return kinetic_action
+    #kinetic_action::Float64 = norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / (4 * path.λ[particle] * path.τ)
+    for i in 1:path.n_dimensions
+        store_diff[i] = path.beads[mod1(bead_two, path.n_beads), particle, i] - path.beads[mod1(bead_one, path.n_beads), particle, i]
+    end
+    kinetic_action = norm(store_diff)^2 / path.K_factor
+    #@timeit tmr "Kinetic" kinetic_action = norm(path.beads[mod1(bead_two, path.n_beads), particle, :] - path.beads[mod1(bead_one, path.n_beads), particle, :])^2 / path.K_factor
+    return kinetic_action
+end
+
+function kineticAction(path::Path, bead_one::Int64, bead_two::Int64, particle::Int64, regime::PrimitiveRegime, potential::HolsteinPotential, store_diff::Vector{Float64})
+    kinetic_action = 1/potential.N * sum(cos(2π*i*l/potential.N) for i in 1:potential.N)
+
+    return kinetic_action
 end
 
 
@@ -63,7 +74,7 @@ function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBod
     return oneBodyPotential(potential, path, bead, particle) * path.τ
 end
 
-function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::PrimitiveRegime)
+function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBodyPotential, regime::PrimitiveRegime, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
 
     """
     Calculate potential action {For One-body Potential, Primitive Regime}
@@ -82,12 +93,14 @@ function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBod
     See also [`Path`](@ref), [`OneBodyPotential`](@ref). 
     """
     
+    #@timeit tmr "PotentialF" 
     if typeof(potential) == FrohlichPotential
         # Extra factor of 2
-        return 2 * path.τ * oneBodyPotential(potential, path, bead, particle)
+        return 2 * path.τ * oneBodyPotential(potential, path, bead, particle, store_diff, prop_Matrix)
     end
 
-    return path.τ * oneBodyPotential(potential, path, bead, particle)
+    #@timeit tmr "Potential"
+    return path.τ * oneBodyPotential(potential, path, bead, particle, store_diff, prop_Matrix)
 end
 
 function potentialAction(path::Path, bead::Int, particle::Int, potential::ConstantPotential, regime::Regime)
