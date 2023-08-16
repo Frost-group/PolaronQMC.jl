@@ -10,9 +10,9 @@ begin
 end
 
 @time begin
-    n_steps = 200000;
+    n_steps = 500000;
     data_set, energy_arr, error_arr = RangeTempPIMC(
-                [0.1, 0.2, 0.3, 0.4], #Temperature
+                [0.1, 0.2, 0.3, 0.4, 0.5, 0.6], #Temperature
                 1.0, # mass
                 1.0, # ω (has to be float)
                 2.0, # α (has to be float)
@@ -21,7 +21,7 @@ end
                 "Primitive", # regime type
                 true, # fixing beads or not
                 0.03, # fixed_τ
-                80, # n_beads (if τ is not fixed)
+                50, # n_beads (if τ is not fixed)
                 n_steps, # No. of steps
                 50000, # number of thermalisation steps
                 "Single", # movers
