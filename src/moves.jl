@@ -1,7 +1,10 @@
 # moves.jl
 using Distributions
+using TimerOutputs
 
-function moveBead(mover::SingleMover, path::Path, particle::Int, potential::Potential, regime::Regime; well_size::Float64 = 2.0)
+#const tmr = TimerOutput();
+
+function moveBead!(mover::SingleMover, path::Path, particle::Int, potential::Potential, regime::Regime, action_arr::Vector{Float64}, shift::Vector{Float64}, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
 	
 	"""
 	Move a single imaginary-time timeslice (bead) on a single particle, or subset of particles, per Monte-Carlo iteration.
@@ -17,51 +20,54 @@ function moveBead(mover::SingleMover, path::Path, particle::Int, potential::Pote
 	# Randomly choose a bead from the particle
     bead = rand(1:path.n_beads)	
 	width = mover.adjusters[particle].value 
-	shift = rand(path.n_dimensions) * width .* rand([-1,1], path.n_dimensions)	# Linear random displacement of bead.
+	
+	#@timeit tmr "shift" 
+	shift[1] = rand() * width * rand([-1,1])	# Linear random displacement of bead.
+	shift[2] = rand() * width * rand([-1,1])	# Linear random displacement of bead.
+	shift[3] = rand() * width * rand([-1,1])	# Linear random displacement of bead.
 
 	# Attempt one Single move
 	mover.adjusters[particle].attempt_counter += 1
 
     # We just need to look at the kinetic contribution from beads +- 1 unit from the selected bead
 	# Just calculate the potential action change at the selected bead
-    old_action = 
-		kineticAction(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
-		kineticAction(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
-		potentialAction(path, bead, particle, potential, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+    #@timeit tmr "old_action" 
+	action_arr[1] = 
+		kineticAction(path, bead-1, bead, particle, regime, potential, store_diff) +		# Link bead-1 to bead
+		kineticAction(path, bead, bead+1, particle, regime, potential, store_diff) +		# Link bead to bead+1
+		potentialAction(path, bead, particle, potential, regime, store_diff, prop_Matrix)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
 
 	path.beads[bead, particle, :] += shift
 
-	# Infinite potential well (Can put a artifically large well_size if not required)
-	if any(abs.(path.beads[bead, particle, :]) .> well_size)
-		path.beads[mod1(bead, path.n_beads), particle, :] -= shift
-		return false
-	end
-
-
-    new_action =
-		kineticAction(path, bead-1, bead, particle, regime) +		# Link bead-1 to bead
-		kineticAction(path, bead, bead+1, particle, regime) +		# Link bead to bead+1
-		potentialAction(path, bead, particle, potential, regime)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+    #@timeit tmr "new_action" 
+	action_arr[2] =
+		kineticAction(path, bead-1, bead, particle, regime, potential, store_diff) +		# Link bead-1 to bead
+		kineticAction(path, bead, bead+1, particle, regime, potential, store_diff) +		# Link bead to bead+1
+		potentialAction(path, bead, particle, potential, regime, store_diff, prop_Matrix)	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
 
 	
 	# Metropolis algorithm. 
 	# Accept if bead displacement decreases the action, otherwise accept with probability exp(-ΔS).
-	if new_action - old_action <= 0.0 || rand() <= exp(-(new_action - old_action))
+	# new - old action
+
+	#@timeit tmr "decision" 
+	if action_arr[2] - action_arr[1] <= 0.0 || rand() <= exp(-(action_arr[2] - action_arr[1]))
 		
 		# Updating counter for adjustment of shift width
-		mover.adjusters[particle].success_counter += 1 
+		mover.adjusters[particle].success_counter += 1
 		return true
 	
 	else
-		
+	
 		# Since rejected so we revert the shift
 		path.beads[mod1(bead, path.n_beads), particle, :] -= shift
 		return false
 
 	end
+
 end
 
-function moveBead(mover::DisplaceMover, path::Path, particle::Int, potential::Potential, regime::Regime; well_size::Float64 = 2.0)
+function moveBead!(mover::DisplaceMover, path::Path, particle::Int, potential::Potential, regime::Regime)
 
 	"""
 	Move the entire imaginary-time timeslice (all the beads) on a single particle, or subset of particles, by the same vector per Monte-Carlo iteration.
@@ -111,7 +117,7 @@ function moveBead(mover::DisplaceMover, path::Path, particle::Int, potential::Po
 	end
 end
 
-function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Potential, regime::Regime; well_size::Float64 = 5.0)
+function moveBead!(mover::BisectMover, path::Path, particle::Int, potential::Potential, regime::Regime)
 	
 	"""
 	Move a segment of imaginary-time timeslice (bead) on a single particle, or subset of particles, per Monte-Carlo iteration.
@@ -201,7 +207,7 @@ function moveBead(mover::BisectMover, path::Path, particle::Int, potential::Pote
 	end
 end
 
-function moveBead(mover::BisectMover, path::Path, particle::Int, potential::FrohlichPotential, regime::Regime; well_size::Float64 = 15.0)
+function moveBead!(mover::BisectMover, path::Path, particle::Int, potential::FrohlichPotential, regime::Regime)
 	"""
 	Special Version of Bisection algorithm for Frohlich Potential
 	as Frohlich potential contains problem with double counting contributions when calculating potential changes
