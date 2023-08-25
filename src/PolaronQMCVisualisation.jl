@@ -67,28 +67,38 @@ function draw_beads_2d(beads, xlims, ylims, n_particles, frame, potential, mover
 end
     
 
-function animate_PIMC(pimc, n_particles, n_dimensions, potential, mover, T)
+function animate_PIMC(data, n_particles, n_dimensions, potential, mover, T)
 
 	if n_dimensions == 3
-		xlims = [minimum([minimum(x[:, :, 1]) for x in pimc[3]]), maximum([maximum(x[:, :, 1]) for x in pimc[3]])]
-		ylims = [minimum([minimum(x[:, :, 2]) for x in pimc[3]]), maximum([maximum(x[:, :, 2]) for x in pimc[3]])]
-		zlims = [minimum([minimum(x[:, :, 3]) for x in pimc[3]]), maximum([maximum(x[:, :, 3]) for x in pimc[3]])]
+		xlims = [minimum([minimum(x[:, :, 1]) for x in data[3]]), maximum([maximum(x[:, :, 1]) for x in data[3]])]
+		ylims = [minimum([minimum(x[:, :, 2]) for x in data[3]]), maximum([maximum(x[:, :, 2]) for x in data[3]])]
+		zlims = [minimum([minimum(x[:, :, 3]) for x in data[3]]), maximum([maximum(x[:, :, 3]) for x in data[3]])]
 
 		frame = 0
-		animation = Plots.@animate for p in pimc[3]
+		animation = Plots.@animate for p in data[3]
 			draw_beads_3d(p, xlims, ylims, zlims, n_particles, frame, potential, mover, T)
 			frame += 1
 		end
 
 	elseif n_dimensions == 2
-		xlims = [minimum([minimum(x[:, :, 1]) for x in pimc[3]]), maximum([maximum(x[:, :, 1]) for x in pimc[3]])]
-		ylims = [minimum([minimum(x[:, :, 2]) for x in pimc[3]]), maximum([maximum(x[:, :, 2]) for x in pimc[3]])]
+		xlims = [minimum([minimum(x[:, :, 1]) for x in data[3]]), maximum([maximum(x[:, :, 1]) for x in data[3]])]
+		ylims = [minimum([minimum(x[:, :, 2]) for x in data[3]]), maximum([maximum(x[:, :, 2]) for x in data[3]])]
 
 		frame = 0
-		animation = Plots.@animate for p in pimc[3]
+		animation = Plots.@animate for p in data[3]
 			draw_beads_2d(p, xlims, ylims, n_particles, frame, potential, mover, T)
 			frame += 1
 		end
+	end
+
+	return animation
+end
+
+function animate_PIMC(data, n_dimensions; particle = 1, dim = 1)
+	positions = data["Position:p$(particle)d$(dim)"]
+	positions_flatten = collect(Iterators.flatten(positions))
+	animation = Plots.@animate for i in 1:length(positions)
+		scatter(positions[i], 1:length(positions[1]), xlimit=[minimum(positions_flatten), maximum(positions_flatten)], xlabel="x", ylabel="τ")
 	end
 
 	return animation
