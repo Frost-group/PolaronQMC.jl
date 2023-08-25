@@ -1,6 +1,6 @@
 # actions.jl
 # Ways of calculating action
-
+using SpecialFunctions
 
 # usually the total action is not used because we calcalate changes instead of the full action. The formula is put here for completeness
 function totalAction(path::Path, bead_one::Int, bead_two::Int, particle::Int, potential::OneBodyPotential, regime::Regime)
@@ -45,11 +45,15 @@ function kineticAction(path::Path, bead_one::Int64, bead_two::Int64, particle::I
     return kinetic_action
 end
 
-function kineticAction(path::Path, bead_one::Int64, bead_two::Int64, particle::Int64, regime::PrimitiveRegime, potential::HolsteinPotential, store_diff::Vector{Float64})
-    kinetic_action = 1/potential.N * sum(cos(2π*i*l/potential.N) for i in 1:potential.N)
-
+function kineticAction(path::DiscretePath, bead_one::Int64, bead_two::Int64, particle::Int64, potential::HolsteinPotential)
+    # Thermodynamic limit N -> ∞
+    kinetic_action = 1.0;
+    for dimension in 1:path.n_dimensions
+        kinetic_action *= besseli(path.beads[bead_one, particle, dimension] - path.beads[bead_two, particle, dimension], 2 * path.τ * potential.J)
+    end
     return kinetic_action
 end
+
 
 
 
@@ -101,6 +105,10 @@ function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBod
 
     #@timeit tmr "Potential"
     return path.τ * oneBodyPotential(potential, path, bead, particle, store_diff, prop_Matrix)
+end
+
+function potentialAction(path::DiscretePath, bead::Int, particle::Int, potential::HolsteinPotential, F_l::Array{Float64})
+    return oneBodyPotential(potential, path, bead, particle, F_l)
 end
 
 function potentialAction(path::Path, bead::Int, particle::Int, potential::ConstantPotential, regime::Regime)
