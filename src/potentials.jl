@@ -7,6 +7,8 @@ Collection of potentials to use in simulations.
 """
 Outer constructors for different potential types.
 """
+# Defining delta function
+δ(x,y) = ==(x,y);
 
 # Just return value of potential for a constant potential independent of single particle.
 function oneBodyPotential(potential::ConstantPotential, path::Path, bead::Int, particle::Int)
@@ -87,15 +89,21 @@ function oneBodyPotential(potential::MexicanHatPotential, path::Path, bead::Int,
     return 0.5 * potential.ω^2 * (-r^2+r^4)
 end
 
-function oneBodyPotential(potential::HolsteinPotential, path::Path, bead::Int, particle::Int, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
+function oneBodyPotential(potential::HolsteinPotential, path::DiscretePath, bead::Int, particle::Int64, F_l::Array{Float64})
     # Refer to the Holstein Small-polaron paper
 
     # Defining the constants to avoid repeated attributes call
-    
-    
-    return path.τ * final_integral #* term_factor # Note that this path.τ multiplication refer to dτ'
+    final_integral = 0.0;
+    for other_bead in 1:path.n_beads
+        if bead != other_bead
+            if δ(@view(path.beads[bead, particle, :]), @view(path.beads[other_bead, particle, :]))
+            #if @views path.beads[bead, particle, :] != @views path.beads[other_bead, particle, :]
+                final_integral += F_l[abs(bead-other_bead)+1]
+            end
+        end
+    end       
+    return final_integral #* term_factor # Note that this path.τ multiplication refer to dτ'
 end
-
 
 
 # Just return value of potential for a constant potential independent of two particles.
