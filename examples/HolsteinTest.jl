@@ -59,7 +59,7 @@ using JLD
     end
 
     # Fixed observable skip or step dependant
-    quick_steps = true
+    quick_steps = false
     if quick_steps
         equilibrium_skip = 1
         observables_skip = 1000
@@ -158,9 +158,7 @@ using JLD
 end
 
 @time begin
-    animation = @animate for i in 1:length(positions)
-        scatter(positions[i], 1:path.n_beads, xlimit=[minimum(positions_flatten), maximum(positions_flatten)], xlabel="x", ylabel="τ")
-    end
-    gif(animation, "image/anim_output_$(λ)_version.gif", fps = 50) 
+    animation = animate_PIMC(data, 1)
+    gif(animation, "image/anim_output_$(λ)_version$(version)_1.gif", fps = 50) 
 end
 
