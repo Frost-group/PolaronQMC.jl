@@ -82,6 +82,30 @@ struct Path
 	end
 end
 
+struct DiscretePath
+
+    """
+    Generic discrete path mutable type -- Discretised for Holstein Hopping
+    """
+
+	n_beads :: Int64
+	n_particles :: Int64
+    n_dimensions :: Int64
+
+    beads :: Array{Int64, 3}
+
+	τ :: Float64
+    m :: Union{Float64, Vector{Float64}} 
+
+	function DiscretePath(n_beads::Int64, n_particles::Int64, n_dimensions::Int64, τ::Float64, m = 1.0)
+        
+        beads = zeros(Int64, n_beads, n_particles, n_dimensions)
+
+		new(n_beads, n_particles, n_dimensions, beads, τ, m)
+	end
+end
+
+
 #-------------------------Mover----------------------------
 # abstract type for how to move the beads in the simulation
 abstract type Mover end
@@ -299,10 +323,9 @@ struct HolsteinPotential <: OneBodyPotential
     ω :: Float64 # Ohonon frequency
     ħ :: Float64
     J :: Float64 # Hopping Integral
-    N :: Int64
 
-    function HolsteinPotential(λ::Float64, ω::Float64, ħ::Float64, J::Float64, N::Int64)
-        new(λ, ω, ħ, J, N)
+    function HolsteinPotential(λ::Float64, ω::Float64, ħ::Float64, J::Float64)
+        new(λ, ω, ħ, J)
     end
 end
 
