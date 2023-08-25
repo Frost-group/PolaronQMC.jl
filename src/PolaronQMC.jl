@@ -12,7 +12,7 @@ using TimerOutputs
 #temporary
 
 # Export types
-export Path, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, SimpleRegime, PrimitiveRegime, BoundRegime, LBRegime, Mover, SingleMover, BisectMover, DisplaceMover, HarmonicInteractionPotential, FrohlichInteractionPotential, HolsteinPotential
+export Path, DiscretePath, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, SimpleRegime, PrimitiveRegime, BoundRegime, LBRegime, Mover, SingleMover, BisectMover, DisplaceMover, HarmonicInteractionPotential, FrohlichInteractionPotential, HolsteinPotential
 
 # Export adjusters for automatically changing shift width
 export Adjuster, SingleAdjuster, DisplaceAdjuster, BisectAdjuster
@@ -24,7 +24,7 @@ export Estimator, ThermodynamicEstimator, VirialEstimator, SimpleEstimator, Simp
 export oneBodyPotential, twoBodyPotential
 
 # Export observables
-export potentialEnergy, kineticEnergy, energy, correlation, position
+export potentialEnergy, kineticEnergy, energy, correlation, position, HolsteinEnergy
 
 # Export function used in the optimisation of the running of the simulation
 export updateAdjuster, copyLastPath!
@@ -36,7 +36,7 @@ export moveBead!
 export totalAction, potentialAction, kineticAction, bisectPotentialAction
 
 # Export simulation run code (PIMC)
-export PIMC
+export PIMC, Holstein_PIMC
 
 # Export methods for comparison
 export analyticEnergyHarmonic, selectiveMean
