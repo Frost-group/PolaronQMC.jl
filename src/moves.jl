@@ -290,3 +290,62 @@ function moveBead!(mover::BisectMover, path::Path, particle::Int, potential::Fro
 		return false
 	end
 end
+
+function moveBead!(path::DiscretePath, particle::Int, potential::Potential, F_l::Array{Float64})
+	
+	"""
+	Discretised single bead movement
+	Move a single imaginary-time timeslice (bead) on a single particle, or subset of particles, per Monte-Carlo iteration.
+
+	Arguments
+	- `mover::Mover: Single Mover type for this method`
+	- `path::Path`: collection of all particle imaginary-time paths.
+	- `particle::Int`: select a specific particle indexed by this integer, or a subset of particles indexed by integers in this vector.
+	- `potential::Union{Potential}`: list of potentials active in the system. Can just be a single potential.
+	See also [`Path`](@ref).
+	"""
+
+	# Randomly choose a bead from the particle
+    bead = rand(1:path.n_beads)	
+    dimension = rand(1:path.n_dimensions)	
+	shift = rand([-1,1]) # Random shifting
+
+    # We just need to look at the kinetic contribution from beads +- 1 unit from the selected bead
+	# Just calculate the potential action change at the selected bead
+    #@timeit tmr "old_action" 
+	old_action = 
+		kineticAction(path, bead, mod1(bead-1, path.n_beads), particle, potential) * 
+        kineticAction(path, bead, mod1(bead+1, path.n_beads), particle, potential) *
+		exp(-potentialAction(path, bead, particle, potential, F_l))	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+
+	path.beads[bead, particle, dimension] += shift
+	#path.beads[bead] += shift
+
+    #@timeit tmr "new_action" 
+	new_action =
+		#prod([kineticAction(path, bead, other_bead, particle, potential) for other_bead in 1:path.n_beads if other_bead != bead]) * 
+		kineticAction(path, bead, mod1(bead-1, path.n_beads), particle, potential) * 
+        kineticAction(path, bead, mod1(bead+1, path.n_beads), particle, potential) *
+        exp(-potentialAction(path, bead, particle, potential, F_l))	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+
+	
+	# Metropolis algorithm. 
+	# Accept if bead displacement decreases the action, otherwise accept with probability exp(-ΔS).
+	# new - old action
+    #println("NEW:", trunc(new_action, digits=2), " ", "OLD:", trunc(old_action, digits=2))
+    #println("ratio:", trunc(new_action/old_action, digits=2))
+
+	if rand() <= new_action/old_action
+		# Updating counter for adjustment of shift width
+		#mover.adjusters[particle].success_counter += 1
+		return true
+	
+	else
+		# Since rejected so we revert the shift
+		path.beads[mod1(bead, path.n_beads), particle, dimension] -= shift
+		#path.beads[mod1(bead, path.n_beads)] -= shift
+		return false
+
+	end
+
+end
