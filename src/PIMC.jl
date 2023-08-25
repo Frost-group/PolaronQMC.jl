@@ -220,7 +220,7 @@ function Holstein_PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Di
 	for step in 1:n_steps
 		#println("step is: ", step)
 		# Feedback for the progress of the PIMC simulation
-		if mod(step, 2000) == 0
+		if mod(step, 200000) == 0
 			#plot(path.beads[:, particle, 1], 1:path.n_beads)
 			println("step is: ", step)
 		end
