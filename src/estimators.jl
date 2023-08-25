@@ -1,7 +1,9 @@
 # estimators.jl
 using Statistics
 using ThreadsX
+using SpecialFunctions
 
+δ(x,y) = ==(x,y);
 
 #-------------Kinetic energy estimators-----------------------
 function kineticEnergy(path::Path, potential::Potential, estimator::Union{SimpleEstimator, SimpleVirialEstimator}) #thermal dynamic estimator from ceperly paper
@@ -101,11 +103,56 @@ function kineticEnergy(path::Path, potential::FrohlichPotential, estimator::Viri
     #return (t2_prefactor * term_two) # -1 (from eqn) * -1 (frm dV/dr) * -1 (force formula) * (-1) from potential [updated]
 end
 
+function kineticEnergy(path::DiscretePath, potential::HolsteinPotential, estimator::VirialEstimator)
+    kinetic_energy = 0.0
+    for particle in 1:path.n_particles
+        for i in 1:path.n_beads
+            for k in 1:path.n_dimensions
+                kinetic_energy += (besseli(path.beads[i, particle, k] - path.beads[mod1(i+1, path.n_beads), particle, k] - 1, 2 * path.τ * potential.J) + besseli(path.beads[i, particle, k] - 
+                                path.beads[mod1(i+1, path.n_beads), particle, k] + 1, 2 * path.τ * potential.J))/(besseli(path.beads[i, particle, k] - path.beads[mod1(i+1, path.n_beads), particle, k], 2 * path.τ * potential.J))
+        
+            end
+        end
+        
+        #=
+        kinetic_energy += (besseli(path.beads[i] - path.beads[mod1(i+1, path.n_beads)] - 1, 2 * path.τ * potential.J) + besseli(path.beads[i] - 
+                            path.beads[mod1(i+1, path.n_beads)] + 1, 2 * path.τ * potential.J))/(besseli(path.beads[i] - path.beads[mod1(i+1, path.n_beads)], 2 * path.τ * potential.J))
+    
+        =#
+    end
+    return -1 * kinetic_energy/path.n_beads
+end
+
+
 #-------------Potential energy estimators---------------------
 function potentialEnergy(path::Path, potential::OneBodyPotential, estimator::Estimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
     return sum(oneBodyPotential(potential, path, bead, particle, store_diff, prop_Matrix)/path.n_beads for bead in 1:path.n_beads, particle in 1:path.n_particles)
 end
 
+function potentialEnergy(path::DiscretePath, potential::HolsteinPotential, estimator::Estimator, DF_l::Array{Float64})
+    potential_energy = 0.0
+    for particle in 1:path.n_particles
+        for i in 1:path.n_beads
+            for j in 1:path.n_beads
+                if i != j
+                    #=
+                    if path.beads[i] == path.beads[j]
+                        potential_energy += DF_l[abs(i-j)+1]
+                    end
+                    =#
+                    if δ(@view(path.beads[i, particle, :]), @view(path.beads[j, particle, :]))
+                        potential_energy += DF_l[abs(i-j)+1]
+                    end
+                
+                end
+            end
+        end
+    end
+
+    
+    return -potential_energy/path.n_beads
+    #return sum(oneBodyPotential(potential, path, bead, particle, store_diff, prop_Matrix)/path.n_beads for bead in 1:path.n_beads, particle in 1:path.n_particles)
+end
 
 function potentialEnergy(path::Path, potential::ConstantPotential, estimator::ThermodynamicEstimator)
     return potential.V
@@ -139,6 +186,17 @@ function energy(path::Path, potential::Potential, estimator::Estimator, store_di
     else
         return KE + PE
     end
+end
+
+function energy(path::DiscretePath, potential::Potential, estimator::Estimator, F_l::Array{Float64})
+    """
+    return kineticEnergy(path, potential, estimator) + potentialEnergy(path, potential, estimator)
+    """
+    #Printing out energy for quick inspection -> Sometimes the values diverges to -Inf and can stop at early stage
+    KE::Float64 = kineticEnergy(path, potential, estimator)
+    PE::Float64 = potentialEnergy(path, potential, estimator, F_l)
+    #rintln("KE:", trunc(KE, digits=2), " ", "PE:", trunc(PE, digits=2))
+    return KE + PE
 end
 
 
