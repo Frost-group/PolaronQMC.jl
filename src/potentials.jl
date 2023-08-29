@@ -8,7 +8,6 @@ Collection of potentials to use in simulations.
 Outer constructors for different potential types.
 """
 # Defining delta function
-δ(x,y) = ==(x,y);
 
 # Just return value of potential for a constant potential independent of single particle.
 function oneBodyPotential(potential::ConstantPotential, path::Path, bead::Int, particle::Int)
