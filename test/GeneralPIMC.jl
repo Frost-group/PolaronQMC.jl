@@ -3,7 +3,7 @@ using PolaronQMC
 using Statistics
 using Plots
 using PolaronMobility
-include("../src/PolaronQMCVisualisation.jl")
+#include("../src/PolaronQMCVisualisation.jl")
 using LaTeXStrings
 using DelimitedFiles
 using JLD
