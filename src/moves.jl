@@ -316,7 +316,7 @@ function moveBead!(path::DiscretePath, particle::Int, potential::Potential, F_l:
 	old_action = 
 		kineticAction(path, bead, mod1(bead-1, path.n_beads), particle, potential) * 
         kineticAction(path, bead, mod1(bead+1, path.n_beads), particle, potential) *
-		exp(-potentialAction(path, bead, particle, potential, F_l))	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+		exp(potentialAction(path, bead, particle, potential, F_l))	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
 
 	path.beads[bead, particle, dimension] += shift
 	#path.beads[bead] += shift
@@ -326,7 +326,7 @@ function moveBead!(path::DiscretePath, particle::Int, potential::Potential, F_l:
 		#prod([kineticAction(path, bead, other_bead, particle, potential) for other_bead in 1:path.n_beads if other_bead != bead]) * 
 		kineticAction(path, bead, mod1(bead-1, path.n_beads), particle, potential) * 
         kineticAction(path, bead, mod1(bead+1, path.n_beads), particle, potential) *
-        exp(-potentialAction(path, bead, particle, potential, F_l))	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
+        exp(potentialAction(path, bead, particle, potential, F_l))	# Potential at bead for all particles incl. any const., 1-body or 2-body interactions.
 
 	
 	# Metropolis algorithm. 
