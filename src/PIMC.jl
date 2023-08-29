@@ -6,6 +6,8 @@ using PyCall
 using TimerOutputs
 const tmr = TimerOutput();
 
+δ(x,y) = ==(x,y);
+
 # PIMC function with multi-threading support
 function PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Path, mover::Mover, estimators::Array, potential::Potential, regime::Regime, observables::Array; adjust::Bool = true, threads::Bool = false, max_level::Int = 1)
 	"""
@@ -203,12 +205,12 @@ function Holstein_PIMC(n_steps::Int, equilibrium_skip, observable_skip, path::Di
 
 	F_l = zeros(path.n_beads) # should start with zero distance
 	for l in 1:path.n_beads
-		F_l[l] = path.τ^3 * potential.λ^2 / (4 * path.n_beads) * sum((cos(2π*(k-1)*(l-1)/path.n_beads)/(1 - cos(2π*(k-1)/path.n_beads) + path.τ^2 * potential.ω^2 / 2)) for k in 1:path.n_beads)
+		F_l[l] = 2 * path.n_dimensions * path.τ^3 * potential.α / (4 * path.n_beads) * sum((cos(2π*(k-1)*(l-1)/path.n_beads)/(1 - cos(2π*(k-1)/path.n_beads) + path.τ^2 * potential.ω^2 / 2)) for k in 1:path.n_beads)
 	end
 
     DF_l = zeros(path.n_beads) # should start with zero distance
 	for l in 1:path.n_beads
-		DF_l[l] = path.τ^2 * potential.λ^2 / (4 * path.n_beads) * 
+		DF_l[l] = 2 * path.n_dimensions * path.τ^2 * potential.α / (4 * path.n_beads) * 
                     (3 * sum((cos(2π*(k-1)*(l-1)/path.n_beads)/(1 - cos(2π*(k-1)/path.n_beads) + path.τ^2 * potential.ω^2 / 2)) for k in 1:path.n_beads) - 
                     path.τ^2 * potential.ω^2 * sum((cos(2π*(k-1)*(l-1)/path.n_beads)/(1 - cos(2π*(k-1)/path.n_beads) + path.τ^2 * potential.ω^2 / 2)^2) for k in 1:path.n_beads))
 		
