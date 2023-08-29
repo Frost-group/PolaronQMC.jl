@@ -108,7 +108,7 @@ function potentialAction(path::Path, bead::Int, particle::Int, potential::OneBod
 end
 
 function potentialAction(path::DiscretePath, bead::Int, particle::Int, potential::HolsteinPotential, F_l::Array{Float64})
-    return oneBodyPotential(potential, path, bead, particle, F_l)
+    return 2 * oneBodyPotential(potential, path, bead, particle, F_l)
 end
 
 function potentialAction(path::Path, bead::Int, particle::Int, potential::ConstantPotential, regime::Regime)
