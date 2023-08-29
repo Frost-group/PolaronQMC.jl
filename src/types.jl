@@ -319,13 +319,13 @@ struct HolsteinPotential <: OneBodyPotential
     Potential for Holstein Polaron (Small-polaron).
     """
 
-    λ :: Float64 # Coupling
+    α :: Float64 # Coupling 
     ω :: Float64 # Ohonon frequency
     ħ :: Float64
     J :: Float64 # Hopping Integral
 
-    function HolsteinPotential(λ::Float64, ω::Float64, ħ::Float64, J::Float64)
-        new(λ, ω, ħ, J)
+    function HolsteinPotential(α::Float64, ω::Float64, ħ::Float64, J::Float64)
+        new(α, ω, ħ, J)
     end
 end
 
