@@ -3,7 +3,7 @@ using Statistics
 using ThreadsX
 using SpecialFunctions
 
-δ(x,y) = ==(x,y);
+
 
 #-------------Kinetic energy estimators-----------------------
 function kineticEnergy(path::Path, potential::Potential, estimator::Union{SimpleEstimator, SimpleVirialEstimator}) #thermal dynamic estimator from ceperly paper
@@ -125,6 +125,44 @@ end
 
 
 #-------------Potential energy estimators---------------------
+#=
+function potentialEnergy(path::Path, potential::FrohlichPotential, estimator::Estimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
+    potential_energy = 0.0
+    n_beads, l_ω = path.n_beads, length(potential.ω);
+    β, α = path.τ * n_beads, potential.α;
+    #term_factor = -0.5 * α * (ħω)^(3/2) * sqrt(1/2/path.m) * csch(ħω * β / 2);
+
+    # Calculates the double integral component with individual modes
+
+    for particle in 1:path.n_particles
+        for bead in 1:n_beads
+            for other_bead in 1:n_beads
+                if other_bead != bead # Discounting self-contributions
+                    for i in 1:path.n_dimensions
+                        store_diff[i] = path.beads[mod1(bead, n_beads), particle, i] - path.beads[mod1(other_bead, n_beads), particle, i]
+                    end
+
+                    for i in 1:l_ω
+                        #=
+                        potential_energy += -0.5 * α * (potential.ħ * potential.ω[i])^(3/2) * sqrt(1/2/path.m) /norm(store_diff) *
+                        (path.τ^2 * sinh(potential.ħ * β * potential.ω[i] * (abs(other_bead-bead)/path.n_beads-0.5)) * csch(potential.ħ * potential.ω[i] * β / 2) * potential.ħ * potential.ω[i] * path.n_beads * (abs(other_bead-bead)/path.n_beads-0.5)
+                        - path.τ^2 * cosh(potential.ħ * potential.ω[i] * β / 2) /sinh(potential.ħ * potential.ω[i] * β / 2)^2 * prop_Matrix[max(bead, other_bead), min(bead, other_bead), i] * 0.5 * potential.ħ * potential.ω[i] * path.n_beads
+                        + 2 * path.τ * prop_Matrix[max(bead, other_bead), min(bead, other_bead), i] * csch(potential.ħ * potential.ω[i] * β / 2))
+                        =#
+                        potential_energy += -0.5 * α * (potential.ħ * potential.ω[i])^(3/2) * sqrt(1/2/path.m) /norm(store_diff) * 2 * path.τ * prop_Matrix[max(bead, other_bead), min(bead, other_bead), i] * csch(potential.ħ * potential.ω[i] * β / 2)
+
+                    end
+                    
+                end
+            end
+        end
+    end
+
+    return potential_energy/path.n_beads
+
+end
+=#
+
 function potentialEnergy(path::Path, potential::OneBodyPotential, estimator::Estimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
     return sum(oneBodyPotential(potential, path, bead, particle, store_diff, prop_Matrix)/path.n_beads for bead in 1:path.n_beads, particle in 1:path.n_particles)
 end
@@ -134,17 +172,11 @@ function potentialEnergy(path::DiscretePath, potential::HolsteinPotential, estim
     for particle in 1:path.n_particles
         for i in 1:path.n_beads
             for j in 1:path.n_beads
-                if i != j
-                    #=
-                    if path.beads[i] == path.beads[j]
-                        potential_energy += DF_l[abs(i-j)+1]
-                    end
-                    =#
-                    if δ(@view(path.beads[i, particle, :]), @view(path.beads[j, particle, :]))
-                        potential_energy += DF_l[abs(i-j)+1]
-                    end
-                
+                # Delta function to check whether the 2 beads are on the same sites
+                if δ(@view(path.beads[i, particle, :]), @view(path.beads[j, particle, :]))
+                    potential_energy += DF_l[abs(i-j)+1]
                 end
+
             end
         end
     end
@@ -180,7 +212,7 @@ function energy(path::Path, potential::Potential, estimator::Estimator, store_di
     #Printing out energy for quick inspection -> Sometimes the values diverges to -Inf and can stop at early stage
     KE::Float64 = kineticEnergy(path, potential, estimator, store_diff)
     PE::Float64 = potentialEnergy(path, potential, estimator, store_diff, prop_Matrix)
-    #println("KE:", trunc(KE, digits=2), " ", "PE:", trunc(PE, digits=2))
+    println("KE:", trunc(KE, digits=2), " ", "PE:", trunc(PE, digits=2))
     if typeof(potential) == FrohlichPotential
         return KE + PE - 1.5 * 1/(exp(path.τ * path.n_beads) - 1)
     else
@@ -195,7 +227,7 @@ function energy(path::DiscretePath, potential::Potential, estimator::Estimator, 
     #Printing out energy for quick inspection -> Sometimes the values diverges to -Inf and can stop at early stage
     KE::Float64 = kineticEnergy(path, potential, estimator)
     PE::Float64 = potentialEnergy(path, potential, estimator, F_l)
-    #rintln("KE:", trunc(KE, digits=2), " ", "PE:", trunc(PE, digits=2))
+    #println("KE:", trunc(KE, digits=2), " ", "PE:", trunc(PE, digits=2))
     return KE + PE
 end
 
