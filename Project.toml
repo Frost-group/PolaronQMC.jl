@@ -1,6 +1,6 @@
 name = "PolaronQMC"
 uuid = "ea65e02c-02a1-4f91-acc1-0c78ab1071d7"
-authors = ["Jarvist Moore Frost <jarvist@gmail.com>", "Bradley Andrew Alan Martin <bam116@ic.ac.uk>", "George Su <georgesuhk@gmail.com>"]
+authors = ["Jarvist Moore Frost <jarvist@gmail.com>", "Bradley Andrew Alan Martin <bam116@ic.ac.uk>", "George Su <georgesuhk@gmail.com>", "Yee Chit Wong <ycwong429@gmail.com>"]
 version = "0.1.0"
 
 [deps]
