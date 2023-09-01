@@ -50,6 +50,8 @@ export draw_beads_3d, draw_beads_2d, animate_PIMC
 # Export quick runs
 export quickrun_frohlich
 
+export generalPIMC, MultiModePIMC, general_Holstein_PIMC, SaveJLDData
+
 
 # Export PIMC algorithm
 #export PIMC, draw_beads_3d, animate_PIMC
@@ -64,11 +66,11 @@ include("estimators.jl") # Estimators to sample.
 include("PIMC.jl") # Path integrals Monte Carlo algorithm.
 include("errors.jl") # Methods for analysing errors.
 include("quickruns.jl") # Functions for obtaining results using default parameters.
+include("GeneralPIMC.jl") # Function for making data
 
 
 #temporary
 include("PolaronQMCVisualisation.jl")
-#include("Schrodinger.jl") # discretised TISE solver
 
 end # module
 
