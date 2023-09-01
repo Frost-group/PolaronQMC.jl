@@ -72,11 +72,6 @@ struct Path
         beads *= start_range # If we want the beads to be more widespread
 
         K_factor = 4 * λ * τ
-        #=
-        distance = zeros(n_beads, n_beads)
-        distance_temp = zeros(n_beads, n_beads)
-        rewrite = [false];
-        =#
 
 		new(n_beads, n_particles, n_dimensions, beads, τ, m, λ, K_factor)#, distance, distance_temp, rewrite)
 	end
