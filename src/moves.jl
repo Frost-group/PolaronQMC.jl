@@ -22,9 +22,9 @@ function moveBead!(mover::SingleMover, path::Path, particle::Int, potential::Pot
 	width = mover.adjusters[particle].value 
 	
 	#@timeit tmr "shift" 
-	shift[1] = rand() * width * rand([-1,1])	# Linear random displacement of bead.
-	shift[2] = rand() * width * rand([-1,1])	# Linear random displacement of bead.
-	shift[3] = rand() * width * rand([-1,1])	# Linear random displacement of bead.
+	for i in 1:path.n_dimensions
+		shift[i] = rand() * width * rand([-1,1])	# Linear random displacement of bead.
+	end
 
 	# Attempt one Single move
 	mover.adjusters[particle].attempt_counter += 1
@@ -52,6 +52,7 @@ function moveBead!(mover::SingleMover, path::Path, particle::Int, potential::Pot
 
 	#@timeit tmr "decision" 
 	if action_arr[2] - action_arr[1] <= 0.0 || rand() <= exp(-(action_arr[2] - action_arr[1]))
+	#if rand() <= exp(-(action_arr[2] - action_arr[1]))
 		
 		# Updating counter for adjustment of shift width
 		mover.adjusters[particle].success_counter += 1
