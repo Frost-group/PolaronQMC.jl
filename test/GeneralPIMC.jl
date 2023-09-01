@@ -50,7 +50,7 @@ function generalPIMC(T::Float64, m::Float64, ω::Union{Float64, Vector{Float64}}
     end
 
     #Initialsing path
-    path = Path(n_beads, n_particles, n_dimensions, τ, m=m, λ = ħ^2/2/m)
+    path = Path(n_beads, n_particles, n_dimensions, τ, m=m, λ = ħ^2/2/m, start_range=20.0)
     println(path.K_factor)
 
     if threads
@@ -109,7 +109,7 @@ function generalPIMC(T::Float64, m::Float64, ω::Union{Float64, Vector{Float64}}
     # Fixed observable skip or step dependant
     if quick_steps
         equilibrium_skip = 10
-        observables_skip = 1000
+        observables_skip = 100
     else
         equilibrium_skip = equilibrium_skip_factor * n_steps #try to put as 0.5, 0.2 is for quicker testing process. Convergence has to be checked.
         observables_skip = observable_skip_factor * n_steps # How many steps to skip before making observables
@@ -139,13 +139,15 @@ function generalPIMC(T::Float64, m::Float64, ω::Union{Float64, Vector{Float64}}
     elseif typeof(potential) == FrohlichPotential
 
         #comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
-        #comparison_polaron = polaron([α], [T], [0.0]; ω=1.0, verbose = true)
+        #comparison_energy = polaron([α], [T], [0.0]; ω=1.0, verbose = true)
+        
         if length(ω) == 1
-            comparison_polaron = feynmanvw(2.0, 1.0, [α], [ω], 1.0/T)
+            comparison_polaron = feynmanvw(2.0, 1.0, α, ω, Inf)
         else
-            comparison_polaron = feynmanvw(2.0, 1.0, [α], ω, 1.0/T)
+            comparison_polaron = feynmanvw(2.0, 1.0, [α], ω, Inf)
         end
         comparison_energy += comparison_polaron[3]
+        
         #end
     end
 
@@ -185,7 +187,7 @@ function generalPIMC(T::Float64, m::Float64, ω::Union{Float64, Vector{Float64}}
         println("jackknife errors: ", jacknife_errors)
         
         # return energy, variances, mean_acceptance_rate, comparison_energy
-        return mean_energy, jacknife_errors, comparison_energy, energies, positions, correlations, acceptance_rates, adjuster_values, equilibrium_skip, observables_skip, version, potential, n_beads, data
+        return mean_energy, jacknife_errors, comparison_energy, energies, positions, correlations, acceptance_rates, adjuster_values, equilibrium_skip, observables_skip, version, potential, n_beads, data, path
     
     else
         println("multithreading")
@@ -405,6 +407,163 @@ function MultiModePIMC(T::Float64, m::Float64, ω_array::Vector{Float64}, α::Fl
 
 end
 
+function general_Holstein_PIMC(T::Float64, ω::Float64, α::Float64, n_dimensions::Int64, n_steps::Int64; 
+    m::Float64=1.0, J::Float64=1.0, n_particles::Int64 = 1, fixed_beads::Bool=false, fixed_τ::Float64 = 0.05, 
+    n_beads::Int64 = 100, potential = "Holstein", estimator="Thermodynamic", 
+    quick_steps=false, threads::Bool = false, start_range = 1.0, particleIndex = 1, dimensionIndex = 1,
+    observable_skip_factor=0.005, equilibrium_skip_factor=0.5, version = 1, 
+    verbose::Bool = true, thread_number = 16)
+    
+    """
+    Initialise System Variables:
+    T
+    m
+    n_particles
+    n_dimensions
+    start_range
+
+    Initialise potential variables:
+    ω
+    α
+
+    Possible choice of potential: {"Harmonic", "Frohlich", "MexicanHat", "Constant"}
+    Possible choice of estimator: {"Simple", "Virial", "Thermodynamic"}
+    Possible choice of regime: {"Simple", "Primitive"}
+    Possible choice of mover: {"Single", "Displace", "Bisect"}
+    """
+    
+    #version = Int(floor(rand()*10000))
+
+    # Path variables
+    β = 1 / T
+    ħ = 1.0
+
+    # For fixed number of beads or not fixing beads
+    if fixed_beads
+        n_beads = n_beads
+        #τ = 1.0 / (T * n_beads)
+        τ = ħ * β / n_beads
+    else
+        τ = fixed_τ
+        n_beads = Int(floor(1/(τ*T)))
+    end
+
+    # Initate path
+    path = DiscretePath(n_beads, n_particles, n_dimensions, τ, m)
+
+    if threads
+        plot_on = false
+    else
+        plot_on = true
+    end
+
+    # Set potential function
+    if potential == "Holstein"
+        potential = HolsteinPotential(α, ω, ħ, J)
+    end
+
+    # Set Estimator
+    if estimator == "Thermodynamic"
+        estimators = [ThermodynamicEstimator()]
+    else
+        println("Invalid Estimator: ", estimator)
+    end
+
+    # Observables type
+    observables = ["Energy", "Position"]
+
+    # Fixed observable skip or step dependant
+    if quick_steps
+        equilibrium_skip = 10
+        observables_skip = 1000
+    else
+        equilibrium_skip = equilibrium_skip_factor * n_steps #try to put as 0.5, 0.2 is for quicker testing process. Convergence has to be checked.
+        observables_skip = observable_skip_factor * n_steps # How many steps to skip before making observables
+    end
+
+    """
+    Run Simulation
+    """
+
+    println("------started--------")
+    println("Temperature is: ", T)
+    println("α is: ", α)
+    println("n_step is: ", n_steps)
+
+    if !threads
+        
+        data = Holstein_PIMC(n_steps, equilibrium_skip, observables_skip, path, estimators, potential, observables)
+        
+        # Storing all the different outputz
+        energies = data["Energy:$(estimator)"]
+        positions = data["Position:p$(particleIndex)d$(dimensionIndex)"] # Select a particular particle and dimension
+        #correlations = data["Correlation:$(estimator)"]
+
+        # Post analysis
+        variances = jackknife(energies)
+        jacknife_errors = sqrt(variances[2])
+        mean_energy = mean(energies)
+
+        # Output measurements and statistics
+        println("Number of Beads: ", n_beads)
+        println("Number of steps: ", n_steps)
+        println("τ is: ", τ)
+        println("Temperature: ", T)
+        println("α: ", α)
+        println("Mean Energy: ", mean_energy)
+        println("jackknife errors: ", jacknife_errors)
+        
+        
+        energy_plot = plot(energies, ylabel="Energy", xlab = "Sweeps / $observables_skip\$ n\$")
+        display(energy_plot)
+        # return energy, variances, mean_acceptance_rate, comparison_energy
+        SaveJLDData(T, potential, version, n_beads, n_steps, data)
+
+        return mean_energy, jacknife_errors, data
+    
+    else
+        println("multithreading")
+        aggregated_data = Dict() # Create an empty dictionary for storing data
+        Mean_energy_arr = [0.0 for j in 1:thread_number]
+        Error_arr = [0.0 for j in 1:thread_number]
+
+        @threads for i in 1:thread_number
+            println("i = $i on thread $(Threads.threadid())")
+
+            data = PIMC(n_steps, equilibrium_skip, observables_skip, deepcopy(path), deepcopy(mover), estimators, potential, regime, observables, adjust=true)
+        
+            # Storing all the different outputz
+            energies = data["Energy:$(estimator)"]
+            positions = data["Position:p$(particleIndex)d$(dimensionIndex)"] # Select a particular particle and dimension
+            correlations = data["Correlation:$(estimator)"]
+            acceptance_rates = data["Acceptance Rate:p$(particleIndex)"]
+            data["Comparison Energy"] = comparison_energy
+
+            # Post analysis
+            variances = jackknife(energies)
+            jacknife_errors = sqrt(variances[2])
+            mean_energy = mean(energies)
+
+            # Output measurements and statistics
+            aggregated_data[i] = data;
+            Mean_energy_arr[i] = mean_energy;
+            Error_arr[i] = jacknife_errors;
+        end
+
+        println("Number of Paths:", thread_number)
+        println("Number of Beads: ", n_beads)
+        println("Number of steps: ", n_steps)
+        println("τ is: ", τ)
+        println("Temperature: ", T)
+        println("α: ", α)
+        println("Mean Energy: ", mean(Mean_energy_arr))
+        println("Comparison Energy: ", comparison_energy)
+        println("jackknife errors: ", mean(Error_arr))
+
+        return aggregated_data, Mean_energy_arr, Error_arr, n_beads;
+    end
+
+end
 
 function SaveJLDData(T, potential, version, n_beads, n_steps, data)
     save("data_arr/$(string(typeof(potential)))/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data)
