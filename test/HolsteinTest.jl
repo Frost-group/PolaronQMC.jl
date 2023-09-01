@@ -5,7 +5,6 @@ begin
     using Plots
     using PolaronMobility
     using LaTeXStrings
-    include("GeneralPIMC.jl")
 end
 using Distributions
 
