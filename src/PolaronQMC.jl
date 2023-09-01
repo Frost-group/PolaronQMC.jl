@@ -50,7 +50,7 @@ export draw_beads_3d, draw_beads_2d, animate_PIMC
 # Export quick runs
 export quickrun_frohlich
 
-export generalPIMC, MultiModePIMC, general_Holstein_PIMC, SaveJLDData
+export generalPIMC, MultiModePIMC, general_Holstein_PIMC, RangeAlphaPIMC, RangeTempPIMC, SaveJLDData
 
 
 # Export PIMC algorithm
