@@ -1,7 +1,9 @@
 using Revise
+using Statistics
+using Plots
 using PolaronMobility
 using LaTeXStrings
-using DelimitedFiles
+using JLD
 using Base.Threads
 
 function generalPIMC(T::Float64, m::Float64, ω::Union{Float64, Vector{Float64}}, α::Float64, n_particles::Int64, n_dimensions::Int64, 
