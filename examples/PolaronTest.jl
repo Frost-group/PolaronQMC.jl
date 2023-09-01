@@ -17,10 +17,10 @@ using JLD
     version = Int(floor(rand()*10000))
 
     # Set Parameters, all use atomic units where m = ħ = ω = 1.0
-    T = 0.15
+    T = 0.1
     m = 1.0
     ω = 1.0
-    α = 8.0
+    α = 3.0
     ħ = 1.0
 
     n_particles = 1
@@ -29,7 +29,7 @@ using JLD
     β = 1 / T
 
     # Number of Monte-Carlo-Steps
-    n_steps = 15000
+    n_steps = 20000
 
     # Choose potential from "Harmonic", "Frohlich", "MexicanHat", "Constant"
     potential = "Frohlich"
@@ -58,22 +58,22 @@ using JLD
         τ = 1.0 / (T * n_beads)
     else
         # For fixed τ
-        τ = 0.015
+        τ = 0.01
         n_beads = Int(floor(1/(τ*T)))
     end
 
     # Fixed observable skip or step dependant
-    quick_steps = false
+    quick_steps = true
     if quick_steps
-        equilibrium_skip = 1
-        observables_skip = 1
+        equilibrium_skip = 10
+        observables_skip = 100
     else
         equilibrium_skip = 0.5 * n_steps #try to put as 0.5, for 0.2 for quicker testing process
         observables_skip = 0.002 * n_steps
     end
 
     # Initate path
-    path = Path(n_beads, n_particles, n_dimensions, τ, m=m)
+    path = Path(n_beads, n_particles, n_dimensions, τ, m=m, start_range=10.0)
 
     # Set regime
     if regime == "Primitive"
