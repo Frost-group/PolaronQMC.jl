@@ -112,7 +112,7 @@ using JLD
 
     # Saving data in a big jld file (dictionary)
     #save("data_arr/$(pot)/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data, "energies", energies, "comparison_energy", comparison_energy, "correlations", correlations, "jacknife_errors", jacknife_errors, 
-        #        "equilibrium_skip", equilibrium_skip, "observables_skip", observables_skip, "final_pos", path.beads[:, :, :])
+        #   "equilibrium_skip", equilibrium_skip, "observables_skip", observables_skip, "final_pos", path.beads[:, :, :])
     
     # Output measurements and statistics
     println("version is:", version)
@@ -126,7 +126,7 @@ using JLD
     println("jackknife errors: ", jacknife_errors)
 
 
-        # Plots
+    # Plots
     # Define plot parameters
     default(fontfamily="Times New Roman",
         titlefont = (16, "Computer Modern"),
