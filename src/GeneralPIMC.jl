@@ -899,7 +899,7 @@ function general_Holstein_PIMC(T::Float64, ω::Float64, α::Float64, n_dimension
         println("Temperature: ", T)
         println("α: ", α)
         println("Mean Energy: ", mean(Mean_energy_arr))
-        println("Comparison Energy: ", comparison_energy)
+        #println("Comparison Energy: ", comparison_energy)
         println("jackknife errors: ", mean(Error_arr))
 
         return aggregated_data, Mean_energy_arr, Error_arr, n_beads;
