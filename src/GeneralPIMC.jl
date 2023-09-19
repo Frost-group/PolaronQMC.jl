@@ -875,7 +875,7 @@ function general_Holstein_PIMC(T::Float64, ω::Float64, α::Float64, n_dimension
         @threads for i in 1:thread_number
             println("i = $i on thread $(Threads.threadid())")
 
-            data = PIMC(n_steps, equilibrium_skip, observables_skip, deepcopy(path), deepcopy(mover), estimators, potential, regime, observables, adjust=true)
+            data = Holstein_PIMC(n_steps, equilibrium_skip, observables_skip, deepcopy(path), estimators, potential, observables)
         
             # Storing all the different outputz
             energies = data["Energy:$(estimator)"]
