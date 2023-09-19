@@ -45,18 +45,18 @@ function oneBodyPotential(potential::FrohlichPotential, path::Path, bead::Int, p
     for other_bead in 1:n_beads
         if other_bead != bead # Discounting self-contributions
             for i in 1:path.n_dimensions
-                store_diff[i] = path.beads[mod1(bead, n_beads), particle, i] - path.beads[mod1(other_bead, n_beads), particle, i]
+                store_diff[i] = path.beads[bead, particle, i] - path.beads[mod1(other_bead, n_beads), particle, i]
             end
 
             for i in 1:l
-                final_integral += -0.5 * α * (potential.ħ * potential.ω[i])^(3/2) / potential.ħ * sqrt(1/2/path.m) * csch(potential.ħ * potential.ω[i] * β / 2) * 
-                                prop_Matrix[max(bead, other_bead), min(bead, other_bead), i]/norm(store_diff)
+                final_integral += 0.5 * α * (potential.ħ * potential.ω[i])^(3/2) * sqrt(1/2/path.m) * csch(potential.ħ * potential.ω[i] * β / 2) * 
+                                prop_Matrix[max(bead, mod1(other_bead, n_beads)), min(bead, mod1(other_bead, n_beads)), i]/norm(store_diff)
             end
             #A = 1/(norm(path.beads[mod1(bead, path.n_beads), particle, :] - path.beads[mod1(other_bead, path.n_beads), particle, :]))
             #inner_integral += prop_Matrix[max(bead, other_bead), min(bead, other_bead)]/norm(store_diff)
         end
     end
-    return path.τ * final_integral #* term_factor # Note that this path.τ multiplication refer to dτ'
+    return -path.τ * final_integral #* term_factor # Note that this path.τ multiplication refer to dτ', the minus sign is due to negative potential
 end
 
 function oneBodyPotential(potential::FrohlichInteractionPotential, path::Path, bead::Int, particle::Int)
