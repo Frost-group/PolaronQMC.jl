@@ -6,11 +6,13 @@ using LaTeXStrings
 using JLD
 using Base.Threads
 
-function generalPIMC(T::Float64, m::Float64, ω::Union{Float64, Vector{Float64}}, α::Float64, n_particles::Int64, n_dimensions::Int64, 
-    regime, fixed_beads, fixed_τ, n_beads, n_steps, n_thermalised, mover, potential, estimator, 
-    quick_steps=false, threads::Bool = false, start_range = 1.0, particleIndex = 1, dimensionIndex = 1,
-    observable_skip_factor=0.005, equilibrium_skip_factor=0.5, version = 1, 
-    verbose::Bool = true, thread_number = 16)
+function generalPIMC(T::Float64, ω::Union{Float64, Vector{Float64}}, α::Float64, n_dimensions::Int64, n_steps::Int64; 
+    m::Float64=1.0, n_particles::Int64=1, regime::String="Primitive", fixed_beads::Bool=false, 
+    fixed_τ::Float64=0.02, n_beads::Int64=50, n_thermalised::Int64=10000, mover::String="Single", 
+    pot::String="Frohlich", estimator::String="Virial", quick_steps::Bool=false, threads::Bool = false, 
+    start_range::Float64 = 1.0, particleIndex::Int64 = 1, dimensionIndex::Int64 = 1,
+    observable_skip_factor::Float64=0.005, equilibrium_skip_factor::Float64=0.5, version::Int64 = 1, 
+    verbose::Bool = true, thread_number::Int64 = 16)
     
     """
     Initialise System Variables:
@@ -57,13 +59,13 @@ function generalPIMC(T::Float64, m::Float64, ω::Union{Float64, Vector{Float64}}
     end
 
     # Set potential function
-    if potential == "Frohlich"
+    if pot == "Frohlich"
         potential = FrohlichPotential(α,ω,ħ) # ω is phonon frequency
-    elseif potential == "Harmonic"
+    elseif pot == "Harmonic"
         potential = HarmonicPotential(ω)
-    elseif potential == "MexicanHat"
+    elseif pot == "MexicanHat"
         potential = MexicanHatPotential(80000.0)
-    elseif potential == "Constant"
+    elseif pot == "Constant"
         potential = ConstantPotential(10.0)
     end
 
@@ -184,7 +186,7 @@ function generalPIMC(T::Float64, m::Float64, ω::Union{Float64, Vector{Float64}}
         println("jackknife errors: ", jacknife_errors)
         
         # return energy, variances, mean_acceptance_rate, comparison_energy
-        return mean_energy, jacknife_errors, comparison_energy, energies, positions, correlations, acceptance_rates, adjuster_values, equilibrium_skip, observables_skip, version, potential, n_beads, data, path
+        return data, mean_energy, jacknife_errors, comparison_energy, equilibrium_skip, observables_skip, n_beads, path
     
     else
         println("multithreading")
@@ -230,10 +232,14 @@ function generalPIMC(T::Float64, m::Float64, ω::Union{Float64, Vector{Float64}}
     end
 
 end
-
-function MultiModePIMC(T::Float64, m::Float64, ω_array::Vector{Float64}, α::Float64, n_particles, n_dimensions, regime, fixed_beads, fixed_τ, n_beads, n_steps, 
-    n_thermalised, mover, potential, estimator, quick_steps=false, threads::Bool = false, start_range = 1.0, particleIndex = 1, dimensionIndex = 1,
-    observable_skip_factor=0.005, equilibrium_skip_factor=0.5, version = 1, verbose::Bool = true, thread_number = 16)
+#=
+function MultiModePIMC(T::Float64, ω_array::Vector{Float64}, α::Float64, n_dimensions::Float64, n_steps::Int64;
+    m::Float64=1.0, n_particles::Int64=1, regime::String="Primitive", fixed_beads::Bool=false, 
+    fixed_τ::Float64=0.1, n_beads::Int64=50, n_thermalised::Int64=10000, mover::String="Single", 
+    potential::String="Frohlich", estimator::String="Virial", quick_steps::Bool=false, threads::Bool = false, 
+    start_range::Float64 = 1.0, particleIndex::Int64 = 1, dimensionIndex::Int64 = 1,
+    observable_skip_factor::Float64=0.005, equilibrium_skip_factor::Float64=0.5, version::Int64 = 1, 
+    verbose::Bool = true, thread_number::Int64 = 16)
     """
     Allow array of phonon frequecies values (multi-mode)
 
@@ -403,6 +409,7 @@ function MultiModePIMC(T::Float64, m::Float64, ω_array::Vector{Float64}, α::Fl
 
 
 end
+=#
 
 function RangeAlphaPIMC(T::Float64, ω::Float64, α_array::Vector{Float64}, n_dimensions::Int64, n_steps::Int64; 
     n_particles::Int64 = 1, m::Float64=1.0, regime::String="Primitive", fixed_beads::Bool=false, fixed_τ::Float64=0.1, n_beads::Int64=50, 
@@ -488,7 +495,7 @@ function RangeAlphaPIMC(T::Float64, ω::Float64, α_array::Vector{Float64}, n_di
         println("Invalid Regime: ", regime)
     end
 
-    for i in 1:length(α_array)
+    @threads for i in 1:length(α_array)
 
         println("Simulating multiple alphas")
         α = α_array[i]
@@ -526,13 +533,13 @@ function RangeAlphaPIMC(T::Float64, ω::Float64, α_array::Vector{Float64}, n_di
         println("n_step is: ", n_steps)
 
         # Thermalisation Process (With simple Potential like Harmonic)
-        PIMC(n_thermalised, n_thermalised, n_thermalised, path, SingleMover(path), estimators, HarmonicPotential(1.0), regime, observables, adjust=true)
+        PIMC(n_thermalised, n_thermalised, n_thermalised, deepcopy(path), SingleMover(deepcopy(path)), estimators, HarmonicPotential(1.0), regime, observables, adjust=true)
         if verbose
             println("Thermalisation complete")
         end
 
         #data = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, visual=false)
-        data = PIMC(n_steps, equilibrium_skip, observables_skip, path, mover, estimators, potential, regime, observables, adjust=true)
+        data = PIMC(n_steps, equilibrium_skip, observables_skip, deepcopy(path), deepcopy(mover), estimators, potential, regime, observables, adjust=true)
         
         # Storing all the different outputz
         energies = data["Energy:$(estimator)"]
