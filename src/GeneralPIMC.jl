@@ -880,7 +880,6 @@ function general_Holstein_PIMC(T::Float64, ω::Float64, α::Float64, n_dimension
             # Storing all the different outputz
             energies = data["Energy:$(estimator)"]
             positions = data["Position:p$(particleIndex)d$(dimensionIndex)"] # Select a particular particle and dimension
-            data["Comparison Energy"] = comparison_energy
 
             # Post analysis
             variances = jackknife(energies)
