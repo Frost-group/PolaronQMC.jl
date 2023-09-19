@@ -10,8 +10,8 @@ begin
 end
 
 @time begin
-    n_steps = 100000;
+    n_steps = 800000;
     energy_arr, error_arr, data_set = 
-            RangeAlphaPIMC(0.1, 1.0, [1.0, 2.0, 3.0, 4.0], 3, n_steps, pot="Harmonic");
+            RangeAlphaPIMC(0.1, 1.0, [1.0, 2.0, 3.0, 4.0], 3, n_steps, pot="Harmonic",estimator="Thermodynamic", fixed_τ=0.2);
     println("-----Simulation Ended-----")
 end
