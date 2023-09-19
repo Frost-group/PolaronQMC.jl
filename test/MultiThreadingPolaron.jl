@@ -5,44 +5,19 @@ begin
     using Plots
     using PolaronMobility
     using LaTeXStrings
-    include("GeneralPIMC.jl")
+    using Distributions
 end
-using Distributions
+
 
 @time begin
-    n_steps = 100000;
+    n_steps = 30000;
     pot = "Frohlich";
-    T = 0.4; version=rand(1:10000)
-    data_set, energy_arr, error_arr, n_beads = generalPIMC(
-                T, #Temperature
-                1.0, # mass
-                1.0, # ω (has to be float)
-                8.0, # α (has to be float)
-                1, # no of particles
-                3, # number of n_dimensions
-                "Primitive", # regime type
-                false, # fixing beads or not
-                0.015, # fixed_τ
-                200, # n_beads (if τ is not fixed)
-                n_steps, # No. of stepsx
-                20000, # number of thermalisation steps
-                "Single", # movers
-                pot, # potential type
-                "Virial", # estimators
-                false, # Not quick steps
-                true, # threading
-                1.0, # Start Range
-                1,
-                1, 
-                0.01, # observable skips
-                0.5, # equilibrium skips
-                1,
-                true,
-                15
-                );
+    T = 0.2; version=rand(1:10000)
+    data_set, energy_arr, error_arr, n_beads = 
+        generalPIMC(T, 1.0, 2.0, 3, n_steps, version=1, pot=pot, threads=true)
 
     println("-----Simulation Ended-----")
-    save("data_arr/MultiThread/$(pot)/T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data_set)
+    #save("data_arr/MultiThread/$(pot)/T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data_set)
 end
 
 begin
