@@ -226,57 +226,5 @@ using JLD
     #gif(anim, "saved_plots/anim_output.gif", fps = 60) 
 
 end
-#=
-begin
-    default(fontfamily="Computer Modern",
-        titlefont = (16, "Computer Modern"),
-        guidefont = (14, "Computer Modern"),
-        tickfont = (12, "Computer Modern"),
-        legendfontsize = 12,
-        linewidth=2, framestyle=:box, label=nothing, grid=true)
-    energy_plot = plot(energies[1:1000], ylabel="Energy", labels=L"α=1.0, T=0.1", xlab = "Steps", dpi=300)
-    hline!([comparison_energy], linestyle=:dash)
-    energy_plot2 = plot(energies[1:8000], ylabel="Energy", labels=L"α=1.0, T=0.1", xlab = "Steps", dpi=300)
-    hline!([comparison_energy], linestyle=:dash)
-    energy_hist = histogram(energies, ylab="Frequencies", labels=L"α=1.0, T=0.1", xlab="Energy", color=:lightblue, bins=70, dpi=300)
-    posplot = stephist(positions_flatten, xlab = "Position", labels=L"α=1.0, T=0.1", normalize=:pdf)
-    acceptance_rates = data["Acceptance Rate:p1"]
-    shift_width = data["Adjuster Value:p1"]
-    acceptance_rate_plot = plot(acceptance_rates[1:200], xlab = "Steps", ylab="Acceptance Rate", dpi=600)
-    shift_width_plot = plot(shift_width[1:200], xlab = "Steps", ylab=L"\mathrm{Shift\, Width} \ \Delta x", dpi=600)
-    acceptance_rate_hist = histogram(acceptance_rates, xlab = "Acceptance Rate", ylab="Frequencies", dpi=600, color=:skyblue, labels=L"α=1.0, T=0.1", bins=100)
-    shift_width_hist = histogram(shift_width, xlab = L"\mathrm{Shift\, Width }\ \Delta x", ylab="Frequencies", labels=L"α=1.0, T=0.1",color=:skyblue, dpi=600)
-    #display(posplot)
-    display(energy_plot)
-    display(energy_plot2)
-    display(energy_hist)
-    #display(shift_width_plot)
-    #display(acceptance_rate_plot)
-    #display(acceptance_rate_hist)
-    #display(shift_width_hist)
-
-    #savefig(acceptance_rate_hist, "report_image/acceptance_rate_shift_α1_T0.1.png")
-    #savefig(acceptance_rate_plot, "report_image/acceptance_rate_plot_α1_T0.1.png")
-    #savefig(shift_width_hist, "report_image/shift_width_hist_α1_T0.1.png")
-    #savefig(shift_width_plot, "report_image/shift_width_plot_α1_T0.1.png")
-    savefig(energy_plot, "report_image/energy_plot_α1_T0.1.png")
-    savefig(energy_plot2, "report_image/energy_plot2_α1_T0.1.png")
-    savefig(energy_hist, "report_image/energy_hist_α1_T0.1.png")
-
-end
-=#
-#=
-begin
-    energies2 = energies
-    autoCorrelation2 = autoCorrelation(energies2, 1.0)
-end
-begin
-    l = Int(floor(length(energies1)-1)/2)
-    auto_plot = plot(1:l, autoCorrelation2[1:l], ylabel=L"C_{j}", xlab = L"j  \ / \ steps", labels = L"α=1.0, T=0.1", dpi=600)#, title=L"Autocorrelation time (α=2, T=0.1)")#, background_color = :transparent, foreground_color=:black)
-    display(auto_plot)
-    println("correlation time is:", autoCorrelationTime(autoCorrelation1[1:7500]))
-    #savefig("report_image/autocorrelation_alpha1_T0.1_dpi600.png")
-end
-=#
 
 
