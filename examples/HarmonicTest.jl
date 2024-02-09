@@ -10,13 +10,13 @@ using LaTeXStrings
 using JLD
 
 @time begin
-    
+
     """
     Initialise System Variables
     """
 
     # Randomly select a version number for saving purposes
-    version = Int(floor(rand()*10000))
+    version = Int(floor(rand() * 10000))
 
     # Set PIMC ring parameters
     T = 0.1
@@ -43,13 +43,13 @@ using JLD
 
     # Choose path regime from "Simple", "Primitive"
     regime = "Primitive"
-    
+
     # Choose energy estimator from "Simple", "Virial", "Thermodynamic"
     estimator = "Virial"
-    
+
     # Choose Observables
     observables = ["Energy", "Position", "Correlation"]
-    
+
     # Choose Estimators
     energy_estimators = []
 
@@ -60,7 +60,7 @@ using JLD
         τ = 1.0 / (T * n_beads)
     else
         τ = 0.5
-        n_beads = Int(floor(1/(τ*T)))
+        n_beads = Int(floor(1 / (τ * T)))
     end
 
     # Fixed observable skip or step dependant
@@ -74,7 +74,7 @@ using JLD
     end
 
     # Initate path
-    path = Path(n_beads, n_particles, n_dimensions, τ, m=m)
+    path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
 
     # Set regime
     if regime == "Primitive"
@@ -86,10 +86,10 @@ using JLD
     else
         println("Invalid Regime: ", regime)
     end
-   
+
     # Set Potential
     if potential == "Frohlich"
-        potential = FrohlichPotential(α,ω,ħ)
+        potential = FrohlichPotential(α, ω, ħ)
     elseif potential == "Harmonic"
         potential = HarmonicPotential(ω)
     elseif potential == "MexicanHat"
@@ -127,21 +127,42 @@ using JLD
     """
 
     # thermalised_start!(path, potential, n_steps = 100000)
-    data = PIMC(n_steps, equilibrium_skip, observables_skip, path, mover, estimators, potential, regime, observables, adjust=true)
-    
+    data = PIMC(
+        n_steps,
+        equilibrium_skip,
+        observables_skip,
+        path,
+        mover,
+        estimators,
+        potential,
+        regime,
+        observables,
+        adjust = true,
+    )
+
     # Store outputs
     energies = data["Energy:$(estimator)"]
     positions = data["Position:p1d1"] # Select a particular particle and dimension
     correlations = data["Correlation:$(estimator)"]
-    
+
     # Flatten position matrix to Array
     positions_flatten = collect(Iterators.flatten(positions))
 
     # Comparison energy
     if typeof(potential) == HarmonicPotential
-        comparison_energy = analyticEnergyHarmonic(potential.ω,β,ħ,n_dimensions) * n_particles
+        comparison_energy =
+            analyticEnergyHarmonic(potential.ω, β, ħ, n_dimensions) * n_particles
     elseif typeof(potential) == FrohlichPotential
-        comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true) * n_particles
+        comparison_polaron =
+            make_polaron(
+                [α],
+                [T],
+                [0.0];
+                ω = 1.0,
+                rtol = 1e-4,
+                verbose = true,
+                threads = true,
+            ) * n_particles
         comparison_energy = comparison_polaron.F
     end
 
@@ -156,8 +177,23 @@ using JLD
     #mean_acceptance_rate = mean(acceptance_rates)
     #std_acceptance_rate = std(acceptance_rates)
 
-    save("data_arr/Harmonic/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data, "energies", energies, "comparison_energy", comparison_energy, "correlations", correlations, "jacknife_errors", jacknife_errors, 
-            "equilibrium_skip", equilibrium_skip, "observables_skip", observables_skip)
+    save(
+        "data_arr/Harmonic/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld",
+        "data",
+        data,
+        "energies",
+        energies,
+        "comparison_energy",
+        comparison_energy,
+        "correlations",
+        correlations,
+        "jacknife_errors",
+        jacknife_errors,
+        "equilibrium_skip",
+        equilibrium_skip,
+        "observables_skip",
+        observables_skip,
+    )
 
     # Output measurements and statistics
     println("Number of Beads: ", n_beads)
@@ -172,25 +208,32 @@ using JLD
     #println("Mean Acceptance Rate: ", mean_acceptance_rate, " +/- ", std_acceptance_rate)
 
     # Define plot parameters
-    default(fontfamily="Computer Modern",
+    default(
+        fontfamily = "Computer Modern",
         titlefont = (16, "Computer Modern"),
         guidefont = (18, "Computer Modern"),
         tickfont = (12, "Computer Modern"),
         legendfontsize = 12,
-        linewidth=2, framestyle=:box, label=nothing, grid=true)
+        linewidth = 2,
+        framestyle = :box,
+        label = nothing,
+        grid = true,
+    )
 
     # Plots (e.g. Energy, position, Correlation)
-    energy_plot = plot(energies, ylabel="Energy", xlab = "Sweeps / $observables_skip\$ n\$")
-    hline!([comparison_energy], linestyle=:dash)
-    energy_hist = histogram(energies, ylab="Frequencies", xlab="Energy")
+    energy_plot =
+        plot(energies, ylabel = "Energy", xlab = "Sweeps / $observables_skip\$ n\$")
+    hline!([comparison_energy], linestyle = :dash)
+    energy_hist = histogram(energies, ylab = "Frequencies", xlab = "Energy")
     posplot = histogram(positions_flatten, xlab = "Position")
 
-    n = Int(floor(n_beads-1))
-    corr_plot = plot(1:n, corr_mean[1:n], yerror = corr_std[1:n], ylabel="G(Δτ)", xlabel = "Δτ")
+    n = Int(floor(n_beads - 1))
+    corr_plot =
+        plot(1:n, corr_mean[1:n], yerror = corr_std[1:n], ylabel = "G(Δτ)", xlabel = "Δτ")
 
     #acceptance_rate_plot = plot(acceptance_rates[Int(length(acceptance_rates)*0.9):end], xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Acceptance\, Rate\, /\, } r", dpi=600)
     #shift_width_plot = plot(shift_widths, xlab = L"\mathrm{Sweeps\, /\, } n", ylab=L"\mathrm{Shift\, Width\, /\, } \Delta x", dpi=600)
-    
+
     display(energy_hist)
     display(energy_plot)
     display(posplot)

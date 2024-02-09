@@ -7,7 +7,7 @@ Algorithm for speeding up the simulation
 """
 
 
-function updateAdjuster(adjuster::Union{SingleAdjuster, DisplaceAdjuster}, path::Path)
+function updateAdjuster(adjuster::Union{SingleAdjuster,DisplaceAdjuster}, path::Path)
     """
     Update shift width by keeping track the acceptance ratio = successful shift/total shift
         (total shift = number of moves in one sweep) -> reset the ratio when a new sweep initiated
@@ -19,7 +19,7 @@ function updateAdjuster(adjuster::Union{SingleAdjuster, DisplaceAdjuster}, path:
             adjuster.value *= 0.99
 
         elseif adjuster.acceptance_rate > 0.99 # To quickly increase the shift width if the acceptance rate is too low
-            adjuster.value *=  1.01
+            adjuster.value *= 1.01
 
         else
             adjuster.value *= (adjuster.acceptance_rate / 0.3) # originally it's 0.5
@@ -46,18 +46,23 @@ function updateAdjuster(adjuster::Union{BisectAdjuster}, path::Path)
         end
 
     else
-        if 2^(adjuster.value+1) + 1 < path.n_beads 
+        if 2^(adjuster.value + 1) + 1 < path.n_beads
             adjuster.value += 1
         end
 
     end
-    
+
     # Resetting the count for next sweep
     adjuster.attempt_counter = 0
     adjuster.success_counter = 0
 end
 
-function copyLastPath!(path::Path, potential::Potential, A::Union{SizedArray, Array}; verbose::Bool = true)
+function copyLastPath!(
+    path::Path,
+    potential::Potential,
+    A::Union{SizedArray,Array};
+    verbose::Bool = true,
+)
     path.beads[:, :, :] = A[:, :, :]
     if verbose
         println("Copying last path complete")
@@ -69,19 +74,17 @@ function recentralise(path::Path; verbose = true)
     Shifting the bead of chain for each particle such that their average position is 0
     To avoid polaron moving to infinities
     """
-    for particle in 1:path.n_particles
-        centroid_pos = [sum(path.beads[bead,particle,dimension] for bead in 1:path.n_beads) for dimension in 1:path.n_dimensions] / path.n_beads
-        for bead in 1:path.n_beads
-            path.beads[bead,particle, :] -= centroid_pos
+    for particle = 1:path.n_particles
+        centroid_pos =
+            [
+                sum(path.beads[bead, particle, dimension] for bead = 1:path.n_beads) for
+                dimension = 1:path.n_dimensions
+            ] / path.n_beads
+        for bead = 1:path.n_beads
+            path.beads[bead, particle, :] -= centroid_pos
         end
     end
     if verbose
         println("Readjusted centre")
     end
 end
-
-
-
-
-
-

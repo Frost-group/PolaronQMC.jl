@@ -10,13 +10,13 @@ using DelimitedFiles
 using JLD
 
 @time begin
-    
+
     """
     Initialise System Variables
     """
 
     # Randomly select a version number for saving purposes
-    version = Int(floor(rand()*10000))
+    version = Int(floor(rand() * 10000))
 
     # Set Parameters, all use atomic units where m = ħ = ω = 1.0
     T = 0.01
@@ -37,13 +37,13 @@ using JLD
     # Choose potential from "Harmonic", "Frohlich", "MexicanHat", "Constant"
     potential = "Holstein"
     pot = potential
-    
+
     # Choose energy estimator from "Simple", "Virial", "Thermodynamic"
     estimator = "Virial"
-    
+
     # Choose Observables
     observables = ["Energy", "Position"]
-    
+
     # Choose Estimators
     energy_estimators = []
 
@@ -55,7 +55,7 @@ using JLD
     else
         # For fixed τ
         τ = 0.05
-        n_beads = Int(floor(1/(τ*T)))
+        n_beads = Int(floor(1 / (τ * T)))
     end
 
     # Fixed observable skip or step dependant
@@ -70,7 +70,7 @@ using JLD
 
     # Initate path
     path = DiscretePath(n_beads, n_particles, n_dimensions, τ, m)
-   
+
     # Set Potential
     if potential == "Holstein"
         potential = HolsteinPotential(α, ω, ħ, J)
@@ -95,8 +95,16 @@ using JLD
     println("n_step is ", n_steps)
     println("---started----!")
 
-    data = Holstein_PIMC(n_steps, equilibrium_skip, observables_skip, path, estimators, potential, observables)
-    
+    data = Holstein_PIMC(
+        n_steps,
+        equilibrium_skip,
+        observables_skip,
+        path,
+        estimators,
+        potential,
+        observables,
+    )
+
     # Store outputs
     energies = data["Energy:$(estimator)"]
     positions = data["Position:p1d1"] # Select a particular particle and dimension
@@ -112,8 +120,8 @@ using JLD
 
     # Saving data in a big jld file (dictionary)
     #save("data_arr/$(pot)/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data, "energies", energies, "comparison_energy", comparison_energy, "correlations", correlations, "jacknife_errors", jacknife_errors, 
-        #   "equilibrium_skip", equilibrium_skip, "observables_skip", observables_skip, "final_pos", path.beads[:, :, :])
-    
+    #   "equilibrium_skip", equilibrium_skip, "observables_skip", observables_skip, "final_pos", path.beads[:, :, :])
+
     # Output measurements and statistics
     println("version is:", version)
     println("Number of Beads: ", n_beads)
@@ -128,20 +136,26 @@ using JLD
 
     # Plots
     # Define plot parameters
-    default(fontfamily="Times New Roman",
+    default(
+        fontfamily = "Times New Roman",
         titlefont = (16, "Computer Modern"),
         guidefont = (18, "Computer Modern"),
         tickfont = (12, "Computer Modern"),
         legendfontsize = 12,
-        linewidth=2, framestyle=:box, label=nothing, grid=true)
+        linewidth = 2,
+        framestyle = :box,
+        label = nothing,
+        grid = true,
+    )
 
     posplot = histogram(positions_flatten, xlab = "Position")
     display(posplot)
 
-    energy_plot = plot(energies, ylabel="Energy", xlab = "Sweeps / $observables_skip\$ n\$")
+    energy_plot =
+        plot(energies, ylabel = "Energy", xlab = "Sweeps / $observables_skip\$ n\$")
     #hline!([comparison_energy], linestyle=:dash)
-    energy_hist = histogram(energies, ylab="Frequencies", xlab="Energy")
-    
+    energy_hist = histogram(energies, ylab = "Frequencies", xlab = "Energy")
+
     # Displaying plot command
     display(energy_hist)
     display(energy_plot)
@@ -152,5 +166,3 @@ using JLD
 
 
 end
-
-

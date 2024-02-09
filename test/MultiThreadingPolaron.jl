@@ -10,20 +10,21 @@ end
 
 
 @time begin
-    n_steps = 30000;
-    pot = "Frohlich";
-    T = 0.2; version=rand(1:10000)
-    data_set, energy_arr, error_arr, n_beads = 
-        generalPIMC(T, 1.0, 2.0, 3, n_steps, version=1, pot=pot, threads=true)
+    n_steps = 30000
+    pot = "Frohlich"
+    T = 0.2
+    version = rand(1:10000)
+    data_set, energy_arr, error_arr, n_beads =
+        generalPIMC(T, 1.0, 2.0, 3, n_steps, version = 1, pot = pot, threads = true)
 
     println("-----Simulation Ended-----")
     #save("data_arr/MultiThread/$(pot)/T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data_set)
 end
 
 begin
-    particleIndex, dimensionIndex = 1, 1;
+    particleIndex, dimensionIndex = 1, 1
     position_all = []
-    for i in 1:length(data_set)
+    for i = 1:length(data_set)
         pos_individual = data_set[i]["Position:p$(particleIndex)d$(dimensionIndex)"]
         collect(Iterators.flatten(pos_individual))
         push!(position_all, pos_individual)

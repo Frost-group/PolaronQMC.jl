@@ -12,13 +12,35 @@ using TimerOutputs
 #temporary
 
 # Export types
-export Path, DiscretePath, Potential, ConstantPotential, OneBodyPotential, TwoBodyPotential, HarmonicPotential, MexicanHatPotential, CoulombPotential, FrohlichPotential, Regime, SimpleRegime, PrimitiveRegime, BoundRegime, LBRegime, Mover, SingleMover, BisectMover, DisplaceMover, HarmonicInteractionPotential, FrohlichInteractionPotential, HolsteinPotential
+export Path,
+    DiscretePath,
+    Potential,
+    ConstantPotential,
+    OneBodyPotential,
+    TwoBodyPotential,
+    HarmonicPotential,
+    MexicanHatPotential,
+    CoulombPotential,
+    FrohlichPotential,
+    Regime,
+    SimpleRegime,
+    PrimitiveRegime,
+    BoundRegime,
+    LBRegime,
+    Mover,
+    SingleMover,
+    BisectMover,
+    DisplaceMover,
+    HarmonicInteractionPotential,
+    FrohlichInteractionPotential,
+    HolsteinPotential
 
 # Export adjusters for automatically changing shift width
 export Adjuster, SingleAdjuster, DisplaceAdjuster, BisectAdjuster
 
 # Export estimators
-export PIMCEstimator, ThermodynamicEstimator, VirialEstimator, SimpleEstimator, SimpleVirialEstimator
+export PIMCEstimator,
+    ThermodynamicEstimator, VirialEstimator, SimpleEstimator, SimpleVirialEstimator
 
 # Export potentials
 export oneBodyPotential, twoBodyPotential
@@ -50,7 +72,8 @@ export draw_beads_3d, draw_beads_2d, animate_PIMC
 # Export quick runs
 export quickrun_frohlich
 
-export generalPIMC, MultiModePIMC, general_Holstein_PIMC, RangeAlphaPIMC, RangeTempPIMC, SaveJLDData
+export generalPIMC,
+    MultiModePIMC, general_Holstein_PIMC, RangeAlphaPIMC, RangeTempPIMC, SaveJLDData
 
 
 # Export PIMC algorithm
@@ -73,4 +96,3 @@ include("GeneralPIMC.jl") # Function for making data
 include("PolaronQMCVisualisation.jl")
 
 end # module
-

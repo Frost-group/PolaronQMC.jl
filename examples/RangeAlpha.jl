@@ -1,17 +1,30 @@
 using PolaronQMC
 using Plots
 begin
-    default(fontfamily="Computer Modern",
-            titlefont = (20, "Computer Modern"),
-            legendfontsize = 12,
-            guidefont = (18, "Computer Modern"),
-            tickfont = (12, "Computer Modern"),
-            linewidth=2, framestyle=:box, label=nothing, grid=false)
+    default(
+        fontfamily = "Computer Modern",
+        titlefont = (20, "Computer Modern"),
+        legendfontsize = 12,
+        guidefont = (18, "Computer Modern"),
+        tickfont = (12, "Computer Modern"),
+        linewidth = 2,
+        framestyle = :box,
+        label = nothing,
+        grid = false,
+    )
 end
 
 @time begin
-    n_steps = 800000;
-    energy_arr, error_arr, data_set = 
-            RangeAlphaPIMC(0.1, 1.0, [1.0, 2.0, 3.0, 4.0], 3, n_steps, pot="Harmonic",estimator="Thermodynamic", fixed_τ=0.2);
+    n_steps = 800000
+    energy_arr, error_arr, data_set = RangeAlphaPIMC(
+        0.1,
+        1.0,
+        [1.0, 2.0, 3.0, 4.0],
+        3,
+        n_steps,
+        pot = "Harmonic",
+        estimator = "Thermodynamic",
+        fixed_τ = 0.2,
+    )
     println("-----Simulation Ended-----")
 end
