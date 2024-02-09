@@ -2,9 +2,9 @@ using PolaronQMC
 
 using Test
 
-@testset "PolaronQMC" begin
-    @testset "Frohlich-singlethread" begin
-        include("FrohlichSingleThread.jl")
+@testset verbose=true "PolaronQMC" begin
+    @testset "Frohlich" begin
+        include("FrohlichTest.jl")
     end
 end
 
