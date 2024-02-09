@@ -911,6 +911,3 @@ function SaveJLDData(T, potential, version, n_beads, n_steps, data)
     save("data_arr/$(string(typeof(potential)))/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data)
 end
 
-function SaveJLDData(T, potential, version, n_beads, n_steps, data)
-    save("data_arr/$(string(typeof(potential)))/$(string(Symbol(potential)))_T$(T)_nsteps$(n_steps)_v$(version)_beads$(n_beads).jld", "data", data)
-end
