@@ -18,7 +18,7 @@ export Path, DiscretePath, Potential, ConstantPotential, OneBodyPotential, TwoBo
 export Adjuster, SingleAdjuster, DisplaceAdjuster, BisectAdjuster
 
 # Export estimators
-export Estimator, ThermodynamicEstimator, VirialEstimator, SimpleEstimator, SimpleVirialEstimator
+export PIMCEstimator, ThermodynamicEstimator, VirialEstimator, SimpleEstimator, SimpleVirialEstimator
 
 # Export potentials
 export oneBodyPotential, twoBodyPotential

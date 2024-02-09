@@ -338,13 +338,14 @@ end
 
 #-------------------Estimator (Energy)----------------------------
 #types of estimators
-abstract type Estimator end
+abstract type PIMCEstimator end
 
 #Energy estimators
-struct SimpleEstimator <: Estimator end # Estimator using basic sum of kinetic and potential total_energy
+struct SimpleEstimator <: PIMCEstimator end # Estimator using basic sum of kinetic and potential total_energy
 
-struct SimpleVirialEstimator <: Estimator end # Estimator using virial theorem for potential term
+struct SimpleVirialEstimator <: PIMCEstimator end # Estimator using virial theorem for potential term
 
-struct ThermodynamicEstimator <: Estimator end # Estimator using thermodynamic theory
+struct ThermodynamicEstimator <: PIMCEstimator end # Estimator using thermodynamic theory
 
-struct VirialEstimator <: Estimator end # Estimator derived using virial theorem
+struct VirialEstimator <: PIMCEstimator end # Estimator derived using virial theorem
+
