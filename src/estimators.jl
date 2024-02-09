@@ -107,7 +107,7 @@ function kineticEnergy(path::Path, potential::FrohlichPotential, estimator::Viri
     #return (t2_prefactor * term_two) # -1 (from eqn) * -1 (frm dV/dr) * -1 (force formula) * (-1) from potential [updated]
 end
 
-function kineticEnergy(path::DiscretePath, potential::HolsteinPotential, estimator::Estimator)
+function kineticEnergy(path::DiscretePath, potential::HolsteinPotential, estimator::PIMCEstimator)
     kinetic_energy = 0.0
     for particle in 1:path.n_particles
         for i in 1:path.n_beads
@@ -130,7 +130,7 @@ end
 
 #-------------Potential energy estimators---------------------
 
-function potentialEnergy(path::Path, potential::FrohlichPotential, estimator::Estimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
+function potentialEnergy(path::Path, potential::FrohlichPotential, estimator::PIMCEstimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
     potential_energy = 0.0
     n_beads, l_ω = path.n_beads, length(potential.ω);
     β, α = path.τ * n_beads, potential.α;
@@ -168,7 +168,7 @@ function potentialEnergy(path::Path, potential::FrohlichPotential, estimator::Es
 end
 
 #=
-function potentialEnergy(path::Path, potential::FrohlichPotential, estimator::Estimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
+function potentialEnergy(path::Path, potential::FrohlichPotential, estimator::PIMCEstimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
     n_beads, l = path.n_beads, length(potential.ω);
     β, α = path.τ * n_beads, potential.α;
 
@@ -195,11 +195,11 @@ function potentialEnergy(path::Path, potential::FrohlichPotential, estimator::Es
     return 2 * path.τ * potential_energy/path.n_beads #* term_factor # Note that this path.τ multiplication refer to dτ'
 end
 =#
-function potentialEnergy(path::Path, potential::OneBodyPotential, estimator::Estimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
+function potentialEnergy(path::Path, potential::OneBodyPotential, estimator::PIMCEstimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
     return sum(oneBodyPotential(potential, path, bead, particle, store_diff, prop_Matrix)/(path.n_beads) for bead in 1:path.n_beads, particle in 1:path.n_particles)
 end
 
-function potentialEnergy(path::DiscretePath, potential::HolsteinPotential, estimator::Estimator, DF_l::Array{Float64})
+function potentialEnergy(path::DiscretePath, potential::HolsteinPotential, estimator::PIMCEstimator, DF_l::Array{Float64})
     potential_energy = 0.0
     for particle in 1:path.n_particles
         for i in 1:path.n_beads
@@ -237,7 +237,7 @@ end
 # Energy ---------------------------------------------------------
 
 
-function energy(path::Path, potential::Potential, estimator::Estimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
+function energy(path::Path, potential::Potential, estimator::PIMCEstimator, store_diff::Vector{Float64}, prop_Matrix::Array{Float64})
     """
     return kineticEnergy(path, potential, estimator) + potentialEnergy(path, potential, estimator)
     """
@@ -252,7 +252,7 @@ function energy(path::Path, potential::Potential, estimator::Estimator, store_di
     end
 end
 
-function energy(path::DiscretePath, potential::Potential, estimator::Estimator, F_l::Array{Float64})
+function energy(path::DiscretePath, potential::Potential, estimator::PIMCEstimator, F_l::Array{Float64})
     """
     return kineticEnergy(path, potential, estimator) + potentialEnergy(path, potential, estimator)
     """
@@ -266,7 +266,7 @@ end
 
 # Correlation ---------------------------------------------------------------------
 
-function correlation(path::Path, potential::HarmonicPotential, estimator::Estimator)
+function correlation(path::Path, potential::HarmonicPotential, estimator::PIMCEstimator)
     """
     Position Correlation function from Vvedensky's paper (user's guide for Path-integral Monte Carlo)
     G(Δτ) = <x(τ)x(τ+Δτ)> - <x(τ)><x(τ+Δτ)>
@@ -296,7 +296,7 @@ function correlation(path::Path, potential::HarmonicPotential, estimator::Estima
 end
 
 
-function correlation(path::Path, potential::Potential, estimator::Estimator)
+function correlation(path::Path, potential::Potential, estimator::PIMCEstimator)
     """
     Position Correlation function from Vvedensky's paper (user's guide for Path-integral Monte Carlo)
     G(Δτ) = <x(τ)x(τ+Δτ)> - <x(τ)><x(τ+Δτ)>
@@ -332,7 +332,7 @@ function correlation(path::Path, potential::Potential, estimator::Estimator)
 end
 
 
-function position(path::Path, potential::Potential, estimator::Estimator)
+function position(path::Path, potential::Potential, estimator::PIMCEstimator)
     return path.beads
 end
 

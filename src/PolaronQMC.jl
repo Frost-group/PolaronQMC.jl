@@ -24,7 +24,7 @@ export PIMCEstimator, ThermodynamicEstimator, VirialEstimator, SimpleEstimator, 
 export oneBodyPotential, twoBodyPotential
 
 # Export observables
-export potentialEnergy, kineticEnergy, energy, correlation, position, HolsteinEnergy
+export potentialEnergy, kineticEnergy, totalEnergy, correlation, position, HolsteinEnergy
 
 # Export function used in the optimisation of the running of the simulation
 export updateAdjuster, copyLastPath!

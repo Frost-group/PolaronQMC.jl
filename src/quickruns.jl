@@ -54,7 +54,7 @@ function quickrun_frohlich(T::Float64, alpha_range, fixed_τ::Float64, thermalis
             pimc = PIMC(n_steps, equilibrium_skip, observables_skip, path, movers, observables, estimators, potential, regime, adjust=true, threads=threads)
     
             output_observables = pimc[2]
-            energy = output_observables["Energy"]
+            totalEnergy = output_observables["Energy"]
     
             for estimator in estimators
                 estimator_energy = energy[string(Symbol(estimator))]

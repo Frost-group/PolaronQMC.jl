@@ -12,7 +12,7 @@ function generalPIMC(T::Float64, ω::Union{Float64, Vector{Float64}}, α::Float6
     pot::String="Frohlich", estimator::String="Virial", quick_steps::Bool=false, threads::Bool = false, 
     start_range::Float64 = 1.0, particleIndex::Int64 = 1, dimensionIndex::Int64 = 1,
     observable_skip_factor::Float64=0.005, equilibrium_skip_factor::Float64=0.5, version::Int64 = 1, 
-    verbose::Bool = true, thread_number::Int64 = 16)
+    verbose::Bool = true, thread_number::Int64 = 16, comparison::Bool = false)
     
     """
     Initialise System Variables:
@@ -131,23 +131,26 @@ function generalPIMC(T::Float64, ω::Union{Float64, Vector{Float64}}, α::Float6
     end
     
     println("new pos: ", path.beads[1, 1, :])
+ 
     # Comparison energy
     comparison_energy = 0.0;
-    if typeof(potential) == HarmonicPotential
-        comparison_energy = analyticEnergyHarmonic(potential.ω,β,ħ,n_dimensions)
-    elseif typeof(potential) == FrohlichPotential
+    if comparison == true
+       if typeof(potential) == HarmonicPotential
+            comparison_energy = analyticEnergyHarmonic(potential.ω,β,ħ,n_dimensions)
+        elseif typeof(potential) == FrohlichPotential
 
-        #comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
-        #comparison_energy = polaron([α], [T], [0.0]; ω=1.0, verbose = true)
-        
-        if length(ω) == 1
-            comparison_polaron = feynmanvw(2.0, 1.0, α, ω, Inf)
-        else
-            comparison_polaron = feynmanvw(2.0, 1.0, [α], ω, Inf)
+            #comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
+            #comparison_energy = polaron([α], [T], [0.0]; ω=1.0, verbose = true)
+            
+            if length(ω) == 1
+                comparison_polaron = feynmanvw(2.0, 1.0, α, ω, Inf)
+            else
+                comparison_polaron = feynmanvw(2.0, 1.0, [α], ω, Inf)
+            end
+            comparison_energy += comparison_polaron[3]
+            
+            #end
         end
-        comparison_energy += comparison_polaron[3]
-        
-        #end
     end
 
     if !threads
