@@ -3,7 +3,6 @@ using Plots
 using PolaronMobility
 using LaTeXStrings
 using JLD
-using Base.Threads
 
 function generalPIMC(
     T::Float64,
@@ -22,7 +21,6 @@ function generalPIMC(
     pot::String = "Frohlich",
     estimator::String = "Virial",
     quick_steps::Bool = false,
-    threads::Bool = false,
     start_range::Float64 = 1.0,
     particleIndex::Int64 = 1,
     dimensionIndex::Int64 = 1,
@@ -30,7 +28,6 @@ function generalPIMC(
     equilibrium_skip_factor::Float64 = 0.5,
     version::Int64 = 1,
     verbose::Bool = true,
-    thread_number::Int64 = 16,
     comparison::Bool = false,
 )
 
@@ -80,11 +77,7 @@ function generalPIMC(
     )
     println(path.K_factor)
 
-    if threads
-        plot_on = false
-    else
-        plot_on = true
-    end
+    plot_on = true
 
     # Set potential function
     if pot == "Frohlich"
@@ -178,7 +171,7 @@ function generalPIMC(
             comparison_energy = analyticEnergyHarmonic(potential.ω, β, ħ, n_dimensions)
         elseif typeof(potential) == FrohlichPotential
 
-            #comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true, threads = true)
+            #comparison_polaron = make_polaron([α], [T], [0.0]; ω=1.0, rtol = 1e-4, verbose = true)
             #comparison_energy = polaron([α], [T], [0.0]; ω=1.0, verbose = true)
 
             if length(ω) == 1
@@ -192,125 +185,68 @@ function generalPIMC(
         end
     end
 
-    if !threads
-
-        data = PIMC(
-            n_steps,
-            equilibrium_skip,
-            observables_skip,
-            path,
-            mover,
-            estimators,
-            potential,
-            regime,
-            observables,
-            adjust = true,
-        )
-
-        # Storing all the different outputz
-        energies = data["Energy:$(estimator)"]
-        positions = data["Position:p$(particleIndex)d$(dimensionIndex)"] # Select a particular particle and dimension
-        correlations = data["Correlation:$(estimator)"]
-        acceptance_rates = data["Acceptance Rate:p$(particleIndex)"]
-        adjuster_values = data["Adjuster Value:p$(particleIndex)"]
-
-        # Post analysis
-        variances = jackknife(energies)
-        jacknife_errors = sqrt(variances[2])
-        mean_energy = mean(energies)
-
-        #=
-        if n_particles == 2
-            positions1 = positions
-            positions2 = collect(Iterators.flatten(data["Position:p2d1"]))
-            posplot = histogram([positions1, positions2])
-            display(posplot)
-        end
-        =#
-
-        # Output measurements and statistics
-        println("Number of Beads: ", n_beads)
-        println("Number of steps: ", n_steps)
-        println("τ is: ", τ)
-        println("Temperature: ", T)
-        println("α: ", α)
-        println("Mean Energy: ", mean_energy)
-        println("Comparison Energy: ", comparison_energy)
-        println("jackknife errors: ", jacknife_errors)
-
-        # return energy, variances, mean_acceptance_rate, comparison_energy
-        return data,
-        mean_energy,
-        jacknife_errors,
-        comparison_energy,
+    data = PIMC(
+        n_steps,
         equilibrium_skip,
         observables_skip,
-        n_beads,
-        path
+        path,
+        mover,
+        estimators,
+        potential,
+        regime,
+        observables,
+        adjust = true,
+    )
 
-    else
-        println("multithreading")
-        aggregated_data = Dict() # Create an empty dictionary for storing data
-        Mean_energy_arr = [0.0 for j = 1:thread_number]
-        Error_arr = [0.0 for j = 1:thread_number]
+    # Storing all the different outputz
+    energies = data["Energy:$(estimator)"]
+    positions = data["Position:p$(particleIndex)d$(dimensionIndex)"] # Select a particular particle and dimension
+    correlations = data["Correlation:$(estimator)"]
+    acceptance_rates = data["Acceptance Rate:p$(particleIndex)"]
+    adjuster_values = data["Adjuster Value:p$(particleIndex)"]
 
-        @threads for i = 1:thread_number
-            println("i = $i on thread $(Threads.threadid())")
+    # Post analysis
+    variances = jackknife(energies)
+    jacknife_errors = sqrt(variances[2])
+    mean_energy = mean(energies)
 
-            data = PIMC(
-                n_steps,
-                equilibrium_skip,
-                observables_skip,
-                deepcopy(path),
-                deepcopy(mover),
-                estimators,
-                potential,
-                regime,
-                observables,
-                adjust = true,
-            )
-
-            # Storing all the different outputz
-            energies = data["Energy:$(estimator)"]
-            positions = data["Position:p$(particleIndex)d$(dimensionIndex)"] # Select a particular particle and dimension
-            correlations = data["Correlation:$(estimator)"]
-            acceptance_rates = data["Acceptance Rate:p$(particleIndex)"]
-            adjuster_values = data["Adjuster Value:p$(particleIndex)"]
-            data["Comparison Energy"] = comparison_energy
-
-            # Post analysis
-            variances = jackknife(energies)
-            jacknife_errors = sqrt(variances[2])
-            mean_energy = mean(energies)
-
-            # Output measurements and statistics
-            aggregated_data[i] = data
-            Mean_energy_arr[i] = mean_energy
-            Error_arr[i] = jacknife_errors
-        end
-
-        println("Number of Paths:", thread_number)
-        println("Number of Beads: ", n_beads)
-        println("Number of steps: ", n_steps)
-        println("τ is: ", τ)
-        println("Temperature: ", T)
-        println("α: ", α)
-        println("Mean Energy: ", mean(Mean_energy_arr))
-        println("Comparison Energy: ", comparison_energy)
-        println("jackknife errors: ", mean(Error_arr))
-
-        return aggregated_data, Mean_energy_arr, Error_arr, n_beads
+    #=
+    if n_particles == 2
+        positions1 = positions
+        positions2 = collect(Iterators.flatten(data["Position:p2d1"]))
+        posplot = histogram([positions1, positions2])
+        display(posplot)
     end
+    =#
 
+    # Output measurements and statistics
+    println("Number of Beads: ", n_beads)
+    println("Number of steps: ", n_steps)
+    println("τ is: ", τ)
+    println("Temperature: ", T)
+    println("α: ", α)
+    println("Mean Energy: ", mean_energy)
+    println("Comparison Energy: ", comparison_energy)
+    println("jackknife errors: ", jacknife_errors)
+
+    # return energy, variances, mean_acceptance_rate, comparison_energy
+    return data,
+    mean_energy,
+    jacknife_errors,
+    comparison_energy,
+    equilibrium_skip,
+    observables_skip,
+    n_beads,
+    path
 end
 #=
 function MultiModePIMC(T::Float64, ω_array::Vector{Float64}, α::Float64, n_dimensions::Float64, n_steps::Int64;
     m::Float64=1.0, n_particles::Int64=1, regime::String="Primitive", fixed_beads::Bool=false, 
     fixed_τ::Float64=0.1, n_beads::Int64=50, n_thermalised::Int64=10000, mover::String="Single", 
-    potential::String="Frohlich", estimator::String="Virial", quick_steps::Bool=false, threads::Bool = false, 
+    potential::String="Frohlich", estimator::String="Virial", quick_steps::Bool=false,  
     start_range::Float64 = 1.0, particleIndex::Int64 = 1, dimensionIndex::Int64 = 1,
     observable_skip_factor::Float64=0.005, equilibrium_skip_factor::Float64=0.5, version::Int64 = 1, 
-    verbose::Bool = true, thread_number::Int64 = 16)
+    verbose::Bool = true)
     """
     Allow array of phonon frequecies values (multi-mode)
 
@@ -352,16 +288,11 @@ function MultiModePIMC(T::Float64, ω_array::Vector{Float64}, α::Float64, n_dim
         potential = ConstantPotential(10.0)
     end
 
-    if threads
-        plot_on = false
-    else
-        plot_on = true
-    end
+    plot_on = true
 
     println("Simulating multiple temperatures")
-    # Big for-loop, multi-threading possible
-    @threads for i in 1:length(T_array)
-        println("i = $i on thread $(Threads.threadid())")
+    
+    for i in 1:length(T_array)
         T = T_array[i]
         β = 1 / T
 
@@ -499,7 +430,6 @@ function RangeAlphaPIMC(
     pot::String = "Frohlich",
     estimator::String = "Virial",
     quick_steps = false,
-    threads::Bool = false,
     start_range = 1.0,
     particleIndex::Int64 = 1,
     dimensionIndex::Int64 = 1,
@@ -507,7 +437,6 @@ function RangeAlphaPIMC(
     equilibrium_skip_factor::Float64 = 0.5,
     version = 1,
     verbose::Bool = true,
-    thread_number::Int64 = 16,
 )
     """
     Allow array of Alpha values.
@@ -548,11 +477,8 @@ function RangeAlphaPIMC(
     #Initialsing path
     path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
 
-    if threads
-        plot_on = false
-    else
-        plot_on = true
-    end
+    
+    plot_on = true
 
     # Set Monte-Carlo Mover
     if mover == "Single"
@@ -587,7 +513,7 @@ function RangeAlphaPIMC(
         println("Invalid Regime: ", regime)
     end
 
-    @threads for i = 1:length(α_array)
+    for i = 1:length(α_array)
 
         println("Simulating multiple alphas")
         α = α_array[i]
@@ -669,8 +595,7 @@ function RangeAlphaPIMC(
                 [0.0];
                 ω = 1.0,
                 rtol = 1e-4,
-                verbose = true,
-                threads = true,
+                verbose = true
             )
             comparison_energy = comparison_polaron.F
         end
@@ -715,7 +640,6 @@ function RangeTempPIMC(
     pot::String = "Frohlich",
     estimator::String = "Virial",
     quick_steps::Bool = false,
-    threads::Bool = false,
     start_range::Float64 = 1.0,
     particleIndex::Int64 = 1,
     dimensionIndex::Int64 = 1,
@@ -723,7 +647,6 @@ function RangeTempPIMC(
     equilibrium_skip_factor = 0.5,
     version = 1,
     verbose::Bool = true,
-    thread_number::Int64 = 16,
 )
 
     """
@@ -788,16 +711,11 @@ function RangeTempPIMC(
         println("Invalid Regime: ", regime)
     end
 
-    if threads
-        plot_on = false
-    else
-        plot_on = true
-    end
+    plot_on = false
 
     println("Simulating multiple temperatures")
-    # Big for-loop, multi-threading possible
-    @threads for i = 1:length(T_array)
-        println("i = $i on thread $(Threads.threadid())")
+    
+    for i = 1:length(T_array)
         T = T_array[i]
         β = 1 / T
 
@@ -886,7 +804,6 @@ function RangeTempPIMC(
                 ω = 1.0,
                 rtol = 1e-4,
                 verbose = true,
-                threads = true,
             )
             comparison_energy = comparison_polaron.F
         end
@@ -938,14 +855,12 @@ function general_Holstein_PIMC(
     potential = "Holstein",
     estimator = "Thermodynamic",
     quick_steps = false,
-    threads::Bool = false,
     particleIndex = 1,
     dimensionIndex = 1,
     observable_skip_factor = 0.005,
     equilibrium_skip_factor = 0.5,
     version = 1,
     verbose::Bool = true,
-    thread_number = 16,
 )
 
     """
@@ -985,11 +900,7 @@ function general_Holstein_PIMC(
     # Initate path
     path = DiscretePath(n_beads, n_particles, n_dimensions, τ, m)
 
-    if threads
-        plot_on = false
-    else
-        plot_on = true
-    end
+    plot_on = true
 
     # Set potential function
     if potential == "Holstein"
@@ -1026,93 +937,44 @@ function general_Holstein_PIMC(
         println("n_step is: ", n_steps)
     end
 
-    if !threads
+    data = Holstein_PIMC(
+        n_steps,
+        equilibrium_skip,
+        observables_skip,
+        path,
+        estimators,
+        potential,
+        observables,
+    )
 
-        data = Holstein_PIMC(
-            n_steps,
-            equilibrium_skip,
-            observables_skip,
-            path,
-            estimators,
-            potential,
-            observables,
-        )
+    # Storing all the different outputz
+    energies = data["Energy:$(estimator)"]
+    positions = data["Position:p$(particleIndex)d$(dimensionIndex)"] # Select a particular particle and dimension
+    #correlations = data["Correlation:$(estimator)"]
 
-        # Storing all the different outputz
-        energies = data["Energy:$(estimator)"]
-        positions = data["Position:p$(particleIndex)d$(dimensionIndex)"] # Select a particular particle and dimension
-        #correlations = data["Correlation:$(estimator)"]
+    # Post analysis
+    variances = jackknife(energies)
+    jacknife_errors = sqrt(variances[2])
+    mean_energy = mean(energies)
 
-        # Post analysis
-        variances = jackknife(energies)
-        jacknife_errors = sqrt(variances[2])
-        mean_energy = mean(energies)
-
-        # Output measurements and statistics
-        if verbose
-            println("Number of Beads: ", n_beads)
-            println("Number of steps: ", n_steps)
-            println("τ is: ", τ)
-            println("Temperature: ", T)
-            println("α: ", α)
-            println("Mean Energy: ", mean_energy)
-            println("jackknife errors: ", jacknife_errors)
-        end
-
-        energy_plot =
-            plot(energies, ylabel = "Energy", xlab = "Sweeps / $observables_skip\$ n\$")
-        display(energy_plot)
-        # return energy, variances, mean_acceptance_rate, comparison_energy
-        SaveJLDData(T, potential, version, n_beads, n_steps, data)
-
-        return mean_energy, jacknife_errors, data
-
-    else
-        println("multithreading")
-        aggregated_data = Dict() # Create an empty dictionary for storing data
-        Mean_energy_arr = [0.0 for j = 1:thread_number]
-        Error_arr = [0.0 for j = 1:thread_number]
-
-        @threads for i = 1:thread_number
-            println("i = $i on thread $(Threads.threadid())")
-
-            data = Holstein_PIMC(
-                n_steps,
-                equilibrium_skip,
-                observables_skip,
-                deepcopy(path),
-                estimators,
-                potential,
-                observables,
-            )
-
-            # Storing all the different outputz
-            energies = data["Energy:$(estimator)"]
-            positions = data["Position:p$(particleIndex)d$(dimensionIndex)"] # Select a particular particle and dimension
-
-            # Post analysis
-            variances = jackknife(energies)
-            jacknife_errors = sqrt(variances[2])
-            mean_energy = mean(energies)
-
-            # Output measurements and statistics
-            aggregated_data[i] = data
-            Mean_energy_arr[i] = mean_energy
-            Error_arr[i] = jacknife_errors
-        end
-
-        println("Number of Paths:", thread_number)
+    # Output measurements and statistics
+    if verbose
         println("Number of Beads: ", n_beads)
         println("Number of steps: ", n_steps)
         println("τ is: ", τ)
         println("Temperature: ", T)
         println("α: ", α)
-        println("Mean Energy: ", mean(Mean_energy_arr))
-        #println("Comparison Energy: ", comparison_energy)
-        println("jackknife errors: ", mean(Error_arr))
-
-        return aggregated_data, Mean_energy_arr, Error_arr, n_beads
+        println("Mean Energy: ", mean_energy)
+        println("jackknife errors: ", jacknife_errors)
     end
+
+    energy_plot =
+        plot(energies, ylabel = "Energy", xlab = "Sweeps / $observables_skip\$ n\$")
+    display(energy_plot)
+    # return energy, variances, mean_acceptance_rate, comparison_energy
+    SaveJLDData(T, potential, version, n_beads, n_steps, data)
+
+    return mean_energy, jacknife_errors, data
 
 end
 
@@ -1123,3 +985,4 @@ function SaveJLDData(T, potential, version, n_beads, n_steps, data)
         data,
     )
 end
+

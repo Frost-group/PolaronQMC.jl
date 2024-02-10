@@ -6,7 +6,6 @@ function quickrun_frohlich(
     thermalisation_steps::Int,
     steps_base::Int;
     thermalised::Bool = true,
-    threads::Bool = true,
     verbose::Bool = true,
 )
     #default variables for simulation
@@ -28,7 +27,6 @@ function quickrun_frohlich(
             thermalised_path,
             st_potential,
             n_steps = thermalisation_steps,
-            threads = threads,
             verbose = verbose,
         )
     end
@@ -77,7 +75,6 @@ function quickrun_frohlich(
             potential,
             regime,
             adjust = true,
-            threads = threads,
         )
 
         output_observables = pimc[2]

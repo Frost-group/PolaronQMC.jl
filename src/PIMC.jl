@@ -1,5 +1,4 @@
 # PIMC.jl
-using Base.Threads
 using StaticArrays
 using PyCall
 
@@ -8,7 +7,6 @@ const tmr = TimerOutput();
 
 δ(x, y) = ==(x, y);
 
-# PIMC function with multi-threading support
 function PIMC(
     n_steps::Int,
     equilibrium_skip,
@@ -20,7 +18,6 @@ function PIMC(
     regime::Regime,
     observables::Array;
     adjust::Bool = true,
-    threads::Bool = false,
     max_level::Int = 1,
 )
     """
@@ -37,7 +34,6 @@ function PIMC(
 
     Optional parameter
     	adjust (Bool, default True): Decide whether to implement adjustor for a faster convergence 
-    	threads (Bool, default False): Choice of Multithreading. Turned off strictly due to algorithmic clashes which lead to incorrect simulation
     	max_level (Int, default 1): Set the max bisecting level for the case of BisectMover (won't affect SingleMover and DisplaceMover)
 
     """
@@ -100,7 +96,8 @@ function PIMC(
     end
 
 
-    # Processes that run per step (Only single threaded kept as multi-threading at this layer create problem)
+    # Processes that run per step 
+    #   (Only single threaded kept as multi-threading at this layer create problem)
     for step = 1:n_steps
 
         # Feedback for the progress of the PIMC simulation
@@ -210,7 +207,6 @@ function Holstein_PIMC(
 
     Optional parameter
     	adjust (Bool, default True): Decide whether to implement adjustor for a faster convergence 
-    	threads (Bool, default False): Choice of Multithreading. Turned off strictly due to algorithmic clashes which lead to incorrect simulation
     	max_level (Int, default 1): Set the max bisecting level for the case of BisectMover (won't affect SingleMover and DisplaceMover)
 
     """
@@ -286,7 +282,8 @@ function Holstein_PIMC(
 
 
     particle = 1
-    # Processes that run per step (Only single threaded kept as multi-threading at this layer create problem)
+    # Processes that run per step 
+    #   (Only single threaded kept as multi-threading at this layer create problem)
     for step = 1:n_steps
         #println("step is: ", step)
         # Feedback for the progress of the PIMC simulation
