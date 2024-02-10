@@ -1,5 +1,4 @@
 # PolaronQMCVisualisation.jl
-using Revise
 using Plots
 using LaTeXStrings
 

@@ -2,7 +2,6 @@
 
 module PolaronQMC
 
-using Revise
 using Statistics
 using LinearAlgebra
 using OnlineStats
@@ -96,3 +95,4 @@ include("GeneralPIMC.jl") # Function for making data
 include("PolaronQMCVisualisation.jl")
 
 end # module
+
