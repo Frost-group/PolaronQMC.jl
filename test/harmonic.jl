@@ -1,7 +1,6 @@
-# HolsteinTest.jl - basic Holstein integration test
+# Harmonic.jl - basic Harmonic PIMC 
 
-pot = "Holstein"
+pot = "Harmonic"
 T = 0.05
-version = rand(1:10000)
 energy, errors, data_set = general_Holstein_PIMC(T, 1.0, 2.0, 3, 1_000_000, version = 1)
 
