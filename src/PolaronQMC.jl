@@ -5,7 +5,6 @@ module PolaronQMC
 using Statistics
 using LinearAlgebra
 using OnlineStats
-using Plots
 using JLD
 using TimerOutputs
 #temporary
@@ -91,8 +90,8 @@ include("quickruns.jl") # Functions for obtaining results using default paramete
 include("GeneralPIMC.jl") # Function for making data
 
 
-#temporary
-include("PolaronQMCVisualisation.jl")
+# - not currently included as Plots dependency - 
+#include("PolaronQMCVisualisation.jl")
 
 end # module
 

@@ -2,7 +2,6 @@ begin
     using Revise
     using PolaronQMC
     using Statistics
-    using Plots
     using PolaronMobility
     using LaTeXStrings
     using BenchmarkTools

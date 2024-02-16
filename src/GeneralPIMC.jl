@@ -1,5 +1,4 @@
 using Statistics
-using Plots
 using PolaronMobility
 using LaTeXStrings
 using JLD
@@ -76,8 +75,6 @@ function generalPIMC(
         start_range = 20.0,
     )
     println(path.K_factor)
-
-    plot_on = true
 
     # Set potential function
     if pot == "Frohlich"
@@ -214,8 +211,8 @@ function generalPIMC(
     if n_particles == 2
         positions1 = positions
         positions2 = collect(Iterators.flatten(data["Position:p2d1"]))
-        posplot = histogram([positions1, positions2])
-        display(posplot)
+ #       posplot = histogram([positions1, positions2])
+ #       display(posplot)
     end
     =#
 
@@ -287,8 +284,6 @@ function MultiModePIMC(T::Float64, ω_array::Vector{Float64}, α::Float64, n_dim
     elseif potential == "Constant"
         potential = ConstantPotential(10.0)
     end
-
-    plot_on = true
 
     println("Simulating multiple temperatures")
     
@@ -478,8 +473,6 @@ function RangeAlphaPIMC(
     path = Path(n_beads, n_particles, n_dimensions, τ, m = m)
 
     
-    plot_on = true
-
     # Set Monte-Carlo Mover
     if mover == "Single"
         mover = SingleMover(path)
@@ -711,8 +704,6 @@ function RangeTempPIMC(
         println("Invalid Regime: ", regime)
     end
 
-    plot_on = false
-
     println("Simulating multiple temperatures")
     
     for i = 1:length(T_array)
@@ -900,8 +891,6 @@ function general_Holstein_PIMC(
     # Initate path
     path = DiscretePath(n_beads, n_particles, n_dimensions, τ, m)
 
-    plot_on = true
-
     # Set potential function
     if potential == "Holstein"
         potential = HolsteinPotential(α, ω, ħ, J)
@@ -968,9 +957,9 @@ function general_Holstein_PIMC(
         println("jackknife errors: ", jacknife_errors)
     end
 
-    energy_plot =
-        plot(energies, ylabel = "Energy", xlab = "Sweeps / $observables_skip\$ n\$")
-    display(energy_plot)
+#    energy_plot =
+#        plot(energies, ylabel = "Energy", xlab = "Sweeps / $observables_skip\$ n\$")
+#    display(energy_plot)
     # return energy, variances, mean_acceptance_rate, comparison_energy
     SaveJLDData(T, potential, version, n_beads, n_steps, data)
 

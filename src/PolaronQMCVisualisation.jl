@@ -159,3 +159,4 @@ function animate_PIMC(data, n_dimensions; particle = 1, dim = 1)
 
     return animation
 end
+
